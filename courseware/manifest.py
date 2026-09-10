@@ -78,20 +78,53 @@ def lesson_from_dict(data: dict, module_roots: list[Path]) -> Lesson:
                                 f"that produces them earlier in the lesson")
         produced |= set(rm.module.produces)
 
-    params: dict[str, int] = {}
-    wanted_params = data.get("params") or {}
+    # Collect all params declared by modules and their specs
+    param_specs: dict[str, list[tuple[str, dict]]] = {}  # param_name -> [(module_name, spec), ...]
     for rm in resolved:
         for pname, spec in rm.module.params.items():
-            value = wanted_params.get(pname, spec.get("default"))
+            if pname not in param_specs:
+                param_specs[pname] = []
+            param_specs[pname].append((rm.module.name, spec))
+
+    # Resolve param values, ensuring each param value satisfies ALL modules that declare it
+    params: dict[str, int] = {}
+    wanted_params = data.get("params") or {}
+    for pname, declaring_modules in param_specs.items():
+        if pname in wanted_params:
+            value = wanted_params[pname]
+        else:
+            # Param not in manifest; check if all defaults agree
+            defaults = [spec.get("default") for _, spec in declaring_modules]
+            if len(set(defaults)) > 1:  # defaults differ
+                module_names = ", ".join(name for name, _ in declaring_modules)
+                raise ManifestError(f"param {pname} has different defaults in {module_names}; "
+                                  f"set it explicitly in the manifest")
+            value = defaults[0]
+
+        # Check that value is an integer
+        if not isinstance(value, int):
+            raise ManifestError(f"param {pname}={value!r} is not an integer")
+
+        # Validate against ALL modules' ranges
+        for module_name, spec in declaring_modules:
             lo, hi = spec.get("min"), spec.get("max")
             if (lo is not None and value < lo) or (hi is not None and value > hi):
-                raise ManifestError(f"param {pname}={value} outside [{lo}, {hi}] for {rm.module.name}")
-            params[pname] = value
+                raise ManifestError(f"param {pname}={value} outside [{lo}, {hi}] for {module_name}")
+
+        params[pname] = value
+
     unknown = set(wanted_params) - set(params)
     if unknown:
         raise ManifestError(f"params not used by any module: {sorted(unknown)}")
 
-    minutes = int(data.get("minutes") or 0)
+    minutes_value = data.get("minutes")
+    if minutes_value is not None:
+        try:
+            minutes = int(minutes_value)
+        except (ValueError, TypeError):
+            raise ManifestError(f"lesson minutes={minutes_value!r} is not an integer")
+    else:
+        minutes = 0
     need = sum(rm.module.minutes for rm in resolved)
     if minutes and need > minutes:
         raise ManifestError(f"modules need {need} minutes but the lesson allows {minutes}")
