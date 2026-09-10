@@ -37,6 +37,7 @@ class Lesson:
 
 
 def _entries(items):
+    """Parse module entries; shared with combos.py (intentional, for one parsing rule only)."""
     for item in items:
         if isinstance(item, str):
             yield item, {}
