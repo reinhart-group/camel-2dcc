@@ -161,6 +161,16 @@ def explore_cross_section(scan: AFMScan):
 # -- 3D printing ------------------------------------------------------------
 
 
+def stl_height_range_nm(scan: AFMScan) -> tuple[float, float]:
+    """The (low, high) heights in nm that ``to_stl`` stretches to ``relief_mm``.
+
+    It uses the 0.5th and 99.5th percentiles, so a few spike pixels don't set
+    the scale. Vertical scale factor of a print = relief_mm / (high - low).
+    """
+    lo, hi = np.percentile(scan.z, [0.5, 99.5])
+    return float(lo), float(hi)
+
+
 def to_stl(scan: AFMScan, path: str | Path, width_mm: float = 100.0, relief_mm: float = 15.0,
            base_mm: float = 3.0, max_pixels: int = 150) -> Path:
     """Write a closed, printable binary STL of the surface.
@@ -172,7 +182,7 @@ def to_stl(scan: AFMScan, path: str | Path, width_mm: float = 100.0, relief_mm: 
     step = max(1, -(-z.shape[0] // max_pixels))  # ceiling division: never exceed max_pixels
     z = z[::step, ::step]
     n = z.shape[0]
-    lo, hi = np.percentile(z, 0.5), np.percentile(z, 99.5)  # ignore single-pixel spikes
+    lo, hi = stl_height_range_nm(scan)
     top = base_mm + relief_mm * np.clip((z - lo) / max(hi - lo, 1e-12), 0, 1)
     xy = np.linspace(0, width_mm, n)
     X, Y = np.meshgrid(xy, xy[::-1])
