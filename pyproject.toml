@@ -1,0 +1,9 @@
+[project]
+name = "camel-2dcc"
+version = "1.0.0"
+description = "CAMEL x 2DCC: public LiST data slice and high-school math Colab notebooks"
+requires-python = ">=3.11"
+
+[tool.pytest.ini_options]
+pythonpath = ["src", "scripts"]
+testpaths = ["tests"]

@@ -74,13 +74,20 @@ def load_small_maps(data_dir: str | Path | None = None) -> dict[int, np.ndarray]
 # -- pictures ---------------------------------------------------------------
 
 
+def _square(scan: AFMScan) -> np.ndarray:
+    """The 3D and STL views assume a square scan (every gallery scan is square)."""
+    if scan.z.ndim != 2 or scan.z.shape[0] != scan.z.shape[1]:
+        raise ValueError(f"{scan.key}: expected a square height map, got shape {scan.z.shape}")
+    return scan.z
+
+
 def surface_3d(scan: AFMScan, exaggeration: float = 1.0, colorscale: str = "Viridis",
                max_pixels: int = 256):
     """Interactive Plotly 3D surface. ``exaggeration`` stretches heights so tiny bumps show."""
     import plotly.graph_objects as go
 
-    z = scan.z
-    step = max(1, z.shape[0] // max_pixels)
+    z = _square(scan)
+    step = max(1, -(-z.shape[0] // max_pixels))  # ceiling division: never exceed max_pixels
     z = z[::step, ::step]
     axis_nm = np.linspace(0, scan.scan_um * 1000, z.shape[0])
     fig = go.Figure(go.Surface(x=axis_nm, y=axis_nm, z=z, colorscale=colorscale,
@@ -158,8 +165,8 @@ def to_stl(scan: AFMScan, path: str | Path, width_mm: float = 100.0, relief_mm: 
     The print is ``width_mm`` wide; the tallest feature rises ``relief_mm``
     above a solid ``base_mm`` slab. Returns the path.
     """
-    z = scan.z
-    step = max(1, z.shape[0] // max_pixels)
+    z = _square(scan)
+    step = max(1, -(-z.shape[0] // max_pixels))  # ceiling division: never exceed max_pixels
     z = z[::step, ::step]
     n = z.shape[0]
     lo, hi = np.percentile(z, 0.5), np.percentile(z, 99.5)  # ignore single-pixel spikes

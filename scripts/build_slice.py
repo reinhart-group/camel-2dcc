@@ -32,6 +32,8 @@ CURATED = ROOT / "data/curated"
 OUT = ROOT / "data/slice/camel-2dcc"
 
 DOI_PREFIX = "10."
+CURATED_FILES = ("chips_timeline.csv", "materials_reference.csv", "superconductors.csv", "SOURCES.md")
+PACKAGE_FILES = ("classroom.py", "spm.py")
 
 
 def _package(row: dict) -> tuple[str | None, str | None]:
@@ -76,6 +78,7 @@ def build_afm_summary(samples: pd.DataFrame, meas: dict) -> pd.DataFrame:
             "date_created": row["date_created"],
             "scan_size_um": m["scan_size_um"],
             "pixels": m["pixels"],
+            "lines": m.get("lines"),
             "rms_roughness_nm": m["rms_nm"],
             "avg_roughness_nm": m["ra_nm"],
             "height_range_nm": m["range_nm"],
@@ -115,11 +118,12 @@ def build_recipes(samples: pd.DataFrame, recipes: dict) -> pd.DataFrame:
             for group in rec["groups"]:
                 if group.get("symbol") != "recipe":
                     continue
-                elapsed = 0.0
+                elapsed = 0.0  # becomes None (unknown) after the first missing duration
                 for i, row in enumerate(group["rows"], 1):
                     key, factor = spec["duration"]
                     dur = _num(row.get(key))
                     dur = None if dur is None else round(dur * factor, 3)
+                    start = None if elapsed is None else round(elapsed, 3)
                     out.append({
                         "sample_id": int(sid),
                         "material": s.loc[int(sid), "materials"],
@@ -128,12 +132,12 @@ def build_recipes(samples: pd.DataFrame, recipes: dict) -> pd.DataFrame:
                         "step_number": i,
                         "step": (row.get("step") or "").strip() or None,
                         "duration_min": dur,
-                        "start_min": round(elapsed, 3),
+                        "start_min": start,
                         "temperature_C": _num(row.get(spec["temp"])),
                         "pressure_torr": _num(row.get(spec["pressure"])),
                         "open_shutters": row.get("shutters"),
                     })
-                    elapsed += dur or 0.0
+                    elapsed = None if elapsed is None or dur is None else elapsed + dur
     return pd.DataFrame(out)
 
 
@@ -143,21 +147,29 @@ def build_growth_summary(steps: pd.DataFrame, afm: pd.DataFrame) -> pd.DataFrame
     A 'growth step' is any step whose name contains 'growth' or 'deposit'
     (case-insensitive) but is not a pre-/post-growth anneal ('pre-growth',
     'post-growth', 'P.G.'). Samples with no such step keep blank growth values.
+    Only each sample's first recipe is summarised (a few samples have 2-3
+    separate recipes; adding them would invent one run that never happened);
+    ``n_recipes`` says how many exist. Totals use min_count=1 so a recipe with
+    no recorded durations gives a blank, not 0, and ``durations_complete``
+    flags recipes where every step has a duration.
     """
+    n_recipes = steps.groupby("sample_id")["recipe_number"].max().rename("n_recipes")
+    steps = steps[steps["recipe_number"] == 1]
     name = steps["step"].fillna("").str.lower()
     is_growth = (name.str.contains("growth|deposit")
                  & ~name.str.contains(r"pre-growth|post-growth|p\.g\.", regex=True))
     g = steps[is_growth].groupby("sample_id").agg(
-        growth_time_min=("duration_min", "sum"),
+        growth_time_min=("duration_min", lambda s: s.sum(min_count=1)),
         growth_temperature_C=("temperature_C", "max"),
         growth_pressure_torr=("pressure_torr", "median"),
         n_growth_steps=("step", "size"),
     )
     base = steps.groupby("sample_id").agg(material=("material", "first"),
                                           growth_method=("growth_method", "first"),
-                                          total_recipe_min=("duration_min", "sum"),
+                                          total_recipe_min=("duration_min", lambda s: s.sum(min_count=1)),
+                                          durations_complete=("duration_min", lambda s: bool(s.notna().all())),
                                           n_steps=("step_number", "size"))
-    out = base.join(g).reset_index()
+    out = base.join(g).join(n_recipes).reset_index()
     return out.merge(afm[["sample_id", "rms_roughness_nm", "scan_size_um"]], on="sample_id", how="left")
 
 
@@ -204,6 +216,11 @@ def main() -> None:
         shutil.rmtree(OUT)
     OUT.mkdir(parents=True)
     rows = json.loads((RAW / "list_samples.json").read_text())
+    # Enforce the public boundary here rather than trusting the key's scope:
+    # a more privileged key must never leak unpublished records into a release.
+    unpublished = [r["id"] for r in rows if r.get("status") != "Published"]
+    if unpublished:
+        sys.exit(f"refusing to build: {len(unpublished)} non-Published samples, e.g. {unpublished[:5]}")
     meas = json.loads((RAW / "afm_measurements.json").read_text())
     recipes = json.loads((RAW / "recipes.json").read_text())
     picks = json.loads((ROOT / "scripts/gallery_picks.json").read_text())
@@ -215,8 +232,8 @@ def main() -> None:
     steps = build_recipes(samples, recipes)
     steps.to_csv(OUT / "growth_recipes.csv", index=False)
     build_growth_summary(steps, afm).to_csv(OUT / "growth_summary.csv", index=False)
-    for f in CURATED.glob("*"):
-        shutil.copy(f, OUT / f.name)
+    for name in CURATED_FILES:  # explicit allowlist: nothing ships by accident
+        shutil.copy(CURATED / name, OUT / name)
 
     small = {str(p.stem): np.load(p) for p in sorted((RAW / "afm64").glob("*.npy")) if p.stem in meas}
     np.savez_compressed(OUT / "afm_small.npz", **small)
@@ -230,8 +247,9 @@ def main() -> None:
                            sample_id=g["sample_id"], doi=g["doi"])
         to_stl(scan, OUT / "stl" / f"{g['key']}.stl")
 
-    shutil.copytree(ROOT / "src/camel_data", OUT / "camel_data",
-                    ignore=shutil.ignore_patterns("__pycache__", "list_public.py"))
+    (OUT / "camel_data").mkdir()
+    for name in PACKAGE_FILES:  # list_public.py (LiST client) deliberately not shipped
+        shutil.copy(ROOT / "src/camel_data" / name, OUT / "camel_data" / name)
     shutil.copy(ROOT / "docs/slice-README.md", OUT / "README.md")
 
     files = sorted(p for p in OUT.rglob("*") if p.is_file())

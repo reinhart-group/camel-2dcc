@@ -23,19 +23,23 @@ KEY_HEADER = "X-API-KEY"
 
 
 def _api_key() -> str:
-    key = os.environ.get("LIST_API_KEY")
+    missing = RuntimeError(
+        "No LiST key found. Set the LIST_API_KEY environment variable, or in Colab "
+        "add a Secret named LIST_API_KEY (key icon in the left sidebar) and allow "
+        "this notebook to use it."
+    )
+    key = (os.environ.get("LIST_API_KEY") or "").strip()
     if key:
         return key
     try:  # Colab Secrets
         from google.colab import userdata  # type: ignore
 
-        return userdata.get("LIST_API_KEY")
+        key = (userdata.get("LIST_API_KEY") or "").strip()
     except Exception as exc:  # noqa: BLE001 — re-raised with a clear message
-        raise RuntimeError(
-            "No LiST key found. Set the LIST_API_KEY environment variable, or in Colab "
-            "add a Secret named LIST_API_KEY (key icon in the left sidebar) and allow "
-            "this notebook to use it."
-        ) from exc
+        raise missing from exc
+    if not key:
+        raise missing
+    return key
 
 
 class PublicLiST:

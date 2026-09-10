@@ -21,9 +21,26 @@ taken from the public records of its LiST sample database. Made for CAMEL high-s
 
 ## How heights were processed
 
-AFM files were read from the instrument's raw format, converted to nanometres, and each scan line was
-levelled with a straight-line fit (the standard "flatten" step), then shifted so the median height is 0.
-Roughness numbers in `afm_summary.csv` come from that levelled surface.
+AFM files were read from the instrument's raw format and converted to nanometres. Each scan line was
+then levelled with a straight-line fit (the instrument software's standard first-order "Flatten"
+step), and heights were shifted so the median is 0. Roughness numbers in `afm_summary.csv` come from
+that levelled surface. Levelling every line can slightly shrink tall features that fill much of a
+line, so treat roughness as a consistent comparison measure, not an absolute truth.
+
+## Which scan represents each sample
+
+Most samples have several AFM scans (centre, edge, different sizes). `afm_summary.csv` keeps one per
+sample, chosen by a fixed rule: skip files an operator marked "modified", then take the largest scan
+size written in the file name, breaking ties by the shortest name. This is a consistent rule, not a
+scientist's pick of the best scan. Roughness depends on scan size, so compare samples with the same
+`scan_size_um` when it matters. `lines` smaller than `pixels` means the scan stopped early.
+
+## Growth recipes: what blanks mean
+
+A blank duration, temperature, or pressure means it was not recorded — never zero. After a step with
+no duration, later `start_min` values are blank because the elapsed time is unknown.
+`growth_summary.csv` summarises each sample's first recipe only (`n_recipes` counts how many exist);
+`durations_complete` is true when every step has a duration.
 
 ## Citing
 

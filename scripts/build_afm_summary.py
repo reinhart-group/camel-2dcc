@@ -35,7 +35,10 @@ ERR = RAW / "afm_measure_errors.json"
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 log = logging.getLogger("measure")
 
-_SIZE_RE = re.compile(r"(\d+(?:\.\d+)?)\s*(?:by|x)\s*\d+(?:\.\d+)?\s*um", re.I)
+# Scan-size hints in operator filenames: "5by5um", "1x1um", "center5um", "_2um".
+# The rule is a fixed tie-breaker, not a scientific choice of "best" scan;
+# afm_summary.csv records the chosen scan's size so comparisons can control for it.
+_SIZE_RE = re.compile(r"(\d+(?:\.\d+)?)\s*(?:(?:by|x)\s*\d+(?:\.\d+)?\s*)?um", re.I)
 
 
 def _scan_hint_um(name: str) -> float:
@@ -52,10 +55,15 @@ def pick_primary(files: list[dict]) -> dict | None:
 
 
 def downsample(z: np.ndarray, n: int = 64) -> np.ndarray:
-    """Block-average to n x n (crop to a multiple of n first)."""
-    r, c = (z.shape[0] // n) * n, (z.shape[1] // n) * n
-    z = z[:r, :c]
-    return z.reshape(n, r // n, n, c // n).mean(axis=(1, 3))
+    """Average into an n x n grid covering the whole scan (no cropping).
+
+    Rows and columns are split into n nearly equal bins, so every pixel lands
+    in exactly one output cell. A non-square scan is squeezed into a square
+    grid; afm_summary.csv records the original lines and pixels per line.
+    """
+    rows = np.array_split(np.arange(z.shape[0]), n)
+    cols = np.array_split(np.arange(z.shape[1]), n)
+    return np.array([[z[np.ix_(r, c)].mean() for c in cols] for r in rows])
 
 
 def measure(client: PublicLiST, sid: str, files: list[dict]) -> dict:
@@ -65,7 +73,12 @@ def measure(client: PublicLiST, sid: str, files: list[dict]) -> dict:
     safe = re.sub(r"[^A-Za-z0-9._-]+", "_", f["filename"])
     path = SPM_DIR / f"{sid}_{safe}"
     if not path.exists():
-        path.write_bytes(client.download(f["activity_id"], f["file_id"]))
+        # Write to a temp name and rename only after it parses, so an
+        # interrupted or error-body download is never cached as the real file.
+        tmp = path.with_name(path.name + ".part")
+        tmp.write_bytes(client.download(f["activity_id"], f["file_id"]))
+        read_spm(tmp)
+        tmp.replace(path)
     h = height_channel(read_spm(path))
     z = flatten(h.data)
     SMALL_DIR.mkdir(parents=True, exist_ok=True)
@@ -74,6 +87,7 @@ def measure(client: PublicLiST, sid: str, files: list[dict]) -> dict:
         "file": f["filename"], "local": str(path), "activity_id": f["activity_id"], "file_id": f["file_id"],
         "instrument": f.get("instrument"), "channel": h.name,
         "scan_size_um": round(h.scan_size_nm / 1000, 4), "pixels": int(h.data.shape[1]),
+        "lines": int(h.data.shape[0]),  # fewer lines than pixels = the scan stopped early
         "rms_nm": round(rms_roughness(z), 4),
         "ra_nm": round(float(np.mean(np.abs(z - z.mean()))), 4),
         "range_nm": round(float(np.ptp(z)), 4),
@@ -85,7 +99,9 @@ def measure(client: PublicLiST, sid: str, files: list[dict]) -> dict:
 def main() -> None:
     SPM_DIR.mkdir(parents=True, exist_ok=True)
     index = json.loads((RAW / "afm_files.json").read_text())
-    done = json.loads(OUT.read_text()) if OUT.exists() else {}
+    # --remeasure recomputes every sample (cached .spm files are reused, so
+    # this is offline for samples already downloaded).
+    done = json.loads(OUT.read_text()) if OUT.exists() and "--remeasure" not in sys.argv else {}
     errors = {}
     todo = [s for s in index if s not in done]
     log.info("%d indexed samples, %d measured, %d to go", len(index), len(done), len(todo))

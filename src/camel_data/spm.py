@@ -126,15 +126,20 @@ def read_spm(path: str | Path) -> list[AFMChannel]:
 
 
 def height_channel(channels: list[AFMChannel]) -> AFMChannel:
-    """Pick the topography channel (prefer 'Height Sensor', then 'Height')."""
+    """Pick the calibrated topography channel (prefer 'Height Sensor', then 'Height').
+
+    Fails closed: a height-like channel whose units are not nanometres (e.g. an
+    unrecognised scale line left it as raw counts) is never returned, so raw
+    integers cannot end up labelled as nm downstream.
+    """
     for want in ("height sensor", "height"):
         for ch in channels:
             if ch.name.lower() == want and ch.unit == "nm":
                 return ch
     for ch in channels:
-        if "height" in ch.name.lower():
+        if "height" in ch.name.lower() and ch.unit == "nm":
             return ch
-    raise LookupError(f"no height channel among {[c.name for c in channels]}")
+    raise LookupError(f"no calibrated (nm) height channel among {[(c.name, c.unit) for c in channels]}")
 
 
 def flatten(z: np.ndarray, order: int = 1) -> np.ndarray:
