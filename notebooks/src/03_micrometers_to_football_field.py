@@ -2,30 +2,32 @@
 # # From Micrometres to a Football Field: Scaling, Stacking, and 3D Printing a Crystal
 #
 # A real AFM scan of a crystal is only a few **micrometres** wide — millionths of a
-# metre. That is about 20 times thinner than a human hair. In this notebook you blow
+# metre. A typical human hair is roughly 50–100 µm across, so a scan like that is
+# roughly one-tenth to one-twentieth the width of a hair. In this notebook you blow
 # a real scan up to the size of a football field, count atomic layers from a measured
-# step height, build a honeycomb lattice, shrink a cube down to nanometre size, and
-# 3D print your own crystal.
+# step height, and 3D print your own crystal. An Extension section goes further into
+# hexagon geometry and surface-area-to-volume scaling.
 #
 # **What you'll do**
 # - Compute a scale factor big enough to turn a microscopic scan into a football field,
-#   and use it to predict how thick one atomic layer would look at that size.
+#   and use it to predict how thick one layer would look at that size.
 # - Measure a real step height in a crystal surface and turn it into a layer count.
-# - Build a hexagonal lattice, compute its unit-cell area, and estimate how many unit
-#   cells fit on a fingernail.
-# - Shrink a cube from 1 cm to 1 nm and watch its surface-area-to-volume ratio explode.
 # - Export a real AFM scan as a 3D-printable STL file and download it.
+# - *(Extension)* Build a hexagonal lattice, compute its unit-cell area, and shrink a
+#   cube to see its surface-area-to-volume ratio explode.
 #
-# **Time:** about 45–50 minutes.
+# **Time:** the Core path (scale factor, layer counting, 3D print, exit ticket) is about
+# 45 minutes. The Extension section adds about 20–25 minutes for a second class period
+# or homework.
 #
 # ### Materials science words
 # | Word | Meaning |
 # |---|---|
 # | **Scale factor** | How many times bigger (or smaller) a model is than the real thing. |
-# | **Monolayer / layer** | One atom-thick (or few-atom-thick) sheet of a crystal. |
+# | **Monolayer / layer** | One repeating layer of a crystal — it may hold several atomic planes bonded together (a MoS₂ monolayer is S–Mo–S, about 0.65 nm thick), not just one atom. |
 # | **Terrace / step** | A flat "stair tread" on a crystal surface, one or more layers tall. |
 # | **Unit cell** | The smallest repeating tile that, copied over and over, builds the whole crystal surface. |
-# | **Lattice constant (a)** | The side length of that repeating tile, usually in nanometres. |
+# | **Lattice constant (a)** | The repeat distance between neighbouring atoms of the same kind, usually in nanometres. |
 # | **Hexagonal / honeycomb lattice** | A repeating pattern of six-sided cells, like chicken wire. |
 # | **Surface-area-to-volume ratio** | How much outside surface an object has compared to how much "stuff" is inside it. |
 # | **STL file** | A 3D file format that describes an object's shape as a mesh of triangles, ready to 3D print. |
@@ -74,8 +76,10 @@ print("✅ Data ready:", sorted(os.listdir("camel-2dcc"))[:6], "...")
 # %% [markdown]
 # ## Meet your crystal
 # `mos2_film` is a 5 µm × 5 µm AFM scan of molybdenum disulfide (MoS₂), a semiconductor
-# only one atom-layer thick when peeled down to its thinnest form. This whole scan —
-# every hill and valley you see below — is about the width of a fine human hair.
+# whose thinnest form is one repeating layer — S–Mo–S, about 0.65 nm thick, not a single
+# atomic plane. A typical human hair is roughly 50–100 µm across, so this whole 5 µm scan
+# — every hill and valley you see below — is only about one-tenth to one-twentieth the
+# width of a hair.
 
 # %%
 import numpy as np
@@ -140,14 +144,17 @@ print(f"Scaled up by {scale_factor:.3g}×, that layer would be {layer_scaled_m *
 # > **Scientist's note:** Horizontal scale (width) and vertical scale (height) don't have
 # > to use the same factor in a 3D model or plot — but when you *do* use the same factor
 # > for both, as we just did, comparisons like "as thick as a phone" are fair. Watch for
-# > this again in Part 5, where the 3D print deliberately uses different factors.
+# > this again in Part 3, where the 3D print deliberately uses different factors.
 
 # %% [markdown]
 # ## Part 2 — Counting atomic layers from a measured step
 # ### Task 4 (Core) — HSA.CED.A.1–4
-# `triangle_pyramids` is a scan of bismuth selenide (Bi₂Se₃), a topological insulator
-# that grows as stacked triangular "steps," each one quintuple layer (five atomic
-# sheets bonded together) tall. Explore the surface, then look at a line profile.
+# `triangle_pyramids` is a scan of bismuth selenide (Bi₂Se₃), a topological insulator that
+# often grows with triangular terraces. Steps between terraces are frequently close to one
+# (or several) quintuple layers — five atomic sheets bonded together, about 0.95 nm — tall,
+# but a real AFM image can also show multi-layer steps, overlapping terraces, or artifacts.
+# Explore the surface, then look at a line profile and check whether the edge you measure
+# is consistent with one quintuple layer.
 
 # %%
 surface_3d(scans["triangle_pyramids"], exaggeration=8).show()
@@ -178,12 +185,9 @@ print(f"Terrace A (blue): {terrace_a_nm:.2f} nm")
 print(f"Terrace B (orange): {terrace_b_nm:.2f} nm")
 
 # %% [markdown]
-# Now measure the step: subtract the two terrace heights (use the values printed above).
+# Now measure the step: subtract the two terrace heights returned by the helper above.
 
 # %%
-terrace_a_nm = 0.99     # <-- change me: copy the "Terrace A" value printed above
-terrace_b_nm = -0.08    # <-- change me: copy the "Terrace B" value printed above
-
 step_height_nm = abs(terrace_a_nm - terrace_b_nm)
 print(f"Measured step height: {step_height_nm:.2f} nm")
 
@@ -207,14 +211,25 @@ print(f"{step_height_nm:.2f} nm ÷ {bi2se3_thickness_nm} nm/layer = {layers_raw:
 # > rounded that way, rather than reporting extra decimal places you can't actually justify.
 
 # %% [markdown]
-# ### Task 6 (Explore) — is one step typical, or lucky?
-# One measurement could be an outlier. The helper below scans **hundreds** of clean step
-# edges across the whole `triangle_pyramids` image and reports the spread for steps that
-# look like a single layer.
+# ### Task 6 (Explore) — how many windows in the scan look like one layer?
+# One measurement could be an outlier or a lucky pick. The helper below slides a window
+# across every row of the whole `triangle_pyramids` image and counts how many overlapping
+# window positions have a step in a range consistent with "about one layer."
 
 # %%
 # @title Helper code (just run this)
-def survey_step_heights(scan, window=10, noise_max=0.15, layer_min=0.5, layer_max=1.5):
+def survey_step_windows(scan, window=10, noise_max=0.15, layer_min=0.5, layer_max=1.5):
+    """Slide a window across the scan and flag positions whose step falls in
+    [layer_min, layer_max] nm.
+
+    This is NOT a count of independent step edges: the window slides 2 pixels
+    at a time, so nearby positions (and nearby rows) re-detect the same
+    physical step many times over. The [layer_min, layer_max] range is also
+    centred close to the expected ~0.95 nm single-layer height on purpose --
+    it's a sanity filter, not a neutral one, so the median below shouldn't be
+    read as independent proof that steps are 0.95 nm. It mostly confirms the
+    filter did what it was built to do.
+    """
     z = scan.z
     n = z.shape[0]
     steps = []
@@ -228,15 +243,20 @@ def survey_step_heights(scan, window=10, noise_max=0.15, layer_min=0.5, layer_ma
                 steps.append(step)
     return np.array(steps)
 
-single_layer_steps = survey_step_heights(scans["triangle_pyramids"])
-print(f"Found {len(single_layer_steps)} single-layer-like step edges across the scan.")
-print(f"Median: {np.median(single_layer_steps):.2f} nm   "
-      f"Middle 50% range: {np.percentile(single_layer_steps, 25):.2f}–{np.percentile(single_layer_steps, 75):.2f} nm")
-print(f"Compare to the reference value for Bi2Se3: {bi2se3_thickness_nm} nm/layer")
+qualifying_windows = survey_step_windows(scans["triangle_pyramids"])
+print(f"Found {len(qualifying_windows)} qualifying windows under this rule "
+      f"(overlapping window positions, not independent step edges).")
+print(f"Median: {np.median(qualifying_windows):.2f} nm   "
+      f"Middle 50% range: {np.percentile(qualifying_windows, 25):.2f}"
+      f"–{np.percentile(qualifying_windows, 75):.2f} nm")
+print(f"Reference value for Bi2Se3: {bi2se3_thickness_nm} nm/layer "
+      f"(the filter's [0.5, 1.5] nm window was chosen close to this value on purpose, "
+      f"so close agreement here is partly built in, not independent confirmation)")
 
 # %% [markdown]
-# **Your answer:** Was your single measurement in Task 4 close to the whole-scan median,
-# or off to one side? What might explain the difference?
+# **Your answer:** Was your single measurement in Task 4 close to this median, or off to
+# one side? Given that these windows overlap and the filter range was chosen close to the
+# expected answer, what would you need to change to get a real, independent step-edge count?
 
 # %% [markdown]
 # ### Task 7 (Explore) — a linear function for stack thickness
@@ -257,110 +277,8 @@ plt.grid(alpha=0.3)
 plt.show()
 
 # %% [markdown]
-# ## Part 3 — Hexagon geometry: the honeycomb lattice
-# ### Task 8 (Core) — HSG.MG.A.1–3
-# Many 2D crystals, including MoS₂, arrange their atoms in a hexagonal (honeycomb)
-# pattern when viewed from above. Run the helper cell to draw one.
-
-# %%
-# @title Helper code (just run this)
-def draw_honeycomb(a_nm=0.316, n_rows=3, n_cols=3):
-    dx, dy = 1.5 * a_nm, np.sqrt(3) * a_nm
-    fig, ax = plt.subplots(figsize=(6, 6))
-    metal_pts, chalc_pts = [], []
-    for row in range(n_rows):
-        for col in range(n_cols):
-            cx = col * dx
-            cy = row * dy + (dy / 2 if col % 2 else 0)
-            verts = [(cx + a_nm * np.sin(k * np.pi / 3), cy + a_nm * np.cos(k * np.pi / 3)) for k in range(6)]
-            ax.add_patch(plt.Polygon(verts, closed=True, facecolor="none", edgecolor="0.6", linewidth=1))
-            for k, (vx, vy) in enumerate(verts):
-                (metal_pts if k % 2 == 0 else chalc_pts).append((vx, vy))
-    metal_pts, chalc_pts = np.array(metal_pts), np.array(chalc_pts)
-    ax.scatter(*metal_pts.T, s=80, color="#2b6cb0", label="metal atom (e.g. Mo)", zorder=3)
-    ax.scatter(*chalc_pts.T, s=50, color="#dd6b20", label="chalcogen atom (e.g. S)", zorder=3)
-    ax.set_aspect("equal")
-    ax.axis("off")
-    ax.legend(loc="upper right", fontsize=9)
-    ax.set_title(f"Top-down honeycomb lattice, a = {a_nm} nm")
-    plt.tight_layout()
-    plt.show()
-
-draw_honeycomb()
-
-# %% [markdown]
-# > **Scientist's note:** A real TMD like MoS₂ is *not* a sheet of identical dots. Each
-# > 2D unit cell holds **two kinds of atoms** — one metal atom (Mo, W, ...) and two
-# > chalcogen atoms (S, Se, ...) — sitting at different heights, not just different spots
-# > on one flat honeycomb. The picture above is a simplified top-down model, useful for
-# > the geometry ahead, not a literal atom-for-atom photograph.
-
-# %% [markdown]
-# The area of one 2D unit cell of a hexagonal lattice with lattice constant `a` is
-# `area = (√3 / 2) × a²`. Look up MoS₂'s lattice constant from `materials_reference`.
-
-# %%
-mos2_a_nm = materials.loc[materials.material == "MoS2", "lattice_constant_nm"].iloc[0]
-cell_area_nm2 = (np.sqrt(3) / 2) * mos2_a_nm ** 2
-print(f"MoS2 lattice constant a = {mos2_a_nm} nm")
-print(f"Unit cell area = {cell_area_nm2:.4f} nm²")
-
-# %% [markdown]
-# ### Task 9 (Explore) — unit cells on a fingernail
-# A fingernail is roughly 1 cm² — that's 1×10¹⁴ nm². How many MoS₂ unit cells fit on it?
-
-# %%
-fingernail_area_nm2 = 1e14   # 1 cm^2 in nm^2 -- <-- change me to try a different area (e.g. a grain of rice)
-
-cells_on_fingernail = fingernail_area_nm2 / cell_area_nm2
-print(f"About {cells_on_fingernail:.2e} unit cells fit on a 1 cm² fingernail.")
-
-# %% [markdown]
-# ### Task 10 (Extend) — atoms, not just cells
-# Each MoS₂ unit cell holds 1 Mo atom and 2 S atoms (3 atoms total). How many atoms is that?
-
-# %%
-atoms_per_cell = 3   # <-- change me if you pick a different material's formula
-atoms_on_fingernail = cells_on_fingernail * atoms_per_cell
-print(f"About {atoms_on_fingernail:.2e} atoms on that fingernail.")
-
-# %% [markdown]
-# ## Part 4 — Surface-area-to-volume: why nanomaterials are "all surface"
-# ### Task 11 (Core) — HSG.MG.A.1–3
-# Shrink a cube from 1 cm down to 1 nm. For a cube of side `s`, surface area is `6s²` and
-# volume is `s³`, so the surface-area-to-volume ratio simplifies to `6/s`.
-
-# %%
-sides_m = np.array([1e-2, 1e-3, 1e-4, 1e-5, 1e-6, 1e-7, 1e-8, 1e-9])   # 1 cm down to 1 nm
-side_labels = ["1 cm", "1 mm", "100 µm", "10 µm", "1 µm", "100 nm", "10 nm", "1 nm"]
-
-sa_to_v = 6 / sides_m   # units: 1/m
-cube_table = pd.DataFrame({"side": side_labels, "side (m)": sides_m, "SA:V (1/m)": sa_to_v})
-print(cube_table)
-
-plt.plot(sides_m, sa_to_v, marker="o", color="tab:green")
-plt.xscale("log")
-plt.yscale("log")
-plt.xlabel("cube side (m, log scale)")
-plt.ylabel("surface-area-to-volume ratio (1/m, log scale)")
-plt.title("Shrinking a cube: SA:V ratio = 6 / side")
-plt.grid(alpha=0.3, which="both")
-plt.show()
-
-# %% [markdown]
-# **Your answer:** As the cube shrinks from 1 cm to 1 nm (a factor of 10 million), by what
-# factor does the SA:V ratio grow? Why does that make sense from `6/s`?
-
-# %% [markdown]
-# > **Scientist's note:** A huge surface-area-to-volume ratio is *one* reason
-# > nanomaterials behave differently from bulk material — more atoms sit at or near a
-# > surface, where bonding is different. But it is not the *whole* story: quantum
-# > confinement, electron screening, and interfaces with other materials also shape how
-# > a monolayer behaves. Don't treat SA:V ratio alone as a full explanation.
-
-# %% [markdown]
-# ## Part 5 — 3D print your crystal
-# ### Task 12 (Core / Extend) — HSG.SRT, scale factors
+# ## Part 3 — 3D print your crystal
+# ### Task 8 (Core) — HSG.SRT, scale factors
 # Export the Bi₂Se₃ scan as a 3D-printable STL file. Choose a width and a "relief"
 # height (how tall the tallest bump rises above the base) — the model must stay
 # printable, so keep relief noticeably smaller than width.
@@ -373,22 +291,28 @@ stl_path = to_stl(scans["triangle_pyramids"], "my_crystal.stl", width_mm=width_m
 print(f"Saved {stl_path}")
 
 # %% [markdown]
-# ### Task 13 (Explore) — compare the two scale factors
-# The model is wide (horizontal) exactly as scaled as you chose — but the real surface
-# relief was only a few nanometres tall, and you stretched it to `relief_mm`. Compute
-# both scale factors and compare.
+# ### Task 9 (Explore) — compare the two scale factors
+# The model is wide (horizontal) exactly as scaled as you chose — but the height range
+# that actually gets stretched to `relief_mm` (the 0.5th–99.5th percentile of the scan,
+# the same range `to_stl` uses so a few spike pixels don't set the scale) is only a few
+# nanometres. Compute both scale factors and compare.
 
 # %%
 scan = scans["triangle_pyramids"]
-real_width_mm = scan.scan_um * 1e-3                       # µm -> mm
-real_relief_nm = float(np.ptp(scan.z))                     # tallest bump minus deepest dip, in nm
-real_relief_mm = real_relief_nm * 1e-6                     # nm -> mm
+real_width_mm = scan.scan_um * 1e-3                          # µm -> mm
+stl_lo_nm, stl_hi_nm = stl_height_range_nm(scan)              # range to_stl actually maps to relief_mm
+stl_relief_nm = stl_hi_nm - stl_lo_nm
+stl_relief_mm = stl_relief_nm * 1e-6                          # nm -> mm
+full_range_nm = float(np.ptp(scan.z))                         # full peak-to-peak, for contrast only
 
 horizontal_scale = width_mm / real_width_mm
-vertical_scale = relief_mm / real_relief_mm
+vertical_scale = relief_mm / stl_relief_mm
 vertical_exaggeration = vertical_scale / horizontal_scale
 
-print(f"Real scan: {real_width_mm:.4f} mm wide, {real_relief_mm:.6f} mm of real relief")
+print(f"Real scan: {real_width_mm:.4f} mm wide")
+print(f"Height range mapped to the STL relief (0.5th–99.5th percentile): {stl_relief_nm:.2f} nm "
+      f"({stl_lo_nm:.2f} to {stl_hi_nm:.2f} nm)")
+print(f"For contrast, the scan's full peak-to-peak height range: {full_range_nm:.2f} nm")
 print(f"Horizontal scale factor: {horizontal_scale:.3g}×")
 print(f"Vertical scale factor:   {vertical_scale:.3g}×")
 print(f"Vertical exaggeration (vertical ÷ horizontal): {vertical_exaggeration:.3g}×")
@@ -423,3 +347,132 @@ except ImportError:
 # 3. Two students 3D print the same scan. One uses 5 mm of relief, the other uses
 #    15 mm, with the same width. Whose print has the larger vertical exaggeration, and
 #    why does that matter when comparing the two prints?
+
+# %% [markdown]
+# ---
+# ## 🧩 Extension (second day or homework)
+# Everything above is the full Core lesson — scale factor, layer counting, and your own
+# 3D-printed crystal. The two sections below go deeper into crystal geometry; save them
+# for a second class period or assign them as homework.
+
+# %% [markdown]
+# ## Extension A — Hexagon geometry: the honeycomb lattice
+# ### Task 10 (Core) — HSG.MG.A.1–3
+# Many 2D crystals, including MoS₂, arrange their atoms in a hexagonal (honeycomb)
+# pattern when viewed from above. Run the helper cell to draw one.
+
+# %%
+# @title Helper code (just run this)
+def draw_mos2_lattice(a_nm=0.316, n_cells=3):
+    """Top-down (projected) view of monolayer MoS2's honeycomb lattice.
+
+    Mo atoms sit on a triangular lattice; `a_nm` is the lattice constant -- the
+    repeat distance between neighbouring Mo atoms. Each MoS2 layer is really
+    S-Mo-S (one S plane above the Mo plane, one below); looking straight down,
+    the two S atoms line up, so they're drawn here as one dot, at the centre
+    of alternate Mo-Mo-Mo triangles. That gives a honeycomb pattern whose
+    hexagon SIDE (the projected Mo-S distance) is a/sqrt(3), not a.
+    """
+    a1 = a_nm * np.array([1.0, 0.0])
+    a2 = a_nm * np.array([0.5, np.sqrt(3) / 2])
+    s_offset = (a1 + a2) / 3   # S site: centre of one alternating triangle
+
+    mo_pts = np.array([i * a1 + j * a2 for i in range(-1, n_cells + 1) for j in range(-1, n_cells + 1)])
+    s_pts = mo_pts + s_offset
+
+    bond_nm = a_nm / np.sqrt(3)   # projected Mo-S distance = honeycomb hexagon side
+    fig, ax = plt.subplots(figsize=(6, 6))
+    for s in s_pts:
+        near = mo_pts[np.linalg.norm(mo_pts - s, axis=1) < bond_nm * 1.05]
+        for m in near:
+            ax.plot([s[0], m[0]], [s[1], m[1]], color="0.6", lw=1, zorder=1)
+
+    ax.scatter(*mo_pts.T, s=80, color="#2b6cb0", label="Mo (metal)", zorder=3)
+    ax.scatter(*s_pts.T, s=50, color="#dd6b20", label="S, top + bottom (same spot in projection)", zorder=3)
+
+    # Mark one primitive cell: a rhombus with sides a_nm at 60 degrees, holding
+    # 1 Mo atom + 1 "S2 column" (2 S atoms, top and bottom) -- area = (sqrt(3)/2) a^2.
+    origin = a1 + a2   # an interior Mo site, away from the drawn edge
+    rhombus = [origin, origin + a1, origin + a1 + a2, origin + a2]
+    ax.add_patch(plt.Polygon(rhombus, closed=True, facecolor="#48bb78", alpha=0.3,
+                              edgecolor="#2f855a", linewidth=2, zorder=2,
+                              label="primitive cell (area = √3⁄2 a²)"))
+
+    ax.set_aspect("equal")
+    ax.axis("off")
+    ax.legend(loc="upper right", fontsize=8)
+    ax.set_title(f"MoS2, top-down projection — Mo-Mo lattice constant a = {a_nm} nm")
+    plt.tight_layout()
+    plt.show()
+
+draw_mos2_lattice()
+
+# %% [markdown]
+# > **Scientist's note:** This is a straight-down (projected) view. In real monolayer
+# > MoS₂, the two S atoms actually sit above and below the Mo plane (S–Mo–S), not in the
+# > Mo plane itself — looking straight down, they land on the same spot, which is why
+# > they're drawn as one dot here. The green rhombus is one primitive cell: it holds 1 Mo
+# > atom and 1 S-atom pair (2 S atoms, top and bottom), matching the MoS₂ formula unit.
+
+# %% [markdown]
+# The area of one 2D unit cell of a hexagonal lattice with lattice constant `a` is
+# `area = (√3 / 2) × a²`. Look up MoS₂'s lattice constant from `materials_reference`.
+
+# %%
+mos2_a_nm = materials.loc[materials.material == "MoS2", "lattice_constant_nm"].iloc[0]
+cell_area_nm2 = (np.sqrt(3) / 2) * mos2_a_nm ** 2
+print(f"MoS2 lattice constant a = {mos2_a_nm} nm")
+print(f"Unit cell area = {cell_area_nm2:.4f} nm²")
+
+# %% [markdown]
+# ### Task 11 (Explore) — unit cells on a fingernail
+# A fingernail is roughly 1 cm² — that's 1×10¹⁴ nm². How many MoS₂ unit cells fit on it?
+
+# %%
+fingernail_area_nm2 = 1e14   # 1 cm^2 in nm^2 -- <-- change me to try a different area (e.g. a grain of rice)
+
+cells_on_fingernail = fingernail_area_nm2 / cell_area_nm2
+print(f"About {cells_on_fingernail:.2e} unit cells fit on a 1 cm² fingernail.")
+
+# %% [markdown]
+# ### Task 12 (Extend) — atoms, not just cells
+# Each MoS₂ unit cell holds 1 Mo atom and 2 S atoms (3 atoms total). How many atoms is that?
+
+# %%
+atoms_per_cell = 3   # <-- change me if you pick a different material's formula
+atoms_on_fingernail = cells_on_fingernail * atoms_per_cell
+print(f"About {atoms_on_fingernail:.2e} atoms on that fingernail.")
+
+# %% [markdown]
+# ## Extension B — Surface-area-to-volume: why nanomaterials are "all surface"
+# ### Task 13 (Core) — HSG.MG.A.1–3
+# Shrink a cube from 1 cm down to 1 nm. For a cube of side `s`, surface area is `6s²` and
+# volume is `s³`, so the surface-area-to-volume ratio simplifies to `6/s`.
+
+# %%
+sides_m = np.array([1e-2, 1e-3, 1e-4, 1e-5, 1e-6, 1e-7, 1e-8, 1e-9])   # 1 cm down to 1 nm
+side_labels = ["1 cm", "1 mm", "100 µm", "10 µm", "1 µm", "100 nm", "10 nm", "1 nm"]
+
+sa_to_v = 6 / sides_m   # units: 1/m
+cube_table = pd.DataFrame({"side": side_labels, "side (m)": sides_m, "SA:V (1/m)": sa_to_v})
+print(cube_table)
+
+plt.plot(sides_m, sa_to_v, marker="o", color="tab:green")
+plt.xscale("log")
+plt.yscale("log")
+plt.xlabel("cube side (m, log scale)")
+plt.ylabel("surface-area-to-volume ratio (1/m, log scale)")
+plt.title("Shrinking a cube: SA:V ratio = 6 / side")
+plt.grid(alpha=0.3, which="both")
+plt.show()
+
+# %% [markdown]
+# **Your answer:** As the cube shrinks from 1 cm to 1 nm (a factor of 10 million), by what
+# factor does the SA:V ratio grow? Why does that make sense from `6/s`?
+
+# %% [markdown]
+# > **Scientist's note:** A huge surface-area-to-volume ratio is *one* reason
+# > nanomaterials behave differently from bulk material — more atoms sit at or near a
+# > surface, where bonding is different. But it is not the *whole* story: quantum
+# > confinement, electron screening, and interfaces with other materials also shape how
+# > a monolayer behaves. Don't treat SA:V ratio alone as a full explanation.

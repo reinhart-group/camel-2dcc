@@ -6,52 +6,88 @@
 # This notebook is for **teachers and researchers**, not students. It shows how to reach the real,
 # live database those slices are built from, using a public, read-only key.
 #
+# **⚠️ This will not work on a normal (hosted) Colab runtime.** LiST only answers requests that
+# reach it from inside the Penn State network. A hosted Colab runtime is a computer on Google's
+# infrastructure, not yours — putting *your laptop* on the campus Wi-Fi or GlobalProtect VPN does
+# nothing for a hosted Colab kernel, because your laptop isn't where the request comes from. You
+# need one of the two setups in **Step 1** below before Tasks 1–4 can reach live data. (Every cell
+# still runs without live access — you'll just see friendly "not connected" messages.)
+#
 # **What you'll do**
-# - Set up a LiST API key as a Colab Secret (never typed into the notebook itself).
+# - Get the notebook's *kernel* running somewhere on the Penn State network (Step 1).
+# - Set up a LiST API key as an environment variable or Colab Secret (never typed into the notebook itself).
 # - Use `PublicLiST`, a small read-only client, to list samples, count AFM scans by material, and
 #   fetch one sample's files live.
 # - Download one real `.spm` AFM file and check it against the same scan already in the slice.
 #
-# **Time:** about 20-30 minutes, plus however long it takes to get a key from the project team.
+# **Time:** about 20-30 minutes, plus however long it takes to get a key from the project team and
+# get a PSU-connected Jupyter kernel running.
 #
 # **Terms you'll see**
 # - **LiST:** the 2DCC-MIP's Lifetime Sample Tracking database — the internal system where every
 #   sample, measurement, and file is logged as it's made.
-# - **Published record:** a sample LiST's owners have marked public. The key this notebook uses can
-#   only ever see Published records — nothing private or in-progress.
+# - **Published record:** a sample LiST's owners have marked public. The public key this notebook
+#   uses is intended to see only Published records; Task 1 double-checks that client-side and skips
+#   anything else it's ever handed.
 # - **API key:** a password-like string that identifies who (or what) is asking LiST for data.
 # - **Colab Secret:** Colab's built-in, per-notebook secret storage (🔑 icon in the left sidebar) —
-#   the right place for a key, because it's never saved into the notebook file itself.
-# - **Penn State network / VPN:** LiST only answers requests that start from the Penn State campus
-#   network or Penn State's GlobalProtect VPN. Off-network, every live call below fails to connect
-#   — that's expected, not a bug, and this notebook is built to keep running anyway.
+#   the right place for a key, because it's never saved into the notebook file itself. Only relevant
+#   if you're using Colab as the *editor* — see Step 2.
+# - **Kernel / runtime:** the actual Python process that runs your code. In hosted Colab this is a
+#   Google-operated machine, not your computer — which is exactly why it can't reach LiST.
+# - **Penn State network / VPN:** LiST only answers requests that reach it from a process actually
+#   running on the Penn State campus network, or through Penn State's GlobalProtect VPN. It's the
+#   *kernel's* network location that matters, not your browser's.
 # - **`.spm` file:** the raw file format written by the Bruker/Veeco AFM instruments at the 2DCC.
 # - **Activity / file ID:** LiST's way of organizing a sample's measurements (activities) and the
 #   files attached to each one.
 
 # %% [markdown]
-# ## 🔑 Step 1 — Get a LiST API key
-# The public read-only key is **not something you generate yourself** — it comes from the 2DCC-MIP
-# project team. Once you have the key text:
+# ## 🌐 Step 1 — Get the kernel onto the Penn State network
+# Do this **before** worrying about the key — it's the part most setups get wrong. Pick one:
 #
-# 1. In Colab, click the **🔑 key icon** in the left sidebar to open **Secrets**.
-# 2. Click **+ Add new secret**.
-# 3. Set **Name** to exactly `LIST_API_KEY`, and paste the key text the project team gave you into
-#    **Value**.
-# 4. Toggle **Notebook access** ON so this notebook is allowed to read it.
-# 5. *(Optional)* If the team gave you a non-default server address, add a second secret named
-#    `LIST_BASE_URL` the same way.
+# **Option A — Local Jupyter (simplest).** Run this notebook's `.ipynb` file directly in Jupyter
+# installed *on a Penn State-connected computer* (on campus Wi-Fi, or off-campus through
+# GlobalProtect VPN). Nothing else to configure — the kernel and the network are the same machine.
 #
-# **Never** paste the key text into a code cell, a markdown cell, or any file you might save or
-# share — that defeats the point of using Secrets. This notebook never displays the key itself,
-# only whether it worked.
+# **Option B — Colab's editor, a local runtime.** If you want Colab's interface specifically, keep
+# using it as the *editor*, but point it at a Jupyter server running on your PSU-connected computer
+# instead of Google's hosted kernel:
+#
+# 1. On the PSU-connected computer: `pip install jupyter`
+# 2. Start a server that allows Colab's origin:
+#    `jupyter notebook --NotebookApp.allow_origin='https://colab.research.google.com' --port=8888`
+# 3. Copy the `http://localhost:8888/?token=...` URL it prints.
+# 4. In Colab: click the **Connect ▾** menu (top right) → **Connect to a local runtime** → paste
+#    the URL → **Connect**.
+#
+# Either way, if the *kernel* isn't on the Penn State network, every live call below prints a short
+# friendly message instead of data — that's expected, not a bug, and it's why classroom notebooks
+# 01–05 ship an offline slice instead of depending on this. Every cell here is written so the
+# notebook finishes top-to-bottom whether or not you're connected.
 
 # %% [markdown]
-# ## 🌐 Step 2 — The network requirement
-# LiST only answers from the Penn State campus network or the GlobalProtect VPN. If you're running
-# this at home, at a conference, or on a school network, every live call below will print a short
-# friendly message instead of data — that's why classroom notebooks 01–05 use the offline slice
-# instead. Every cell below is written so the notebook finishes top-to-bottom either way.
+# ## 🔑 Step 2 — Get a LiST API key
+# The public read-only key is **not something you generate yourself** — it comes from the 2DCC-MIP
+# project team. Once you have the key text, set it as an environment variable on the machine
+# running the kernel (works for Option A, and for Option B since the local Jupyter server is that
+# machine too):
+#
+# ```
+# export LIST_API_KEY=paste-the-key-text-here
+# ```
+#
+# *(Using hosted Colab as an editor anyway, just to edit this notebook without running the live
+# cells?* You can instead add a Colab Secret: click the **🔑 key icon** in the left sidebar →
+# **+ Add new secret** → Name `LIST_API_KEY`, paste the value, toggle **Notebook access** ON. This
+# only lets *that* notebook read the key — it still won't let a hosted kernel reach LiST; use it
+# only if you're not attempting Tasks 1–4 live.)
+#
+# *(Optional)* If the team gave you a non-default server address, set `LIST_BASE_URL` the same way.
+#
+# **Never** paste the key text into a code cell, a markdown cell, or any file you might save or
+# share — that defeats the point of using an environment variable or Secret. This notebook never
+# displays the key itself, only whether it worked.
 
 # %% [markdown]
 # ## 🔧 Setup (run this first)
@@ -95,9 +131,10 @@ print("✅ Data ready:", sorted(os.listdir("camel-2dcc"))[:6], "...")
 # ## Step 3 — Connect
 # The data slice's `camel_data` package doesn't ship `PublicLiST` (it needs a live key, which the
 # slice deliberately has no route to) — so here it is, copied straight from
-# `src/camel_data/list_public.py` in the CAMEL repo. `get_client()` wraps connecting in a
-# try/except so a failure — missing key, wrong key, or off-network — prints one friendly line
-# instead of a traceback.
+# `src/camel_data/list_public.py` in the CAMEL repo (keep this copy in sync with that file by hand;
+# there's no shared-import mechanism between the repo and a notebook running from an unzipped
+# slice). `get_client()` wraps connecting in a try/except so a failure — missing key, wrong key, or
+# off-network — prints one friendly line instead of a traceback.
 
 # %%
 # @title Helper code (just run this)
@@ -107,18 +144,22 @@ KEY_HEADER = "X-API-KEY"
 
 
 def _api_key() -> str:
-    key = os.environ.get("LIST_API_KEY")
+    missing = RuntimeError(
+        "No LiST key found. Set the LIST_API_KEY environment variable, or in Colab "
+        "add a Secret named LIST_API_KEY (key icon in the left sidebar) and allow "
+        "this notebook to use it."
+    )
+    key = (os.environ.get("LIST_API_KEY") or "").strip()
     if key:
         return key
     try:  # Colab Secrets
         from google.colab import userdata  # type: ignore
-        return userdata.get("LIST_API_KEY")
+        key = (userdata.get("LIST_API_KEY") or "").strip()
     except Exception as exc:  # noqa: BLE001 — re-raised with a clear message
-        raise RuntimeError(
-            "No LiST key found. Set the LIST_API_KEY environment variable, or in Colab "
-            "add a Secret named LIST_API_KEY (key icon in the left sidebar) and allow "
-            "this notebook to use it."
-        ) from exc
+        raise missing from exc
+    if not key:
+        raise missing
+    return key
 
 
 class PublicLiST:
@@ -202,11 +243,25 @@ print("Connected." if client is not None else "Not connected — the live cells 
 
 # %% [markdown]
 # ## Task 1 — List samples
-# `PublicLiST.samples()` pages through every Published sample and returns it as a list of dicts.
+# `PublicLiST.samples()` pages through every sample the key can see and returns it as a list of
+# dicts. The public key is *intended* to see only `status == "Published"` records — but that's a
+# server-side promise, not something the client can verify on its own, so we double-check every
+# record before showing it and skip (with a warning) anything that isn't actually Published.
 
 # %%
+def published_only(records, label="samples"):
+    """Keep only status == 'Published' records; warn and drop anything else."""
+    ok = [r for r in records if r.get("status") == "Published"]
+    skipped = len(records) - len(ok)
+    if skipped:
+        print(f"⚠️  Skipped {skipped} {label} whose status was not 'Published' "
+              f"(unexpected for this key — worth reporting to the project team).")
+    return ok
+
+
 live_samples = client and safe_call("Listing samples", client.samples)
 if live_samples is not None:
+    live_samples = published_only(live_samples, "samples")
     print(f"{len(live_samples)} published samples right now.")
     print("Example record keys:", sorted(live_samples[0].keys())[:8], "...")
 
@@ -219,6 +274,7 @@ if live_samples is not None:
 if client is not None:
     afm_live = safe_call("Listing AFM samples", client.afm_samples)
     if afm_live is not None:
+        afm_live = published_only(afm_live, "AFM samples")
         from collections import Counter
         live_counts = Counter(m for s in afm_live for m in (s.get("materials") or []))
         print(f"{len(afm_live)} live AFM samples.")
@@ -280,10 +336,11 @@ if client is not None and sample_files is not None:
 # | File | What it holds |
 # |------|----------------|
 # | `samples.csv` | Every public sample: material, substrate, growth method, measurements, dates, data package, DOI. |
-# | `afm_summary.csv` | One row per AFM scan: scan size, pixels, RMS/average roughness, height range. |
+# | `afm_summary.csv` | One selected AFM height scan per sample (a fixed pick-one-scan rule, not every scan taken): scan size, pixels, RMS/average roughness, height range. |
 # | `afm_small.npz` | Every AFM scan shrunk to 64x64 heights (nm), keyed by sample id. |
 # | `afm_gallery/*.npz` + `gallery.json` | Hand-picked full-resolution height maps used in the notebooks. |
-# | `mbe_recipes.csv` | Step-by-step MBE (molecular beam epitaxy) growth recipes. |
+# | `growth_recipes.csv` | Step-by-step growth recipes (MOCVD and Hybrid MBE): step name, duration, start time, temperature, pressure. |
+# | `growth_summary.csv` | One row per grown sample: total growth time, growth temperature/pressure, joined to AFM roughness when measured. |
 # | `chips_timeline.csv`, `materials_reference.csv`, `superconductors.csv` | Curated context tables — see `SOURCES.md`. |
 # | `stl/*.stl` | 3D-printable AFM surfaces. |
 # | `camel_data/` | The `classroom.py` and `spm.py` helpers the notebooks import (no `list_public.py` — that needs a live key). |
@@ -291,7 +348,19 @@ if client is not None and sample_files is not None:
 
 # %% [markdown]
 # ## Rebuilding or updating a slice
-# This module — `PublicLiST` — is the same route `scripts/build_slice.py` uses to build the ZIP
-# that ships to classrooms. If your school or district needs a refreshed slice (new samples added,
-# a fixed data-entry typo, etc.), that script is the one to re-run — from on the Penn State
-# network, with a key that has the right access, never from inside a shared classroom notebook.
+# Building a slice is a two-stage process, and only the first stage needs `PublicLiST` or the
+# Penn State network:
+#
+# 1. **Network stage — run on a Penn State-connected machine**, in order: `scripts/index_afm_files.py`
+#    (lists every public sample's files), `scripts/build_afm_summary.py` (downloads and measures one
+#    primary AFM scan per sample), `scripts/fetch_recipes.py` (pulls growth recipes), and
+#    `scripts/fetch_gallery_candidates.py` (pulls the hand-picked gallery scans). These are the
+#    scripts that actually use `PublicLiST`, one call at a time, with a key that has the right
+#    access — never run from inside a shared classroom notebook.
+# 2. **Offline assembly — `scripts/build_slice.py`.** This stage touches no network at all; it just
+#    reads the JSON/CSV files the network stage staged under `data/raw/` and `data/curated/`, and
+#    assembles `data/slice/camel-2dcc/` and the `camel-2dcc-v1.zip` that ships to classrooms.
+#
+# If your school or district needs a refreshed slice (new samples added, a fixed data-entry typo,
+# etc.), re-run stage 1 from the Penn State network, then stage 2 locally — `build_slice.py` itself
+# does not go fetch anything new from LiST.

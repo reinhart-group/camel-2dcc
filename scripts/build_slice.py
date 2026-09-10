@@ -33,7 +33,7 @@ OUT = ROOT / "data/slice/camel-2dcc"
 
 DOI_PREFIX = "10."
 CURATED_FILES = ("chips_timeline.csv", "materials_reference.csv", "superconductors.csv", "SOURCES.md")
-PACKAGE_FILES = ("classroom.py", "spm.py")
+PACKAGE_FILES = ("classroom.py", "spm.py", "grains.py")
 
 
 def _package(row: dict) -> tuple[str | None, str | None]:
@@ -238,6 +238,12 @@ def main() -> None:
 
     small = {str(p.stem): np.load(p) for p in sorted((RAW / "afm64").glob("*.npy")) if p.stem in meas}
     np.savez_compressed(OUT / "afm_small.npz", **small)
+
+    # Grain maps and table for notebook 06 (built by scripts/build_grains.py).
+    (OUT / "grains").mkdir()
+    for p in sorted((RAW / "grains").glob("*")):
+        if p.suffix in (".npz", ".csv", ".json"):
+            shutil.copy(p, OUT / "grains" / p.name)
 
     gallery = build_gallery(picks, meas, samples)
     (OUT / "stl").mkdir()

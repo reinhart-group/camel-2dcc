@@ -9,9 +9,9 @@
 #
 # **What you'll do**
 # - Fit an exponential model to 50+ years of real transistor-count data and find its doubling time.
-# - Use ratio and multiplication models to see why atom-thin 2D materials interest chip designers.
-# - Turn a 2D material's band gap into the color of light it can emit, and convert superconductor
-#   temperatures between Kelvin, Celsius, and Fahrenheit.
+# - Use ratio and multiplication models to see why ultra-thin 2D materials interest chip designers.
+# - Turn a 2D material's optical energy into the color of light it can emit, and convert
+#   superconductor temperatures between Kelvin, Celsius, and Fahrenheit.
 #
 # **Time:** about 45-50 minutes.
 #
@@ -20,18 +20,23 @@
 # - **Exponential growth:** growth where the amount is multiplied by the same factor in every equal
 #   time step (as opposed to *adding* the same amount each step, which is linear growth).
 # - **Doubling time:** how long it takes an exponentially growing quantity to multiply by 2.
-# - **Monolayer:** a layer of a material exactly one atom (or one unit cell) thick — as thin as a
-#   material can be and still exist as a solid.
-# - **2D material:** a material that naturally forms in single-atom-thick or few-atom-thick sheets
-#   held together by weak forces, like MoS2 (molybdenum disulfide) or WSe2 (tungsten diselenide).
-# - **Band gap:** the minimum energy needed to free an electron inside a material so it can carry
-#   current or absorb/emit light. Measured in **electron-volts (eV)**.
+# - **Monolayer:** one repeating layer of a material's structure — the thinnest a material can be
+#   and still exist as that solid. A monolayer can hold more than one plane of atoms: a MoS2
+#   monolayer is a three-plane S–Mo–S sandwich, about 0.65 nm thick.
+# - **2D material:** a material that naturally forms in single-layer or few-layer sheets held
+#   together by weak forces, like MoS2 (molybdenum disulfide) or WSe2 (tungsten diselenide).
+# - **Electronic band gap:** the minimum energy needed to free an electron inside a material so it
+#   can carry current. Measured in **electron-volts (eV)**.
+# - **Optical energy:** the energy of the main photon a material absorbs or emits. It's close to,
+#   but not exactly the same as, the electronic band gap, and it shifts with substrate, strain, and
+#   temperature.
 # - **Photon:** a single particle of light. Its energy (eV) sets its **wavelength** (color, in nm) —
 #   higher energy means shorter wavelength.
 # - **Optical fiber:** a hair-thin glass strand that carries data as pulses of infrared light,
 #   used to connect computers inside (and between) data centers.
 # - **Superconductor:** a material that, below a **critical temperature**, carries electric current
-#   with *exactly zero* electrical resistance — no energy wasted as heat.
+#   with *exactly zero* electrical resistance — no energy wasted as heat in the wire itself.
+#   Reaching that critical temperature still takes real cryogenic cooling, which uses energy.
 # - **Electrical resistance:** how much a material "fights" the flow of current; fighting current
 #   wastes energy as heat, the same way rubbing your hands together warms them up.
 
@@ -92,9 +97,11 @@ chips[["year", "chip", "maker", "transistors", "used_for"]]
 # $$N(t) = N_0 \cdot 2^{\,(t - 1971)/d}$$
 #
 # where $N_0 = 2{,}300$ (the 4004's transistor count in 1971) and $d$ is the **doubling time** in
-# years — how many years it takes the count to double. Move the slider until your curve tracks the
-# real chips. Watch both plots: the left one is a normal (linear) y-axis, the right one is a **log**
-# y-axis, where equal steps mean "×10," not "+10."
+# years — how many years it takes the count to double. The static plot below compares two candidate
+# values of $d$ against the real chips; decide which tracks the data better. Watch both plots: the
+# left one is a normal (linear) y-axis, the right one is a **log** y-axis, where equal steps mean
+# "×10," not "+10." If your notebook's interactive widgets are working, the slider further down lets
+# you try any value of $d$.
 
 # %%
 # @title Helper code (just run this)
@@ -105,30 +112,45 @@ import ipywidgets as widgets
 
 BLUE, ORANGE = "#0072B2", "#E69F00"  # colour-blind-safe (Okabe-Ito palette)
 
-def plot_doubling_guess(chips, d):
+def _doubling_figure(chips, ds, colors, title):
     t0, N0 = 1971, 2300
     t_grid = np.linspace(1971, 2026, 200)
-    N_model = N0 * 2 ** ((t_grid - t0) / d)
-
     fig = make_subplots(rows=1, cols=2, subplot_titles=("Linear y-axis", "Log y-axis"))
     for col in (1, 2):
         fig.add_trace(go.Scatter(x=chips.year, y=chips.transistors, mode="markers",
                                   name="real chips", marker=dict(size=9, color=ORANGE),
                                   showlegend=(col == 1)), row=1, col=col)
-        fig.add_trace(go.Scatter(x=t_grid, y=N_model, mode="lines", name=f"your model, d={d:g} yr",
-                                  line=dict(color=BLUE, width=3), showlegend=(col == 1)), row=1, col=col)
+        for d, color in zip(ds, colors):
+            N_model = N0 * 2 ** ((t_grid - t0) / d)
+            fig.add_trace(go.Scatter(x=t_grid, y=N_model, mode="lines", name=f"d = {d:g} yr",
+                                      line=dict(color=color, width=3), showlegend=(col == 1)),
+                          row=1, col=col)
     fig.update_yaxes(type="log", row=1, col=2)
     fig.update_xaxes(title_text="year")
     fig.update_yaxes(title_text="transistors", row=1, col=1)
     fig.update_yaxes(title_text="transistors (log scale)", row=1, col=2)
-    fig.update_layout(height=430, title=f"N(t) = 2300 x 2^((t-1971)/d),  d = {d:g} years",
-                       margin=dict(t=80))
+    fig.update_layout(height=430, title=title, margin=dict(t=80))
     fig.show()
+
+def plot_doubling_static(chips, ds=(2.0, 3.0)):
+    """A static (non-widget) comparison of a couple of candidate doubling times."""
+    colors = [BLUE, "#009E73"]  # colour-blind-safe (Okabe-Ito) blue and green
+    title = "N(t) = 2300 x 2^((t-1971)/d) for d = " + " and ".join(f"{d:g}" for d in ds) + " years"
+    _doubling_figure(chips, ds, colors, title)
+
+def plot_doubling_guess(chips, d):
+    _doubling_figure(chips, [d], [BLUE], f"N(t) = 2300 x 2^((t-1971)/d),  d = {d:g} years")
 
 def explore_doubling(chips):
     widgets.interact(lambda d: plot_doubling_guess(chips, d),
                       d=widgets.FloatSlider(value=3.0, min=0.5, max=6.0, step=0.1,
                                             description="d (years)", continuous_update=False))
+
+# %%
+plot_doubling_static(chips)  # static fallback — works even if interactive widgets don't load
+
+# %% [markdown]
+# **Optional:** if widgets are working in your notebook, try any value of $d$ with the slider below.
 
 # %%
 explore_doubling(chips)
@@ -155,25 +177,52 @@ else:
     print(f"The real fit is about {d_fit:.1f} years; try the slider again with that in mind.")
 
 # %% [markdown]
+# **Selection check:** `chips_timeline.csv` is a hand-picked set of famous chips, not a random or
+# complete series. How much does the fit change if you drop the non-Intel chips?
+
+# %%
+intel_only = chips[chips["maker"] == "Intel"]
+slope_intel, _ = np.polyfit(intel_only["year"].to_numpy(dtype=float) - 1971,
+                            np.log2(intel_only["transistors"].to_numpy(dtype=float)), 1)
+print(f"Doubling time using only the {len(intel_only)} Intel chips: {1 / slope_intel:.2f} years "
+      f"(vs {d_fit:.2f} years using all {len(chips)} hand-picked chips)")
+
+# %% [markdown]
 # > **Scientist's note:** A doubling time near 2 years matches what's usually called "Moore's
 # > law." But Moore's law is an **observed historical trend** from real engineering progress, not a
 # > law of physics like gravity — nothing guarantees it continues. It also only measures transistor
 # > *count*. More transistors is not the same thing as more AI capability: how those transistors are
 # > wired together, how fast data moves between them, and how much energy they use all matter too.
+# >
+# > `chips_timeline.csv` is also a **hand-picked** set of famous chips, not a random or complete
+# > series — it moves from single-die Intel CPUs to Apple phone/laptop chips to NVIDIA AI
+# > accelerators, and the last row (B200) packages **two dies**. That makes $d_\text{fit}$ a
+# > selection-sensitive estimate, not an independent verification of Moore's law — the Intel-only
+# > fit above gives a different number from the same underlying idea.
 
 # %% [markdown]
 # ## Part 2 — Why go atom-thin?
 #
 # A transistor's **channel** is the material current flows through when it's switched on. A
-# thinner channel lets engineers build smaller, more tightly packed switches. Silicon channels are
-# three-dimensional blocks — even the thinnest research silicon channels are only reported down to
-# roughly 5 nm before the transistor becomes hard to switch off cleanly. A single monolayer of MoS2
-# is naturally just 0.65 nm thick and still works as a channel, because a 2D material has no
-# "extra" atoms above or below the working layer.
+# thinner channel lets engineers build smaller, more tightly packed switches — but "thin" can mean
+# several different things that are easy to mix up:
+# - **Channel thickness** — how thick the current-carrying layer itself is (what this section compares).
+# - **Gate length** — how long the switch is along the direction current flows; a separate dimension.
+# - The marketing **"node" name** (like "3 nm") — a naming convention today, not a direct
+#   measurement of any single physical feature.
+# - **Manufacturability** — whether a thin channel can be built, wired up, and mass-produced
+#   reliably at scale, which is a different challenge from how thin a single lab device can be made.
+#
+# For this section we'll use **5 nm** as a deliberately chosen, illustrative silicon channel
+# thickness — not a record. Research silicon channels well under 1 nm have been reported, but "how
+# thin can a lab make silicon" and "how thin is manufacturable at scale" are different questions. A
+# single monolayer of MoS2 is naturally just 0.65 nm thick and still works as a channel, because a
+# 2D material has no "extra" atoms above or below the working layer.
 
 # %% [markdown]
-# ### Task 3 (Core) — Ratio problem
-# How many MoS2 monolayers (0.65 nm each) would it take to match a ~5 nm silicon research channel?
+# ### Task 3 (Core) — Ratio problem (hypothetical)
+# How many MoS2 monolayers (0.65 nm each) would it take to match an illustrative ~5 nm silicon
+# channel? (This is a hypothetical ratio, not a claim about any specific manufactured chip.)
 
 # %%
 si_channel_nm = 5.0      # <-- change me: try other silicon research figures, e.g. 3 or 10
@@ -184,9 +233,11 @@ print(f"{si_channel_nm} nm silicon is about {layers_to_match:.1f} MoS2 monolayer
 print(f"One MoS2 layer is about {si_channel_nm / mos2_layer_nm:.1f}x thinner than that silicon channel.")
 
 # %% [markdown]
-# > **Scientist's note:** "~5 nm" is a rough, order-of-magnitude research figure for illustration —
-# > real silicon transistors use complex 3D fin or wrap-around shapes, not one flat layer, so there
-# > is no single official "silicon channel thickness" to quote precisely.
+# > **Scientist's note:** "~5 nm" is a deliberately chosen illustrative figure, **not** the
+# > thinnest silicon channel ever reported — some research devices have used silicon channels under
+# > 1 nm thick. Real silicon transistors also use complex 3D fin or wrap-around shapes, not one flat
+# > layer, so there is no single official "silicon channel thickness" to quote precisely, and this
+# > ratio task stays a hypothetical comparison, not a claim about any real device's exact dimensions.
 
 # %% [markdown]
 # ### Task 4 (Core) — Stacking as multiplication
@@ -223,19 +274,24 @@ print(f"{stack_layers} stacked layers x {one_layer_devices:,} devices/layer = {t
 #
 # A photon's energy $E$ (eV) and wavelength $\lambda$ (nm) are related by
 # $\lambda = 1240 / E$ — an **inverse proportion**: higher energy, shorter (bluer) wavelength.
-# `materials_reference.csv` lists each monolayer's band gap in eV.
+# `materials_reference.csv` lists each monolayer's **optical energy** in eV — the energy of the
+# main light a single layer absorbs and emits. That's close to, but not exactly the same as, the
+# **electronic band gap** (the energy needed to free a current-carrying electron): light striking a
+# material also has to overcome the attraction between the freed electron and the "hole" it leaves
+# behind. The colour a monolayer shows can also shift with its substrate, strain, and temperature.
 
 # %% [markdown]
 # ### Task 5 (Core)
-# Compute the wavelength for every 2D material that has a listed monolayer band gap.
+# Compute the wavelength for every 2D material that has a listed monolayer optical energy.
 
 # %%
 materials = load_table("materials_reference")
-# band_gap_monolayer_eV == 0 (graphene, a semimetal) is a real value, not a missing one — but a
-# zero gap has no finite wavelength, so it doesn't belong in a "color of light" table.
-glowing = materials[materials["band_gap_monolayer_eV"] > 0].copy()
-glowing["wavelength_nm"] = 1240 / glowing["band_gap_monolayer_eV"]
-glowing[["material", "name", "band_gap_monolayer_eV", "wavelength_nm"]]
+# optical_energy_monolayer_eV is blank for materials with no single meaningful classroom value
+# (including graphene, a semimetal with no gap) — filtering for values greater than 0 keeps only
+# the materials that have a listed optical energy.
+glowing = materials[materials["optical_energy_monolayer_eV"] > 0].copy()
+glowing["wavelength_nm"] = 1240 / glowing["optical_energy_monolayer_eV"]
+glowing[["material", "name", "optical_energy_monolayer_eV", "wavelength_nm"]]
 
 # %%
 # @title Helper code (just run this)
@@ -275,47 +331,50 @@ def plot_spectrum(df):
     for _, row in df.iterrows():
         wl = row["wavelength_nm"]
         ax.axvline(wl, color="black", lw=1.5)
-        ax.text(wl, 1.05, f"{row['material']}\n{row['band_gap_monolayer_eV']:g} eV, {wl:.0f} nm",
+        ax.text(wl, 1.05, f"{row['material']}\n{row['optical_energy_monolayer_eV']:g} eV, {wl:.0f} nm",
                 ha="center", va="bottom", fontsize=9)
     ax.set(xlabel="wavelength (nm)", xlim=(380, 900), ylim=(0, 1))
     ax.set_yticks([])
-    ax.set_title("Color of light matching each monolayer's band gap")
+    ax.set_title("Color of light matching each monolayer's optical energy")
     plt.tight_layout()
     plt.show()
     for _, row in df.iterrows():
-        print(f"{row['material']}: {row['band_gap_monolayer_eV']:g} eV -> {row['wavelength_nm']:.0f} nm "
+        print(f"{row['material']}: {row['optical_energy_monolayer_eV']:g} eV -> {row['wavelength_nm']:.0f} nm "
               f"({color_name(row['wavelength_nm'])})")
 
 # %%
 plot_spectrum(glowing)
 
 # %% [markdown]
-# > **Scientist's note:** This is the color a photon *at exactly the band-gap energy* would be.
-# > Whether a real device actually emits light efficiently at that color depends on defects,
-# > temperature, and device design — a material that can *absorb* photons above its band gap does
-# > not automatically *emit* light well at that same energy (emission and detection are different
-# > processes).
+# > **Scientist's note:** This is the color a photon *at exactly the listed optical energy* would
+# > be. Whether a real device actually emits light efficiently at that color depends on defects,
+# > temperature, and device design — a material that can *absorb* photons above its optical energy
+# > does not automatically *emit* light well at that same energy (emission and detection are
+# > different processes). And remember, optical energy is not the same quantity as the electronic
+# > band gap used to talk about current flow (see the Part 3 intro).
 
 # %% [markdown]
 # ### Task 6 (Explore) — Data-center light
 # AI chips inside (and between) data centers often talk to each other over optical fibers carrying
 # infrared light near 1310 nm and 1550 nm. What photon energies are those, and how do they compare
-# to the monolayer band gaps above?
+# to the monolayer optical energies above?
 
 # %%
 for wl in (1310, 1550):  # <-- change me: try other fiber wavelengths, e.g. 850
     print(f"{wl} nm fiber light carries photons of about {1240 / wl:.2f} eV")
 
-smallest = glowing.loc[glowing["band_gap_monolayer_eV"].idxmin()]
-print(f"\nSmallest monolayer band gap above: {smallest['band_gap_monolayer_eV']:.2f} eV "
+smallest = glowing.loc[glowing["optical_energy_monolayer_eV"].idxmin()]
+print(f"\nSmallest monolayer optical energy above: {smallest['optical_energy_monolayer_eV']:.2f} eV "
       f"({smallest['material']}) — every fiber-light photon here has noticeably less energy than "
-      f"any of these gaps.")
+      f"any of these optical energies.")
 
 # %% [markdown]
-# ## Part 4 — Superconductors and the cold-electricity problem
+# ## Part 4 — Superconductors: zero resistance, but real cooling costs
 #
 # `superconductors.csv` lists **critical temperatures** ($T_c$): below $T_c$, a material carries
-# current with *zero* electrical resistance.
+# current with *zero* electrical resistance. Watch the direction of cause and effect: a
+# superconductor doesn't cool anything — it has to *be* cooled, with real refrigeration equipment
+# that itself uses energy, before it becomes a superconductor.
 
 # %% [markdown]
 # ### Task 7 (Core) — Temperature conversions
@@ -335,19 +394,37 @@ print(f"{temp_K} K = {temp_C:.2f} C = {temp_F:.2f} F")
 sconductors = load_table("superconductors")
 sconductors["critical_temp_C"] = sconductors["critical_temp_K"] - 273.15
 sconductors["critical_temp_F"] = 9 / 5 * sconductors["critical_temp_C"] + 32
-sconductors[["material", "year_discovered", "critical_temp_K", "critical_temp_C", "critical_temp_F"]]
+print("Note: single-layer FeSe on SrTiO3 has no single critical_temp_K — it's stored as a "
+      "tc_low_K-tc_high_K range instead (see the plot below).")
+sconductors[["material", "year_discovered", "critical_temp_K", "tc_low_K", "tc_high_K", "criterion",
+             "critical_temp_C", "critical_temp_F"]]
 
 # %%
 # @title Helper code (just run this)
+PINK = "#CC79A7"  # colour-blind-safe (Okabe-Ito palette)
+
 def plot_tc_history(df):
+    solid = df[df["critical_temp_K"].notna()]
+    ranged = df[df["critical_temp_K"].isna()]  # reported signature given as a range, not a point
+
     fig = go.Figure()
-    fig.add_trace(go.Scatter(x=df["year_discovered"], y=df["critical_temp_K"], mode="markers+text",
-                              text=df["material"], textposition="top center",
-                              marker=dict(size=11, color=ORANGE)))
+    fig.add_trace(go.Scatter(x=solid["year_discovered"], y=solid["critical_temp_K"], mode="markers+text",
+                              text=solid["material"], textposition="top center",
+                              marker=dict(size=11, color=ORANGE, symbol="circle"),
+                              name="zero-resistance Tc"))
+    if len(ranged):
+        mid = (ranged["tc_low_K"] + ranged["tc_high_K"]) / 2
+        fig.add_trace(go.Scatter(
+            x=ranged["year_discovered"], y=mid, mode="markers+text",
+            text=ranged["material"], textposition="bottom center",
+            marker=dict(size=13, color=PINK, symbol="diamond"),
+            error_y=dict(type="data", symmetric=False,
+                        array=ranged["tc_high_K"] - mid, arrayminus=mid - ranged["tc_low_K"]),
+            name="reported signature (range, not a zero-resistance point)"))
     fig.add_hline(y=77, line=dict(color=BLUE, dash="dash"),
                   annotation_text="77 K — liquid nitrogen boils here", annotation_position="bottom right")
     fig.update_layout(xaxis_title="year discovered", yaxis_title="critical temperature (K)",
-                      title="Higher points need less extreme cooling", height=460)
+                      title="Higher points need less extreme cooling to reach Tc", height=460)
     fig.show()
 
 # %%
@@ -360,14 +437,17 @@ plot_tc_history(sconductors)
 surface_3d(gallery["superconductor_blocks"]).show()
 
 # %% [markdown]
-# > **Scientist's note:** The single-layer FeSe/SrTiO3 row's $T_c$ is a *range* — different labs
-# > have reported different onset temperatures for this one-atom-thin film, so treat it as
-# > approximate. Also: superconductors are **not** already wiring together AI data centers today.
-# > Zero-resistance materials are an active research direction for a *possible future* — this data
-# > does not show them in current commercial use.
+# > **Scientist's note:** The single-layer FeSe/SrTiO3 point above is plotted as a **range** (the
+# > diamond marker's error bar spans `tc_low_K` to `tc_high_K`), not one exact number — different
+# > labs have reported different onset temperatures for this one-layer-thin film, and it's a
+# > *reported superconducting signature*, not the same kind of measurement as the other materials'
+# > zero-resistance $T_c$. Also: superconductors are **not** already wiring together AI data centers
+# > today, and they don't cool anything themselves — reaching any of these critical temperatures
+# > takes real cryogenic refrigeration, which uses energy. Cutting resistive losses in select future
+# > wires or magnets is an active research direction, not current commercial use.
 
 # %% [markdown]
-# ### Task 9 (Explore/Extend) — Why zero resistance would matter
+# ### Task 9 (Explore/Extend) — Why zero resistance would matter for one wire
 # A normal wire carrying current $I$ through resistance $R$ wastes power as heat: $P = I^2 R$.
 
 # %%
@@ -376,10 +456,22 @@ resistance_ohm = 0.01
 
 heat_watts = current_A ** 2 * resistance_ohm
 print(f"A normal wire: {current_A} A through {resistance_ohm} ohm wastes {heat_watts:.1f} W as heat.")
-print("The same current through a superconductor (R = 0) wastes 0 W as heat.")
+print("The same current through a superconductor (R = 0) wastes 0 W as heat in the wire itself.")
 
 # %% [markdown]
-# The IEA estimates data centers used about 415 TWh of electricity in 2024 (about 1.5% of world
+# > **Scientist's note:** This is one made-up wire, not a data center. A real superconducting wire
+# > still needs continuous cryogenic cooling (which uses energy), plus contacts, power conversion,
+# > and support equipment that also have losses — so "R = 0 in this wire" does not mean "this system
+# > uses zero energy," and it does not mean AI data centers already use superconductors. Whether
+# > cutting resistive losses in select future wires or magnets would be worth its cooling cost is an
+# > open engineering question this notebook doesn't have the data to answer.
+#
+# ---
+#
+# ### A separate exercise: how big is data-center electricity use?
+# This next part is **unrelated to the superconductor wire above** — it's a scale exercise using
+# real-world numbers, not evidence of any superconductor savings. The IEA estimates data centers
+# used about 415 TWh of electricity in 2024 (about 1.5% of world
 # electricity), projected to reach about 945 TWh by 2030 (see `SOURCES.md`).
 
 # %%
@@ -452,5 +544,6 @@ plt.show()
 #    that after 10 years (how many doublings, and $2$ raised to that power)?
 # 2. Between a 650 nm red photon and an 800 nm near-infrared photon, which one carries **more**
 #    energy? How do you know from $\lambda = 1240/E$ without a calculator?
-# 3. In your own words, why is "more transistors" not automatically "smarter AI," and why can't we
-#    say superconductors are already cooling today's AI data centers?
+# 3. In your own words, why is "more transistors" not automatically "smarter AI," and why is it
+#    wrong to say superconductors "cool" a data center — what do they actually need in order to
+#    work, and what problem might they help with someday?

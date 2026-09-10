@@ -144,13 +144,18 @@ def plot_two_histograms(scan_a, scan_b, label_a=None, label_b=None):
     label_b = label_b or f"{scan_b.title} ({scan_b.material})"
     heights_a, heights_b = scan_a.z.ravel(), scan_b.z.ravel()
 
+    lo = min(heights_a.min(), heights_b.min())
+    hi = max(heights_a.max(), heights_b.max())
+    bin_edges = np.linspace(lo, hi, 41)  # same 40 bins for both scans, so the bars are comparable
+
     fig, ax = plt.subplots(figsize=(8, 5))
-    ax.hist(heights_a, bins=40, alpha=0.6, color=COLOR_A, label=label_a, density=True)
-    ax.hist(heights_b, bins=40, alpha=0.6, color=COLOR_B, label=label_b, density=True)
+    for heights, color, label in ((heights_a, COLOR_A, label_a), (heights_b, COLOR_B, label_b)):
+        ax.hist(heights, bins=bin_edges, weights=np.ones(len(heights)) / len(heights),
+                 alpha=0.6, color=color, label=label)
     for heights, color in ((heights_a, COLOR_A), (heights_b, COLOR_B)):
         ax.axvline(heights.mean(), color=color, ls="--", lw=2)
         ax.axvline(np.median(heights), color=color, ls=":", lw=2)
-    ax.set(xlabel="height (nm)", ylabel="fraction of pixels",
+    ax.set(xlabel="height (nm)", ylabel="fraction of pixels per bin",
            title="Dashed line = mean   Dotted line = median")
     ax.legend()
     plt.tight_layout()
@@ -185,7 +190,10 @@ else:
 # %% [markdown]
 # ## Part 3 — A real table, and the decisions hiding inside it
 #
-# `afm_summary.csv` has one row per real AFM scan — one for (almost) every public 2DCC sample.
+# `afm_summary.csv` has **one selected AFM scan per sample** — for every public 2DCC sample with a
+# usable scan, the data pipeline picked one representative scan by a fixed rule (skip anything an
+# operator marked "modified," then take the largest scan on file). Most samples have several AFM
+# scans; this table is a curated one-per-sample summary, not a census of every scan ever taken.
 # It's authentically messy, on purpose. Two things you'll notice:
 # - The `material` column is sometimes just the **substrate** (`Al2O3`, `Sapphire`) or even a gas
 #   or element (`H2`, `Se`) — meaning that particular scan wasn't of a grown film at all.
@@ -198,20 +206,25 @@ else:
 # %%
 table = load_table("afm_summary")
 
-EXCLUDE_BARE_SUBSTRATES = True   # <-- change me: True or False
-MISSING_GROWTH_METHOD = "drop"   # <-- change me: "drop" or "unknown"
+EXCLUDE_SUBSTRATE_LABELS = True   # <-- change me: True or False
+MISSING_GROWTH_METHOD = "drop"    # <-- change me: "drop" or "unknown"
 
 # %%
 # @title Helper code (just run this)
-BARE_SUBSTRATE_MATERIALS = {"Al2O3", "Sapphire", "GaAs", "H2", "Se"}
+# This is a *classroom heuristic*, not a physical fact: it's a short list of `material` labels that
+# usually mean the selected scan imaged bare substrate or a leftover gas/element rather than a grown
+# film — going only by whatever label a scientist typed into that one column. It doesn't prove what
+# the AFM tip actually scanned, and a couple of these labels (GaAs, Se) can also be a real film's
+# material on some samples.
+SUBSTRATE_HEURISTIC_LABELS = {"Al2O3", "Sapphire", "GaAs", "H2", "Se"}
 
-def clean_afm_summary(raw_table, exclude_bare_substrates=True, missing_growth_method="drop"):
+def clean_afm_summary(raw_table, exclude_substrate_labels=True, missing_growth_method="drop"):
     """Apply the two cleaning decisions above and report how many rows survive."""
     n_start = len(raw_table)
     df = raw_table[raw_table["material"].notna()].copy()
 
-    if exclude_bare_substrates:
-        df = df[~df["material"].isin(BARE_SUBSTRATE_MATERIALS)]
+    if exclude_substrate_labels:
+        df = df[~df["material"].isin(SUBSTRATE_HEURISTIC_LABELS)]
 
     if missing_growth_method == "drop":
         df = df[df["growth_method"].notna()]
@@ -227,11 +240,11 @@ def clean_afm_summary(raw_table, exclude_bare_substrates=True, missing_growth_me
     return df
 
 # %%
-clean = clean_afm_summary(table, EXCLUDE_BARE_SUBSTRATES, MISSING_GROWTH_METHOD)
+clean = clean_afm_summary(table, EXCLUDE_SUBSTRATE_LABELS, MISSING_GROWTH_METHOD)
 
 # %% [markdown]
 # ### Task 3b (Explore)
-# Go back two cells up, flip **one** variable at a time (`EXCLUDE_BARE_SUBSTRATES` or
+# Go back two cells up, flip **one** variable at a time (`EXCLUDE_SUBSTRATE_LABELS` or
 # `MISSING_GROWTH_METHOD`), and rerun both cells.
 #
 # **Your answer:** Did the row count change a little or a lot? Did the median roughness change a
@@ -258,24 +271,36 @@ my_guess_material = "MoS2"  # <-- change me: your prediction
 # @title Helper code (just run this)
 PALETTE = ["#0072B2", "#E69F00", "#009E73", "#D55E00", "#CC79A7", "#56B4E9", "#F0E442"]
 
-def plot_box_by(df, group_col, value_col="rms_roughness_nm", top_n=6, log_scale=False):
-    """Box plot of value_col grouped by group_col, for the top_n most common groups."""
+def plot_box_by(df, group_col, value_col="rms_roughness_nm", top_n=6, log_scale=False, min_n=10):
+    """Box plot of value_col grouped by group_col, for the top_n most common groups.
+
+    Groups with fewer than min_n scans are still drawn (nothing is hidden) but greyed out and
+    marked with a `*` — a box plot built from a handful of points has unstable quartiles and
+    whiskers, so it isn't a fair comparison against a group built from hundreds of scans.
+    """
     counts = df[group_col].value_counts()
     groups = counts.nlargest(top_n).index.tolist()
     groups = sorted(groups, key=lambda g: df.loc[df[group_col] == g, value_col].median())
     data = [df.loc[df[group_col] == g, value_col].dropna().values for g in groups]
+    tiny = [g for g in groups if counts[g] < min_n]
 
     fig, ax = plt.subplots(figsize=(8, 5))
     bp = ax.boxplot(data, patch_artist=True)
     ax.set_xticks(range(1, len(groups) + 1))
-    ax.set_xticklabels([f"{g}\n(n={counts[g]})" for g in groups])
-    for patch, color in zip(bp["boxes"], (PALETTE * 2)):
-        patch.set_facecolor(color)
-        patch.set_alpha(0.7)
+    ax.set_xticklabels([f"{g}{' *' if g in tiny else ''}\n(n={counts[g]})" for g in groups])
+    for patch, g, color in zip(bp["boxes"], groups, (PALETTE * 2)):
+        if g in tiny:
+            patch.set_facecolor("#BBBBBB")
+            patch.set_alpha(0.5)
+            patch.set_hatch("//")
+        else:
+            patch.set_facecolor(color)
+            patch.set_alpha(0.7)
     if log_scale:
         ax.set_yscale("log")
     ax.set(ylabel=f"RMS roughness, nm ({'log scale' if log_scale else 'linear scale'})",
-           title=f"RMS roughness by {group_col}")
+           title=f"RMS roughness by {group_col}" + ("   (* = fewer than "
+                 f"{min_n} scans — too few for a stable box)" if tiny else ""))
     ax.grid(alpha=0.3, axis="y")
     plt.tight_layout()
     plt.show()
@@ -286,8 +311,9 @@ def plot_box_by(df, group_col, value_col="rms_roughness_nm", top_n=6, log_scale=
         iqr = q3 - q1
         lo, hi = q1 - 1.5 * iqr, q3 + 1.5 * iqr
         n_out = int(((vals < lo) | (vals > hi)).sum())
+        flag = "  <- fewer than {} scans; exclude from the core comparison".format(min_n) if g in tiny else ""
         print(f"{g}: n={len(vals)}, median={vals.median():.3f} nm, IQR={iqr:.3f} nm, "
-              f"outliers (1.5xIQR rule)={n_out}")
+              f"outliers (1.5xIQR rule)={n_out} ({n_out / len(vals):.1%}){flag}")
 
 # %%
 LOG_SCALE = False  # <-- change me: try True — roughness spans orders of magnitude
@@ -306,14 +332,18 @@ else:
 
 # %% [markdown]
 # ### Task 4b (Core)
-# Now compare by growth method instead of material.
+# Now compare by growth method instead of material. One group (`MBE`) usually has only a handful of
+# scans — it'll show up greyed out with a `*`, because comparing a 3-point box to a 700-point box
+# isn't fair. Focus your comparison on the two solid-colored boxes.
 
 # %%
 plot_box_by(clean, "growth_method", top_n=6, log_scale=LOG_SCALE)
 
 # %% [markdown]
-# **Your answer:** Which growth method's box is lowest (smoothest typical film)? Does that group
-# have more or fewer outliers than the others?
+# **Your answer:** Between the two groups with enough scans to trust, which growth method's box is
+# lowest (smoothest typical film)? Using the *fraction* of outliers (not just the raw count — the
+# groups are very different sizes), does that group have a higher or lower outlier rate than the
+# other?
 #
 # _(write your answer here)_
 

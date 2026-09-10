@@ -98,11 +98,15 @@ def surface_3d(scan: AFMScan, exaggeration: float = 1.0, colorscale: str = "Viri
     # Keep x and y true to scale; stretch z by the exaggeration factor.
     z_span = max(float(np.ptp(z)), 1e-9)
     xy_span = scan.scan_um * 1000
+    # Plotly boxes get unreadable if the height axis is more than 3x the width,
+    # so the stretch is capped; the title reports the stretch actually drawn.
+    z_box = min(exaggeration * z_span / xy_span, 3.0)
+    shown = z_box * xy_span / z_span
+    note = "" if shown >= exaggeration * 0.999 else f" (capped from ×{exaggeration:g})"
     fig.update_layout(
-        title=f"{scan.title} — {scan.scan_um:g} µm × {scan.scan_um:g} µm, heights ×{exaggeration:g}",
+        title=f"{scan.title} — {scan.scan_um:g} µm × {scan.scan_um:g} µm, heights ×{shown:.0f}{note}",
         scene=dict(xaxis_title="x (nm)", yaxis_title="y (nm)", zaxis_title="height (nm)",
-                   aspectmode="manual",
-                   aspectratio=dict(x=1, y=1, z=min(exaggeration * z_span / xy_span, 3.0))),
+                   aspectmode="manual", aspectratio=dict(x=1, y=1, z=z_box)),
         height=600, margin=dict(l=0, r=0, t=50, b=0),
     )
     return fig

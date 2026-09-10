@@ -5,26 +5,32 @@
 # a furnace or a vacuum chamber. Every real crystal grown at Penn State's 2D Crystal Consortium
 # (2DCC) follows a written **recipe**: an exact sequence of steps, each with a duration,
 # temperature, and pressure. Two very different kitchens show up in this notebook:
-# - **MOCVD** (metal-organic chemical vapor deposition): reactive gases flow over a hot sapphire
-#   wafer, around 1000 °C, and react to leave a crystal behind, layer by layer.
-# - **Hybrid MBE** (molecular beam epitaxy): beams of atoms are aimed at a wafer inside an
-#   **ultra-high vacuum** chamber — so empty that atoms fly in a straight line without bumping
-#   into air molecules first.
+# - **MOCVD** (metal-organic chemical vapor deposition): gaseous metal-organic and chalcogen
+#   precursors react on a heated substrate, and can build up one- or few-layer films. *This*
+#   recipe's setpoint happens to be 1000 °C — that's a choice for this material, not a rule for
+#   every MOCVD recipe.
+# - **Hybrid MBE** (molecular beam epitaxy): controlled beams of atoms or molecules, aimed at a
+#   wafer inside a high- or ultra-high-vacuum chamber — so empty that the beams travel in a
+#   straight line without bumping into air molecules first — sometimes combined with a precursor
+#   gas (that's the "hybrid" part).
 #
-# In this notebook you'll turn one real MOCVD recipe into a **piecewise graph**, find the slope of
-# its temperature ramp, and use that slope to make a prediction. Then you'll see why a blank cell
-# in a data table is dangerous to guess at, and use real pressure numbers to see just how
-# different "empty" is between a MOCVD chamber and an MBE chamber.
+# In this notebook you'll turn one real MOCVD recipe into a **piecewise graph**, build a
+# hypothetical linear model of its temperature ramp, and use that model to make a conditional
+# prediction. Then you'll see why a blank cell in a data table is dangerous to guess at, and use
+# real pressure numbers to see just how different "empty" is between a MOCVD chamber and an MBE
+# chamber.
 #
 # **What you'll do**
 # - Turn a table of recipe steps into cumulative time, then into a piecewise temperature-vs-time
-#   graph, and find the ramp's average rate of change (°C/min).
+#   graph, and find the slope of a *hypothetical* linear model of the ramp (°C/min).
 # - Convert 1000 °C between Celsius, Kelvin, and Fahrenheit, and compare pressures that span
 #   *eleven* orders of magnitude using scientific notation.
-# - Use a slider to explore any real MoS2 recipe, then look honestly at whether growth time
-#   predicts film roughness across ~300 real samples.
+# - Use a dropdown to explore a few contrasting real MoS2 recipes, then look honestly at whether
+#   growth time predicts film roughness across ~300 real samples.
 #
-# **Time:** about 45–50 minutes.
+# **Time:** Tasks 1–5 (**Core**) take about 30 minutes and fit a 45-minute period with the exit
+# ticket. Tasks 6–8 (**Explore**/**Extend**) are optional — use them for early finishers, or as
+# homework, if time allows.
 #
 # **Materials science words**
 # - **MOCVD / Hybrid MBE:** two different "recipes" for growing a 2D crystal — see above.
@@ -33,8 +39,8 @@
 # - **Setpoint:** the temperature or pressure the furnace is *told* to hold. It is not necessarily
 #   the exact value the sample itself experiences — the recipe records the setpoint, not a direct
 #   measurement of the crystal.
-# - **Anneal:** holding a material at a steady high temperature for a while, without adding new
-#   atoms, so its structure can settle.
+# - **Anneal:** a heat-treatment step with no intended net deposition — holding a material at a
+#   steady high temperature so its structure can settle, without the recipe aiming to add atoms.
 # - **Ramp:** a step where a controlled variable (like temperature) changes steadily from one
 #   value to another.
 # - **Piecewise function:** a function built from different rules over different intervals — like
@@ -97,8 +103,10 @@ gallery = load_gallery()
 surface_3d(gallery["mos2_film"], exaggeration=30).show()
 
 # %% [markdown]
-# Every bump and terrace on that surface is a consequence of the recipe you're about to graph.
-# Let's read it.
+# The recipe you're about to graph shaped this surface — but it isn't the only thing that did.
+# The substrate underneath, how the sample was handled and stored, its environment, and even how
+# the AFM measurement itself was processed all leave a mark too. This notebook follows one
+# possible connection (the recipe); it doesn't claim every bump has a recipe cause. Let's read it.
 #
 # ## Part 2 — The recipe as data
 # `growth_recipes` has one row per real step from the 2DCC recipe database: how long the step
@@ -191,40 +199,61 @@ plot_timeline(xs, ys, title=f"Sample {SAMPLE_ID} — temperature vs. cumulative 
 # ### Task 2 (Core)
 # Look at the recipe table from Part 2 and the graph above.
 #
-# **Your answer:** Which step is the ramp? What are its start and end time (minutes), and its
-# start and end temperature (°C)? (We don't have a *measured* starting temperature for the ramp —
-# the recipe's first row is already at 1000 °C. We're assuming it starts at room temperature,
-# about 25 °C, since that's how a furnace begins its day. State that assumption in your answer.)
+# **Your answer:** Which step is the ramp? What are its start and end time (minutes), and its end
+# temperature (°C)? (We don't have a *measured* starting temperature for the ramp — the recipe's
+# first row is already at 1000 °C. For Task 3, we'll build a hypothetical model that *assumes* it
+# starts at room temperature, about 25 °C, since that's how a furnace often begins its day. State
+# that assumption in your answer, and note that it's an assumption, not a measurement.)
 #
 # _(write your answer here)_
 
 # %% [markdown]
-# ### Task 3 (Core) — The ramp as a linear function
-# The ramp is a straight line: `temperature = ROOM_TEMP_C + slope × time`. Find its slope (the
-# average rate of change, in °C per minute), then use the line to predict when the furnace
-# crosses 500 °C.
+# ### Task 3 (Core) — A hypothetical linear model of the ramp
+# We don't have a measured starting temperature, so **if the ramp were linear and started at
+# 25 °C**, it would follow `temperature = ROOM_TEMP_C + slope × time`. Find the slope this
+# hypothetical model implies (°C per minute), then use the model to estimate when the furnace
+# would cross 500 °C. Both numbers are *conditional on the 25 °C assumption* — not measurements.
 
 # %%
 ramp = recipe[recipe["step"].str.contains("ramp", case=False)].iloc[0]  # <-- change me if you like
 slope = (ramp["temperature_C"] - ROOM_TEMP_C) / ramp["duration_min"]
 print(f"ramp: {ramp['step']!r}, {ramp['duration_min']:g} min, "
-      f"{ROOM_TEMP_C:g} °C -> {ramp['temperature_C']:g} °C")
-print(f"slope (average rate of change) ≈ {slope:.2f} °C per minute")
+      f"IF it started at {ROOM_TEMP_C:g} °C -> {ramp['temperature_C']:g} °C")
+print(f"hypothetical slope (average rate of change) ≈ {slope:.2f} °C per minute")
 
 # %%
 def T(t):
-    """T(t) = 25 + slope * t  — the ramp as a linear function of time (minutes)."""
+    """T(t) = 25 + slope * t  — a HYPOTHETICAL linear model of the ramp, assuming it started at
+    ROOM_TEMP_C. Not a measured function — change ROOM_TEMP_C and this model changes too."""
     return ROOM_TEMP_C + slope * t
 
 t_500 = (500 - ROOM_TEMP_C) / slope   # <-- change me: solve T(t) = 500 for t, a different way if you want
-print(f"T(t) predicts the furnace crosses 500 °C at about t ≈ {t_500:.2f} minutes")
+print(f"under this model, the furnace would cross 500 °C at about t ≈ {t_500:.2f} minutes "
+      f"(a conditional estimate, not a measurement)")
 print(f"check: T({t_500:.2f}) = {T(t_500):.1f} °C")
+
+# %% [markdown]
+# **Quick comparison — change one number.** The slope and the 500 °C crossing both came from
+# assuming the ramp started at 25 °C. What if the furnace hadn't fully cooled down and actually
+# started at 200 °C instead?
+
+# %%
+ALT_ROOM_TEMP_C = 200.0  # <-- change me: try another assumed starting temperature
+alt_slope = (ramp["temperature_C"] - ALT_ROOM_TEMP_C) / ramp["duration_min"]
+alt_t_500 = (500 - ALT_ROOM_TEMP_C) / alt_slope
+print(f"assumed start {ROOM_TEMP_C:g} °C -> hypothetical slope {slope:.2f} °C/min, "
+      f"500 °C crossing ≈ {t_500:.2f} min")
+print(f"assumed start {ALT_ROOM_TEMP_C:g} °C -> hypothetical slope {alt_slope:.2f} °C/min, "
+      f"500 °C crossing ≈ {alt_t_500:.2f} min")
+print("changing ONE assumed number changed both answers — neither version is a measurement.")
 
 # %% [markdown]
 # > **Scientist's note:** `temperature_C` is the furnace **setpoint** — what the furnace is told
 # > to hold — not a direct measurement of the wafer's surface. Real hot-zone temperature can lag
-# > or differ slightly from the setpoint. Treat the ramp slope as a good *model*, not a lab
-# > measurement of the crystal itself.
+# > or differ slightly from the setpoint. And the ramp's *starting* temperature isn't in the data
+# > at all — the slope and the 500 °C crossing are outputs of a hypothetical model conditional on
+# > an assumed starting temperature, not lab measurements of the crystal itself. The comparison
+# > above shows how much that one assumption matters.
 
 # %% [markdown]
 # ## Part 4 — Missing is not zero
@@ -255,7 +284,8 @@ plt.show()
 
 # %% [markdown]
 # ## Part 5 — Same temperature, three scales
-# MOCVD growth runs around 1000 °C. Convert that one temperature to Kelvin and Fahrenheit.
+# This MOCVD recipe's growth setpoint is 1000 °C (other MOCVD recipes use other setpoints).
+# Convert that one temperature to Kelvin and Fahrenheit.
 
 # %%
 T_C = 1000
@@ -308,16 +338,28 @@ print(f"air is about {air_pressure_torr / mbe_pressure_torr:.2e}x fuller than th
 
 # %% [markdown]
 # ## Part 7 — Try a different recipe
-# Every MoS₂ MOCVD sample in the slice has its own recipe. Use the dropdown to explore one.
+# Hundreds of MoS₂ MOCVD samples are in the slice, but many have a blank ramp temperature or
+# duration, or more than one step named "ramp" — the same missing-data problem from Part 4. The
+# dropdown below is pre-filtered to 8 real recipes that each have exactly one usable ramp step, so
+# every choice gives a real, computable slope.
 
 # %%
-# @title Helper code (just run this — the slider is below)
+# @title Helper code (just run this — the dropdown is below)
 import ipywidgets as widgets
 from IPython.display import display
 
-mos2_sample_ids = sorted(recipes.loc[
-    (recipes.material == "MoS2") & (recipes.growth_method == "MOCVD") & (recipes.recipe_number == 1),
-    "sample_id"].unique())
+# Curated, contrasting MoS2 MOCVD samples — each verified to have exactly one ramp step with a
+# recorded duration AND temperature (no nan / IndexError possible from this list).
+MOS2_SAMPLE_OPTIONS = [
+    ("23451 — 1000 °C, 17.0 min (this notebook's default)", 23451),
+    ("32465 — 600 °C, 17.0 min (slow ramp)", 32465),
+    ("114343 — 850 °C, 13.5 min (fast, short ramp)", 114343),
+    ("32466 — 600 °C, 10.3 min (short, lower-temperature ramp)", 32466),
+    ("20398 — 900 °C, 17.0 min", 20398),
+    ("32464 — 1000 °C, 17.0 min, 200 Torr (higher pressure than the rest)", 32464),
+    ("44926 — 975 °C, 16.3 min", 44926),
+    ("116271 — 1000 °C, 17.2 min", 116271),
+]
 
 def show_recipe(sample_id):
     rec = (recipes[(recipes.sample_id == sample_id) & (recipes.recipe_number == 1)]
@@ -326,27 +368,33 @@ def show_recipe(sample_id):
     plot_timeline(xs, ys, title=f"Sample {sample_id} — temperature vs. cumulative time")
     display(rec[["step_number", "step", "duration_min", "start_min", "temperature_C", "pressure_torr"]])
 
-widgets.interact(show_recipe, sample_id=widgets.Dropdown(options=mos2_sample_ids, value=SAMPLE_ID,
+widgets.interact(show_recipe, sample_id=widgets.Dropdown(options=MOS2_SAMPLE_OPTIONS, value=SAMPLE_ID,
                                                           description="Sample"));
 
 # %% [markdown]
-# *Static fallback* (in case the slider above doesn't render): here's the default sample again.
+# *Static fallback* (in case the dropdown above doesn't render): here's the default sample again.
 
 # %%
 show_recipe(SAMPLE_ID)
 
 # %% [markdown]
 # ### Task 7 (Explore)
-# Pick a different sample from the dropdown above (there are hundreds to choose from — scroll or
-# type to search). Find its ramp step and compute its slope the same way you did in Task 3.
+# Pick a different sample from the dropdown above (8 real, contrasting recipes). Find its ramp
+# step and compute its slope the same way you did in Task 3.
 
 # %%
-NEW_SAMPLE_ID = 24166  # <-- change me: pick a sample id from the dropdown
+NEW_SAMPLE_ID = 32465  # <-- change me: pick a sample id from the dropdown above
 new_recipe = recipes[(recipes.sample_id == NEW_SAMPLE_ID) & (recipes.recipe_number == 1)]
-new_ramp = new_recipe[new_recipe["step"].str.contains("ramp", case=False)].iloc[0]
-new_slope = (new_ramp["temperature_C"] - ROOM_TEMP_C) / new_ramp["duration_min"]
-print(f"sample {NEW_SAMPLE_ID}: ramp slope ≈ {new_slope:.2f} °C/min "
-      f"(sample {SAMPLE_ID} was {slope:.2f} °C/min)")
+new_ramp_rows = new_recipe[new_recipe["step"].str.contains("ramp", case=False)].dropna(
+    subset=["temperature_C", "duration_min"])
+if len(new_ramp_rows) == 0:
+    print(f"No usable ramp step (recorded duration AND temperature) for sample {NEW_SAMPLE_ID} — "
+          f"missing data, not a code error. Pick a different sample from the dropdown above.")
+else:
+    new_ramp = new_ramp_rows.iloc[0]
+    new_slope = (new_ramp["temperature_C"] - ROOM_TEMP_C) / new_ramp["duration_min"]
+    print(f"sample {NEW_SAMPLE_ID}: ramp slope ≈ {new_slope:.2f} °C/min "
+          f"(sample {SAMPLE_ID} was {slope:.2f} °C/min)")
 
 # %% [markdown]
 # **Your answer:** Is your new sample's ramp faster, slower, or about the same as sample
@@ -357,14 +405,18 @@ print(f"sample {NEW_SAMPLE_ID}: ramp slope ≈ {new_slope:.2f} °C/min "
 
 # %% [markdown]
 # ## Complexity dials
-# - **Core:** Tasks 1–5 — read the table, run the helper cells, fill in the marked formulas.
-# - **Explore:** Tasks 6–7 — compute ratios, explore a second recipe with the slider.
+# - **Core (Tasks 1–5, ~30 min):** required — read the table, run the helper cells, fill in the
+#   marked formulas.
+# - **Explore (Tasks 6–7) and Extend (Task 8), below, are optional.** Use them for early
+#   finishers or as homework — they are not needed to reach the exit ticket.
+# - **Explore:** Tasks 6–7 — compute ratios, explore a second recipe with the dropdown.
 # - **Extend:** Task 8 below — open-ended, a second dataset, honest statistics.
 #
-# ## Part 8 (Extend) — Does growing longer change the roughness?
-# `growth_summary` has one row per grown sample, including how long the `Growth` step(s) lasted
-# and the AFM-measured `rms_roughness_nm` of the resulting film. If longer growth built up a
-# rougher (or smoother) film, we'd expect a trend in this scatter plot.
+# ## Part 8 (Extend, optional) — Does growing longer change the roughness?
+# `growth_summary` has one row per grown sample, summarizing that sample's *first* recorded recipe
+# — how long its `Growth` step(s) lasted and the AFM-measured `rms_roughness_nm` of the resulting
+# film. If longer growth built up a rougher (or smoother) film, we'd expect a trend in this
+# scatter plot.
 
 # %%
 # @title Helper code (just run this)
@@ -399,10 +451,11 @@ fit_slope, fit_intercept, r_value = plot_growth_vs_roughness(mos2_summary)
 # > **Scientist's note:** A small |r| means no clear *straight-line* trend in this slice — it does
 # > **not** prove growth time has no effect. Other things differ between these samples too:
 # > temperature, pressure, and other recipe steps aren't identical; roughness was measured on
-# > scans of different sizes (`scan_size_um` ranges from 1 to 5 µm here, and roughness on a small
-# > scan isn't directly comparable to roughness on a large one); and researchers chose which
-# > samples to scan in the first place. **Correlation is not causation** — and here, there isn't
-# > even much correlation to begin with.
+# > scans of very different sizes (`scan_size_um` ranges from 1 to 70 µm here, and roughness on a
+# > small scan isn't directly comparable to roughness on a large one); a handful of these samples
+# > were regrown more than once, but `growth_summary` only describes each sample's first recipe;
+# > and researchers chose which samples to scan in the first place. **Correlation is not
+# > causation** — and here, there isn't even much correlation to begin with.
 #
 # ### Task 8 (Extend)
 # **Your answer:** Based on `r` and the scatter plot, would you tell a crystal grower that
