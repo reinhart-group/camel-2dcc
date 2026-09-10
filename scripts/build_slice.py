@@ -33,7 +33,7 @@ OUT = ROOT / "data/slice/camel-2dcc"
 
 DOI_PREFIX = "10."
 CURATED_FILES = ("chips_timeline.csv", "materials_reference.csv", "superconductors.csv", "SOURCES.md")
-PACKAGE_FILES = ("classroom.py", "spm.py", "grains.py")
+PACKAGE_FILES = ("classroom.py", "spm.py", "grains.py", "contracts.py")
 
 
 def _package(row: dict) -> tuple[str | None, str | None]:
