@@ -6,3 +6,4 @@ data/raw/
 .ipynb_checkpoints/
 data/slice/
 notebooks/executed/
+.superpowers/

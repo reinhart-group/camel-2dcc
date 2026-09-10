@@ -155,7 +155,33 @@ All seven points accepted; they supersede the sections above where they conflict
    validation, fail-closed execution on the real slice, independent answer checks, one Colab smoke
    test, and visibly shared task logic. Add a dial only after the pilot passes.
 
-## Open questions for Wes
+## Decisions from Wes (2026-09-10)
+
+1. **Copy** the MATSE 219 build code into CAMEL (factor a shared package later if needed).
+2. **Dials are granular, per module — not two editions.** This refines revision 2: a manifest sets
+   lesson-wide dial defaults and may override any dial for any single module
+   (`task_mean_median_by_hand: {guidance: worked}` while `task_random_sample: {guidance: open}`).
+   Each module declares the dial levels it supports and its constraints (e.g.
+   `task_outlier_effect` requires `messiness: real`); the builder resolves every module's
+   effective settings and rejects unsupported ones with a specific error. "Algebra 1" and
+   "Explorer" survive only as named presets (bundles of defaults), not as the unit of variation.
+   Testing = every shipped manifest built and executed, plus a seeded random sample of valid
+   dial combinations per lesson on each build (fail closed). Structural dials stay build-time
+   (revision 1); numeric data dials (`sample_size`, `seed`) are also exposed in the runtime
+   `PARAMS` cell.
+3. **Telemetry: no schema yet** (only a preliminary demo exists). Ship the no-op slot; stamp every
+   task cell's metadata with `lesson_id/module_id/task_id` and its effective dial settings so a
+   future collector can use them without rebuilding.
+
+4. **Datasets and applied concepts are both modules, and they cross.** A concept module never names a
+   dataset; it declares the data *shape* it accepts (`series`, `groups`, `curve`, `map`). A dataset
+   module declares the shapes it produces, as standard variables (`series_values`,
+   `series_label`, `series_unit`, …). Any concept can follow any dataset that produces what it
+   accepts, so "mean vs. median" runs on grain areas, AFM roughness, or a future Zuo data-centre
+   series unchanged. The builder checks the binding; a runtime check after each dataset module
+   asserts the shapes exist with the right types.
+
+## Open questions for Wes (resolved above)
 
 1. Copy MATSE 219's build code into CAMEL, or factor a shared tiny package both repos import?
    (Recommend: copy now, factor later if a third course appears.)

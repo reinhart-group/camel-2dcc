@@ -60,6 +60,9 @@ except ImportError:
 from camel_data.classroom import *
 print("✅ Data ready:", sorted(os.listdir("camel-2dcc"))[:6], "...")
 
+# %%
+from camel_data.grains import *  # triangle-crystal helpers
+
 # %% [markdown]
 # ## Task 1 — Five heights, by hand
 # Here are five height measurements from a crystal surface, in nanometres:
