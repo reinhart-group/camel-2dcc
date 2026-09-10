@@ -1,0 +1,11 @@
+id: pilot-roughness-explorer
+title: "How Bumpy Is It? Mean and Median on Real AFM Data"
+minutes: 40
+preset: explorer
+params: {sample_size: 300, seed: 1}
+modules:
+  - setup
+  - data_afm_roughness
+  - concept_mean_median
+  - concept_outlier_effect
+  - exit_ticket_stats

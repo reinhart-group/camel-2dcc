@@ -1,0 +1,12 @@
+id: pilot-grains-mixed
+title: "How Big Are the Triangles? Mean and Median"
+minutes: 40
+preset: algebra1
+dials: {messiness: real}
+params: {sample_size: 100, seed: 3}
+modules:
+  - setup
+  - data_grain_areas
+  - concept_mean_median: {guidance: fill}
+  - concept_outlier_effect: {guidance: open}
+  - exit_ticket_stats
