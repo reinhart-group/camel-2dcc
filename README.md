@@ -56,6 +56,46 @@ Each network stage is resumable and records failures in `data/raw/*errors.json`.
 - Real Colab: `colab new -s camel-test`, `colab upload -s camel-test data/slice/camel-2dcc-v1.zip
   /content/camel-2dcc-v1.zip`, `colab exec -s camel-test -f notebooks/NN_name.ipynb`, `colab stop`.
 
+## Composable courseware (`courseware/`, `lessons/`)
+
+A lesson YAML manifest picks modules and "dial" settings; the composer stitches the
+selected cells into one runnable Colab notebook. Module kinds: `frame` (lesson
+bookends, e.g. `frame/setup.py`), `dataset` (loads/samples one real dataset into
+standard shape variables, e.g. `datasets/data_grain_areas.py`), `concept` (a
+stats/math concept written only against standard names like `series_values` so it
+runs on any dataset, e.g. `concepts/concept_mean_median.py`).
+
+Dials, declared per-module in front matter and set per-lesson or via `preset`
+(`courseware/presets.yaml`): `register` (`plain`/`explorer`, reading level),
+`guidance` (`worked`/`fill`/`open`, how much answer code is given), `messiness`
+(`flagged`/`real`, whether known-bad rows are dropped).
+
+Manifest example (`lessons/pilot-grains-algebra1.yaml`):
+
+```yaml
+id: pilot-grains-algebra1
+title: "How Big Are the Triangles? Mean and Median"
+minutes: 40
+preset: algebra1
+dials: {messiness: real}
+params: {sample_size: 25, seed: 3}
+modules:
+  - setup
+  - data_grain_areas
+  - concept_mean_median: {guidance: worked}
+  - concept_outlier_effect
+  - exit_ticket_stats
+```
+
+A lesson's own `dials:` and a module's inline overrides win over the preset. Build:
+
+```bash
+.venv/bin/python -m courseware build lessons/*.yaml --out build/lessons
+```
+
+Add `--execute --random N --seed S` to also execute every built notebook plus `N`
+random valid dial combinations per lesson (used before a real Colab check).
+
 ## The public LiST key
 
 The key reads only `Published` records. It is not a secret, but it is never written into code or
