@@ -161,6 +161,10 @@ def build_growth_summary(steps: pd.DataFrame, afm: pd.DataFrame) -> pd.DataFrame
     return out.merge(afm[["sample_id", "rms_roughness_nm", "scan_size_um"]], on="sample_id", how="left")
 
 
+def _str_or_none(value) -> str | None:
+    return value if isinstance(value, str) and value else None
+
+
 def build_gallery(picks: list[dict], meas: dict, samples: pd.DataFrame) -> list[dict]:
     gdir = OUT / "afm_gallery"
     gdir.mkdir(parents=True, exist_ok=True)
@@ -182,7 +186,9 @@ def build_gallery(picks: list[dict], meas: dict, samples: pd.DataFrame) -> list[
             "title": p["title"], "story": p["story"], "scan_um": round(h.scan_size_nm / 1000, 4),
             "pixels": n, "rms_roughness_nm": round(float(np.std(z)), 4),
             "processing": "per-line linear flatten, median set to 0",
-            "data_package": s.loc[p["sample_id"], "data_package"], "doi": s.loc[p["sample_id"], "doi"],
+            # Some packages have no DOI; pandas gives NaN, which is not valid JSON.
+            "data_package": _str_or_none(s.loc[p["sample_id"], "data_package"]),
+            "doi": _str_or_none(s.loc[p["sample_id"], "doi"]),
             "source_file": spm.name.split("_", 1)[1],
         })
     (gdir / "gallery.json").write_text(json.dumps(meta, indent=1))

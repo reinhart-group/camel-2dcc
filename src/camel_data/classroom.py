@@ -152,7 +152,7 @@ def explore_cross_section(scan: AFMScan):
 
 
 def to_stl(scan: AFMScan, path: str | Path, width_mm: float = 100.0, relief_mm: float = 15.0,
-           base_mm: float = 3.0, max_pixels: int = 200) -> Path:
+           base_mm: float = 3.0, max_pixels: int = 150) -> Path:
     """Write a closed, printable binary STL of the surface.
 
     The print is ``width_mm`` wide; the tallest feature rises ``relief_mm``

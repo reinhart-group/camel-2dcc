@@ -6,7 +6,7 @@
 # No internet link? Upload `camel-2dcc-v1.zip` with the 📁 Files panel on the left, then run this cell.
 
 # %%
-DATA_URL = "PASTE-SHAREPOINT-LINK-HERE"  # teacher: the only line you may need to change
+DATA_URL = "https://pennstateoffice365-my.sharepoint.com/:u:/g/personal/wfr5091_psu_edu/IQCkNUoFnJNJSK8lUEepTJeSAT3NukSFJzB9-9fS5GB5mp0?e=KafIFG"  # teacher: the only line you may need to change
 
 import io, os, sys, zipfile, requests
 if not os.path.isdir("camel-2dcc"):
