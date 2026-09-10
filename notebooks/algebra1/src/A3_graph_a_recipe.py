@@ -15,10 +15,10 @@
 # - Read temperature and time straight off a graph.
 # - Find the slope of the heat-up part, in °C per minute.
 # - Write an equation and solve it for a target temperature.
-# - See how changing one number changes the whole answer.
-# - Convert the recipe's hottest temperature to Fahrenheit.
+# - *If you have time:* see how changing one number changes the whole answer, and
+#   convert the hottest temperature to Fahrenheit.
 #
-# **Time:** about 30–40 minutes.
+# **Time:** about 30–40 minutes for Tasks 1–4 and the exit ticket. Tasks 5–6 are optional.
 
 # %% [markdown]
 # ## 🔧 Setup (run this first)
@@ -76,22 +76,41 @@ surface_3d(gallery["mos2_film"], exaggeration=30).show()
 # taller here so you can see them — the real crystal is almost perfectly flat.
 #
 # ## Task 1 — Read the recipe
-# `recipe` below is the real, step-by-step recipe for this exact crystal: `duration_min` is
-# how long each step lasted, and `start_min` is the minute it started, counting from when the
-# recipe began.
+# The table below is the real, step-by-step recipe for this exact crystal: **Minutes** is
+# how long each step lasted, and **Start minute** is the minute it started, counting from
+# when the recipe began.
 
 # %%
+# @title Helper code (just run this) — builds a plain-language table
 import pandas as pd
+
+STEP_NAMES = {
+    "Ramp up T": "Heat up",
+    "P.G. Annealing 1": "Hold hot 1",
+    "P.G. Annealing 2": "Hold hot 2",
+    "Growth": "Grow the crystal",
+    "P.G. Annealing": "Hold hot 3",
+    "Cooldown 1": "Cool down 1",
+    "Cooldown 2": "Cool down 2",
+}
 
 recipes = load_table("growth_recipes")
 recipe = (recipes[(recipes.sample_id == 23451) & (recipes.recipe_number == 1)]
           .sort_values("step_number").reset_index(drop=True))
-recipe[["step_number", "step", "duration_min", "start_min", "temperature_C"]]
+recipe_table = pd.DataFrame({
+    "Step": recipe["step_number"],
+    "What happens": recipe["step"].map(STEP_NAMES),
+    "Minutes": recipe["duration_min"],
+    "Start minute": recipe["start_min"],
+    "Temperature (°C)": recipe["temperature_C"].apply(
+        lambda t: f"{t:g}" if pd.notna(t) else "— not recorded"),
+})
+recipe_table
 
 # %% [markdown]
-# `start_min` is a **running total** — each step's own minutes, added to every step before
-# it. Add up the first four steps' minutes by hand (Ramp up T, Anneal 1, Anneal 2, Growth),
-# then type your total below.
+# **Start minute** is a **running total** — each step's own minutes, added to every step
+# before it. Add up the first four steps' minutes by hand (Heat up, Hold hot 1, Hold hot 2,
+# Grow the crystal), then type your total below.
 
 # %%
 running_total_min = ...  # ✏️ type your answer here: 17 + 5 + 5 + 3
@@ -101,7 +120,7 @@ print(f"My running total: {running_total_min} minutes")
 # @title Helper code (just run this) — checks your total
 expected_total = recipe.loc[:3, "duration_min"].sum()
 if running_total_min == expected_total:
-    print(f"✅ Nice! {expected_total:g} minutes — and that matches start_min for step 5 in the table above!")
+    print(f"✅ Nice! {expected_total:g} minutes — and that matches the Start minute for step 5 in the table above!")
 elif running_total_min == ...:
     print("🔁 Replace the `...` with 17 + 5 + 5 + 3.")
 else:
@@ -200,7 +219,7 @@ else:
     print(f"🔁 Check your algebra. It should give about {expected_t500:.1f} minutes.")
 
 # %% [markdown]
-# ## Task 5 — Change one number
+# ## Task 5 (optional) — Change one number
 # Our 25 °C start was just a guess. What if the oven hadn't fully cooled from the day
 # before, and actually started at 200 °C? Try the slider (it doesn't need code) and watch
 # both the slope and the time to 500 °C change.
@@ -241,7 +260,7 @@ else:
 # Changing **one** number — the starting temperature — changed both the slope and the
 # answer. Neither version is a measurement; both are "if this, then that" models.
 #
-# ## Task 6 — Same heat, a different scale
+# ## Task 6 (optional) — Same heat, a different scale
 # Scientists (and recipes) use Celsius. Cooks in the US often use Fahrenheit instead:
 # $$F = 1.8 \times C + 32$$
 # Convert this recipe's hottest temperature, 1000 °C, to Fahrenheit.
@@ -254,7 +273,7 @@ growth_temp_F = ...  # ✏️ type your answer here: 1.8 * 1000 + 32
 expected_F = 1.8 * recipe["temperature_C"].max() + 32
 if growth_temp_F == expected_F:
     print(f"✅ Nice! 1000 °C = {expected_F:.0f} °F. A home oven usually tops out around 550 °F — "
-          "this crystal oven runs more than three times hotter!")
+          f"this crystal oven runs about {expected_F - 550:.0f} °F hotter!")
 elif growth_temp_F == ...:
     print("🔁 Replace the `...` with 1.8 * 1000 + 32.")
 else:

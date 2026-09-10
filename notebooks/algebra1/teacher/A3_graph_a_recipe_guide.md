@@ -17,30 +17,34 @@ slice is rebuilt, and give students the printed numbers if they differ from this
   conditional/what-if reasoning.
 - Convert between °C and °F as two linear functions of the same quantity.
 
-## Timing (30–40 min)
+## Timing (30–40 min core; Tasks 5–6 are optional extras)
 
 | Minutes | Section |
 |---|---|
 | 0–5 | Setup cell, meet-the-crystal hook |
 | 5–10 | Task 1 — running total of minutes |
-| 10–17 | Task 2 — read the graph |
-| 17–22 | Task 3 — slope of the heat-up |
-| 22–27 | Task 4 — write and solve the equation |
-| 27–33 | Task 5 — change one number (slider + fixed check) |
-| 33–37 | Task 6 — °C to °F |
-| 37–40 | Exit ticket |
+| 10–18 | Task 2 — read the graph |
+| 18–24 | Task 3 — slope of the heat-up |
+| 24–30 | Task 4 — write and solve the equation |
+| — | *If you have time:* Task 5 (change one number) and Task 6 (°C to °F) |
+| 30–35 | Exit ticket |
 
 ## Expected answers
 
 - **Task 1:** running total of the first four steps = **30 minutes** (17+5+5+3). This matches the
-  table's own `start_min` for step 5 — point that out if a student doesn't notice it themselves.
+  table's own Start minute for step 5 — point that out if a student doesn't notice it themselves.
+  The recipe table now shows plain-language step names (Heat up, Hold hot 1/2/3, Grow the
+  crystal, Cool down 1/2) instead of the raw `P.G. Annealing` labels, and blank temperatures
+  during cool-down read "— not recorded" instead of a bare NaN.
 - **Task 2:** peak temperature **1000 °C**; the oven holds there for **23 minutes** (minute 17 to
   minute 40 — three anneal/growth steps back to back).
 - **Task 3:** heat-up slope ≈ **57.4 °C/min** (exactly 975/17), *conditional on the 25 °C guess*.
 - **Task 4:** reaches 500 °C at **t ≈ 8.3 min** under that same model.
-- **Task 5:** starting at 200 °C instead: slope ≈ **47.1 °C/min**, reaches 500 °C at **t ≈ 6.4
-  min** — faster, because there's less distance to climb.
-- **Task 6:** 1000 °C = **1832 °F**.
+- **Task 5 (optional):** starting at 200 °C instead: slope ≈ **47.1 °C/min**, reaches 500 °C at
+  **t ≈ 6.4 min** — faster, because there's less distance to climb.
+- **Task 6 (optional):** 1000 °C = **1832 °F**, about **1,282 °F hotter** than a 550 °F home oven
+  (a difference, not a multiple — Fahrenheit has an arbitrary zero, so "three times hotter" isn't
+  a meaningful comparison).
 
 ## Common mistakes
 
@@ -54,10 +58,10 @@ slice is rebuilt, and give students the printed numbers if they differ from this
 
 ## If you have 10 more minutes
 
-Have students pick their own alternate starting temperature (change the slider, or edit
-`ALT_ROOM_TEMP_C`-style value by hand) and predict, before running, whether the new 500 °C time
-will be bigger or smaller than 8.3 minutes — then check. Or: ask what starting temperature would
-make the oven reach 500 °C in exactly 5 minutes (solve backwards for the assumed start).
+Tasks 5 (change one number, with a slider) and 6 (°C to °F) are built into the notebook as
+optional extras right before the exit ticket — have fast finishers do those while others catch
+up. If there's still time after that: ask what starting temperature would make the oven reach
+500 °C in exactly 5 minutes (solve backwards for the assumed start).
 
 ## Verification
 
@@ -67,4 +71,4 @@ make the oven reach 500 °C in exactly 5 minutes (solve backwards for the assume
 .venv/bin/python scripts/readability.py notebooks/algebra1/src/A3_graph_a_recipe.py
 ```
 Last run: `OK   A3_graph_a_recipe.ipynb -> notebooks/executed/A3_graph_a_recipe.ipynb`;
-Flesch–Kincaid grade **6.5** (target ≤ 8.0).
+Flesch–Kincaid grade **6.7** (target ≤ 8.0).
