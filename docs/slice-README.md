@@ -16,6 +16,7 @@ taken from the public records of its LiST sample database. Made for CAMEL high-s
 | `growth_summary.csv` | One row per grown sample: total growth time, growth temperature and pressure, joined to its AFM roughness when measured. |
 | `chips_timeline.csv`, `materials_reference.csv`, `superconductors.csv` | Curated context tables (not LiST data); see `SOURCES.md`. |
 | `stl/*.stl` | 3D-printable AFM surfaces. |
+| `grains/` | Island ("grain") maps and measurements for notebook 06: three spots on one WSe2 wafer (sample 17458), a seed-stage sample (17464), and two scans for line profiles (24111, 39166). `grains.csv` has one row per detected grain; `scans.json` describes each scan. |
 | `camel_data/` | Small Python helpers the notebooks import. |
 | `manifest.json` | Every file with its size and SHA-256 checksum. |
 
@@ -34,6 +35,16 @@ sample, chosen by a fixed rule: skip files an operator marked "modified", then t
 size written in the file name, breaking ties by the shortest name. This is a consistent rule, not a
 scientist's pick of the best scan. Roughness depends on scan size, so compare samples with the same
 `scan_size_um` when it matters. `lines` smaller than `pixels` means the scan stopped early.
+
+## How grains were found
+
+Each grain scan is levelled line by line using only its low (substrate) pixels. A pixel counts as
+"island" when it is higher than half the typical island height (the median of pixels clearly above
+the substrate noise). Each connected blob is one grain. Blobs are labelled `single`, `merged`
+(touching islands joined together), `dust` (far taller than the islands), or `streak` (a thin scan
+glitch); grains touching the scan border or a glitch line are flagged. This is a simple height
+rule, not a scientist's hand count; the notebook draws the outlines so it can be checked by eye.
+The rule is only used where islands are clearly separated; the line-profile scans have no grain table.
 
 ## Growth recipes: what blanks mean
 

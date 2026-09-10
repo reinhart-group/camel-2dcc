@@ -14,7 +14,8 @@ atomic force microscope (AFM) scans and growth recipes from Penn State's 2D Crys
 | 02 | `02_how_smooth_is_smooth` — RMS roughness, box plots across 1,004 real scans | statistics |
 | 03 | `03_micrometers_to_football_field` — scale factors, layer counting, hexagons, 3D printing | algebra, geometry |
 | 04 | `04_build_a_crystal` — a real growth recipe as a piecewise function | algebra, functions |
-| 05 | `05_chips_for_ai` — Moore's law, light from band gaps, superconductors, data-centre energy | exponential and inverse functions |
+| 05 | `05_chips_for_ai` — Moore's law, light from 2D materials, superconductors, data-centre energy | exponential and inverse functions |
+| 06 | `06_counting_crystals` — triangle grains on one wafer, line scans, random samples vs the population | statistics, geometry |
 
 Teacher keys with timing, standards, and expected answer ranges are in `notebooks/teacher/`.
 Notebook sources are jupytext percent-format files in `notebooks/src/`; build with
@@ -40,6 +41,8 @@ set -a; . ./.env; set +a
 .venv/bin/python scripts/build_afm_summary.py       # download + measure one scan per sample
 .venv/bin/python scripts/fetch_recipes.py           # growth recipes
 .venv/bin/python scripts/fetch_gallery_candidates.py  # gallery scans (picks: scripts/gallery_picks.json)
+.venv/bin/python scripts/fetch_gallery_candidates.py --per 6 --out grain_candidates 17458 17464 24111 39166
+PYTHONPATH=src .venv/bin/python scripts/build_grains.py  # grain maps + table (offline)
 .venv/bin/python scripts/build_slice.py             # assemble data/slice/ (offline)
 ```
 
