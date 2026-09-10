@@ -17,7 +17,7 @@ taken from the public records of its LiST sample database. Made for CAMEL high-s
 | `chips_timeline.csv`, `materials_reference.csv`, `superconductors.csv` | Curated context tables (not LiST data); see `SOURCES.md`. |
 | `stl/*.stl` | 3D-printable AFM surfaces. |
 | `extras/` | Non-AFM measurements for notebook 07: FeSe resistance vs temperature (`transport_fese.csv`, `transport_summary.csv`), MoS2/WS2 Raman spectra and MoS2 peak positions (`raman_spectra.csv`, `raman_peaks.csv`), an X-ray diffraction scan (`xrd_20958.csv`, sapphire substrate), and an SEM image of MoS2 triangles with its measured scale (`sem_32096.png`, `sem_32096.json`). |
-| `grains/` | Island ("grain") maps and measurements for notebook 06: three spots on one WSe2 wafer (sample 17458), a seed-stage sample (17464), and two scans for line profiles (24111, 39166). `grains.csv` has one row per detected grain; `scans.json` describes each scan. |
+| `grains/` | Island ("grain") maps and measurements for notebook 06: three spots on one WSe2 wafer (sample 17458: 850 °C nucleation, no ripening), a second recipe for comparison (17464: 875 °C nucleation then 10 min ripening), and two scans for line profiles (24111, 39166). `grains.csv` has one row per detected grain; `scans.json` describes each scan. |
 | `camel_data/` | Small Python helpers the notebooks import. |
 | `manifest.json` | Every file with its size and SHA-256 checksum. |
 

@@ -41,12 +41,13 @@ slice (`data/slice/camel-2dcc/`) — none are typed from memory.
 | 15–22 | Part 2 — ratio (Task 3) + stacking model (Task 4) |
 | 22–32 | Part 3 — photonics (Tasks 5–6) |
 | 32–42 | Part 4 — superconductors (Tasks 7–9) |
+| *+5 (optional)* | *"See it happen" real-FeSe-films add-on, after Task 8's plot* |
 | 42–47 | Part 5 — catalog counts (Tasks 10–11) |
 | 47–50 | Exit ticket |
 
 Core-only path (non-AP, single 45-min period): Tasks 1, 3, 4, 5, 7, 10, exit ticket — skip 2, 6, 8,
-9, 11 or assign as homework/Explore. Task 1's static comparison plot (not the slider) is what makes
-this path work even if Colab's interactive widgets fail to load.
+9, 11, and the "See it happen" add-on, or assign as homework/Explore. Task 1's static comparison
+plot (not the slider) is what makes this path work even if Colab's interactive widgets fail to load.
 
 ## Expected answers (as ranges — real data, not brittle exact values)
 
@@ -81,6 +82,17 @@ this path work even if Colab's interactive widgets fail to load.
   plotted separately as a pink diamond with an error bar spanning `tc_low_K`=40 K to
   `tc_high_K`=65 K — a *reported superconducting signature*, not a zero-resistance measurement like
   the other rows.
+- **"See it happen" real-FeSe-films add-on (Explore, ~5 min, optional):** from `transport_summary.csv`,
+  `T_zero_1pct_K` — sample **20198 ≈ 4.99 K**, **20200 ≈ 14.00 K**, **20201 ≈ 22.87 K**; sample
+  **20199 never reaches ~zero resistance** in its measured range (down to 4 K, the lowest
+  temperature it was measured at — `T_zero_1pct_K` is blank/NaN). Two films (20200, 20201) reach
+  zero resistance at a higher temperature than bulk FeSe's 8 K; one (20198) reaches it lower;
+  20199 doesn't reach it at all here — the point is real thin-film samples disagree with each
+  other and with the bulk value, which is exactly what motivates further study, not a mechanism
+  claim. Ohm's-law check on sample 20198 (I = 1 µA): at **19.54 K, R ≈ 1015.6 Ω → V ≈ 1.016 mV**;
+  at **3.00 K, R ≈ −0.004 Ω → V ≈ −0.004 µV** — the near-zero-K voltage is thousands of times
+  smaller and its slight negative sign is measurement noise (the instrument's noise floor), not
+  negative resistance.
 - **Task 9 heat (single wire):** default 100 A through 0.01 Ω → **100 W** wasted as heat (I²R);
   accept any internally-consistent I²R for whatever current the student tries. This is a toy
   single-wire example — it is explicitly NOT evidence about data-center-scale savings.
@@ -135,6 +147,12 @@ this path work even if Colab's interactive widgets fail to load.
 - **Treating the IEA 415→945 TWh numbers as proof of superconductor savings.** They aren't connected
   — Task 9 is split into "one wire" (I²R) and a clearly separated "scale of data-center electricity"
   exercise with its own heading, and the Scientist's note after the I²R calculation says so directly.
+- **Assuming a higher-Tc thin film "explains" why (mechanism).** The "See it happen" add-on
+  deliberately does not explain *why* films 20200/20201 reach zero resistance above bulk FeSe's
+  8 K — that's an open research question this notebook doesn't answer. Watch for students
+  inventing a mechanism (e.g., "because it's thinner") that the data doesn't support.
+- **Reading the slightly negative near-zero resistance as "negative resistance."** It's instrument
+  noise floor, not a real physical effect — the Scientist's note after the Ohm's-law check says so.
 - **Treating single-layer FeSe's 65 K as an exact zero-resistance value.** It's plotted with an
   error bar (40–65 K) using a different marker (pink diamond vs. orange circle) specifically because
   it's a reported signature under specific lab conditions, not a zero-resistance measurement like
@@ -151,5 +169,5 @@ this path work even if Colab's interactive widgets fail to load.
 ## Complexity dials
 
 - **Core:** Tasks 1, 3, 4, 5, 7, 10.
-- **Explore:** Tasks 2, 6, 8, 9.
+- **Explore:** Tasks 2, 6, 8, 9, plus the optional "See it happen" real-FeSe-films add-on (~5 min).
 - **Extend:** Task 11.

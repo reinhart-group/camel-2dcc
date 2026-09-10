@@ -27,13 +27,17 @@ OUT = RAW / "grains"
 # (key, sample_id, file, wafer position, role, growth note from the LiST record)
 SCANS = [
     ("wse2_17458_center", 17458, "Center.0_00000.spm", "center", "population",
-     "WSe2 on sapphire, MOCVD, no ripening step"),
+     "WSe2 on sapphire, MOCVD, 850 °C nucleation, no ripening step"),
     ("wse2_17458_flat", 17458, "To the flat.0_00000.spm", "toward the flat", "population",
-     "WSe2 on sapphire, MOCVD, no ripening step"),
+     "WSe2 on sapphire, MOCVD, 850 °C nucleation, no ripening step"),
     ("wse2_17458_edge", 17458, "To the edge.0_00000.spm", "toward the edge", "population",
-     "WSe2 on sapphire, MOCVD, no ripening step"),
-    ("wse2_17464_center", 17464, "Center.0_00000.spm", "center", "growth series",
-     "WSe2 on sapphire, MOCVD, no growth step (seeds only)"),
+     "WSe2 on sapphire, MOCVD, 850 °C nucleation, no ripening step"),
+    # Recipes (growth_recipes.csv): 17458 = 30 s nucleation at 850 °C, no ripening;
+    # 17464 = 30 s nucleation at 875 °C then a 10 min ripening step. Neither has a
+    # separate "Growth" step. They differ in two settings, so this is a comparison
+    # of two recipes, not a growth time series.
+    ("wse2_17464_center", 17464, "Center.0_00000.spm", "center", "second recipe",
+     "WSe2 on sapphire, MOCVD, 875 °C nucleation then 10 min ripening"),
     # Left out: 17457 (5 min) — glitch lines and dust dominate the pixels above
     # the noise, so the rule's cutoff jumps to ~7.8 nm; and the 30-min samples
     # (17459/17462/17463) — the film nearly covers the surface, so "substrate =

@@ -13,7 +13,7 @@
 # - Turn a 2D material's optical energy into the color of light it can emit, and convert
 #   superconductor temperatures between Kelvin, Celsius, and Fahrenheit.
 #
-# **Time:** about 45-50 minutes.
+# **Time:** about 45-50 minutes (plus an optional ~5-minute "see real data" add-on in Part 4).
 #
 # **Materials science words**
 # - **Transistor:** a tiny electronic switch. Chips are made of billions of them wired together.
@@ -431,6 +431,96 @@ def plot_tc_history(df):
 plot_tc_history(sconductors)
 
 # %% [markdown]
+# ### See it happen: real FeSe films from the 2DCC (Explore, ~5 minutes)
+# The points above are one number per material. Here are actual resistance-vs-temperature sweeps
+# from four different FeSe thin films grown and measured at the 2DCC — real, noisy lab data.
+
+# %%
+fese_transport = load_extra("transport_fese.csv")  # sample_id, temperature_K, resistance_ohm
+fese_summary = load_extra("transport_summary.csv")  # per-film summary, incl. T_zero_1pct_K
+fese_summary
+
+# %% [markdown]
+# `T_zero_1pct_K` is the temperature where a film's resistance first drops to about 1% of its 40 K
+# value — close enough to call "zero" for a real noisy measurement. A blank means the film never
+# got that low in the range measured.
+
+# %%
+# @title Helper code (just run this)
+GREEN = "#009E73"  # colour-blind-safe (Okabe-Ito palette)
+
+def plot_fese_transport(df):
+    fig = make_subplots(rows=1, cols=2, subplot_titles=("0-40 K (the transition)", "0-300 K (full range)"))
+    colors = {20198: BLUE, 20199: ORANGE, 20200: GREEN, 20201: PINK}
+    for sample_id, group in df.groupby("sample_id"):
+        g = group.sort_values("temperature_K")
+        color = colors.get(sample_id, "gray")
+        fig.add_trace(go.Scatter(x=g.temperature_K, y=g.resistance_ohm, mode="lines+markers",
+                                  name=str(sample_id), marker=dict(size=5, color=color),
+                                  line=dict(color=color)), row=1, col=1)
+        fig.add_trace(go.Scatter(x=g.temperature_K, y=g.resistance_ohm, mode="lines+markers",
+                                  name=str(sample_id), marker=dict(size=4, color=color),
+                                  line=dict(color=color), showlegend=False), row=1, col=2)
+    fig.add_hline(y=0, line=dict(color="black", dash="dash"), row=1, col=1)
+    fig.add_hline(y=0, line=dict(color="black", dash="dash"), row=1, col=2)
+    fig.update_xaxes(title_text="temperature (K)", range=[0, 40], row=1, col=1)
+    fig.update_xaxes(title_text="temperature (K)", range=[0, 300], row=1, col=2)
+    fig.update_yaxes(title_text="resistance (ohm)")
+    fig.update_layout(height=430, title="Real FeSe thin-film resistance vs. temperature (four 2DCC samples)",
+                      legend_title="sample_id", margin=dict(t=80))
+    fig.show()
+
+plot_fese_transport(fese_transport)
+
+# %% [markdown]
+# From the plot (or the `T_zero_1pct_K` column above): about what temperature does each film first
+# reach ~zero resistance? Which film never gets there in this data? How do these compare to bulk
+# FeSe's 8 K critical temperature (from `superconductors.csv`)?
+
+# %%
+for _, row in fese_summary.iterrows():
+    tz = row["T_zero_1pct_K"]
+    if np.isnan(tz):
+        print(f"sample {int(row['sample_id'])}: never reaches ~zero resistance down to "
+              f"{row['lowest_T_measured_K']:g} K, the lowest temperature measured")
+    else:
+        print(f"sample {int(row['sample_id'])}: reaches ~zero resistance at about {tz:.2f} K")
+
+# %% [markdown]
+# > **Scientist's note:** These four films don't all agree with each other, or with bulk FeSe's 8 K.
+# > Some reach zero resistance at noticeably higher temperatures than the bulk crystal; one film
+# > doesn't reach zero at all within the range measured here. Comparing thin films (and their
+# > substrate) to bulk crystals like this is exactly what scientists study — this notebook doesn't
+# > try to explain *why* the temperature differs, only that real measurements show that it does.
+#
+# **One-line Ohm's law check:** using film 20198's actual measured resistance, and $V = IR$ with a
+# small $I = 1\ \mu A$ test current, how does the voltage in its normal state (20 K) compare to its
+# near-zero-resistance state (3 K)?
+
+# %%
+def resistance_near(df, sample_id, temp_K):
+    """Nearest measured resistance for one sample near a target temperature."""
+    g = df[df["sample_id"] == sample_id]
+    return g.loc[(g["temperature_K"] - temp_K).abs().idxmin()]
+
+current_A = 1e-6  # 1 microamp test current
+row_20K = resistance_near(fese_transport, 20198, 20)
+row_3K = resistance_near(fese_transport, 20198, 3)
+
+v_20K = current_A * row_20K["resistance_ohm"]
+v_3K = current_A * row_3K["resistance_ohm"]
+print(f"Sample 20198 at {row_20K['temperature_K']:.2f} K: R = {row_20K['resistance_ohm']:.1f} ohm "
+      f"-> V = {v_20K * 1000:.3f} mV")
+print(f"Sample 20198 at {row_3K['temperature_K']:.2f} K:  R = {row_3K['resistance_ohm']:.4f} ohm "
+      f"-> V = {v_3K * 1e6:.3f} uV")
+
+# %% [markdown]
+# > **Scientist's note:** Near "zero" resistance, real instruments still read tiny nonzero (even
+# > slightly negative) numbers from measurement noise — that's the noise floor, not negative
+# > resistance. The 20 K voltage is thousands of times larger than the 3 K voltage, consistent with
+# > (not exactly) zero.
+
+# %% [markdown]
 # Here is a real FeSe (iron selenide) superconductor film from the 2DCC, grown on SrTiO3:
 
 # %%
@@ -533,7 +623,8 @@ plt.show()
 # ## Complexity dials
 # - **Core:** Tasks 1, 3, 4, 5, 7, 10 — move the slider, change the marked variables, read the
 #   plots.
-# - **Explore:** Tasks 2, 6, 8, 9 — fit the model, compare energies, read the Tc-vs-year plot.
+# - **Explore:** Tasks 2, 6, 8, 9, plus the optional "See it happen" real-FeSe-films add-on after
+#   Task 8 (~5 min) — fit the model, compare energies, read the Tc-vs-year plot.
 # - **Extend:** Task 11 — open-ended comparison across all four TMDs.
 
 # %% [markdown]
