@@ -54,6 +54,17 @@ def test_load_module_rejects_cell_tag_for_undeclared_dial():
         load_module(FIX / "bad_undeclared_dial.py")
 
 
+def test_load_module_rejects_cell_tag_with_undeclared_value():
+    """A cell tagged with a value the dial never declared (e.g. a typo like
+    'register:elaboarte') must be a hard error, not a silent drop — same trap
+    as the undeclared-dial case, one level deeper."""
+    with pytest.raises(ModuleError, match="register") as exc_info:
+        load_module(FIX / "bad_undeclared_value.py")
+    msg = str(exc_info.value)
+    assert "elaboarte" in msg
+    assert "plain" in msg and "explorer" in msg
+
+
 def test_find_module_searches_subfolders():
     assert find_module("data_demo", [FIX]).kind == "dataset"
     with pytest.raises(ModuleError, match="not found"):

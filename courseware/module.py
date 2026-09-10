@@ -71,11 +71,19 @@ def load_module(path: Path) -> Module:
         raise ModuleError(f"{path}: kind must be dataset, concept, or frame")
     nb = jupytext.reads(text[m.end():], fmt="py:percent")
     module = Module(name=meta["module"], kind=meta["kind"], path=Path(path), meta=meta, cells=nb.cells)
-    declared = set(module.dials)
+    declared = module.dials
     for cell in nb.cells:
-        for dial in _dial_tags(cell):
+        for dial, values in _dial_tags(cell).items():
             if dial not in declared:
                 raise ModuleError(f"{path}: cell tagged '{dial}:...' but front matter declares no '{dial}' dial")
+            allowed = declared[dial]
+            for value in values:
+                if value not in allowed:
+                    raise ModuleError(
+                        f"{path}: module '{meta['module']}' cell tagged '{dial}:{value}' but "
+                        f"'{value}' is not a declared value of dial '{dial}' "
+                        f"(allowed: {allowed})"
+                    )
     return module
 
 
