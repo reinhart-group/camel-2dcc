@@ -56,17 +56,27 @@
 # %%
 DATA_URL = "https://pennstateoffice365-my.sharepoint.com/:u:/g/personal/wfr5091_psu_edu/IQCkNUoFnJNJSK8lUEepTJeSAT3NukSFJzB9-9fS5GB5mp0?e=KafIFG"  # teacher: the only line you may need to change
 
-import io, os, sys, zipfile, requests
-if not os.path.isdir("camel-2dcc"):
+import io, json, os, shutil, sys, zipfile, requests
+def _ready():  # a complete copy has its manifest and every file it lists
+    try:
+        m = json.load(open("camel-2dcc/manifest.json"))
+        return m["release_id"] == "camel-2dcc-v1" and all(os.path.exists("camel-2dcc/" + f["path"]) for f in m["files"])
+    except (OSError, ValueError, KeyError):
+        return False
+if not _ready():
+    shutil.rmtree("camel-2dcc", ignore_errors=True)  # clear any half-finished copy
     if os.path.exists("camel-2dcc-v1.zip"):
         zip_bytes = open("camel-2dcc-v1.zip", "rb").read()
     else:
-        link = DATA_URL + ("&" if "?" in DATA_URL else "?") + "download=1"
-        zip_bytes = requests.get(link, timeout=120).content
+        r = requests.get(DATA_URL + ("&" if "?" in DATA_URL else "?") + "download=1", timeout=120)
+        r.raise_for_status()
+        zip_bytes = r.content
     if zip_bytes[:2] != b"PK":
         raise RuntimeError("The download was not the data file. Check DATA_URL, or upload camel-2dcc-v1.zip "
                            "with the Files panel and run this cell again.")
     zipfile.ZipFile(io.BytesIO(zip_bytes)).extractall(".")
+    if not _ready():
+        raise RuntimeError("The data file is incomplete or the wrong version. Download camel-2dcc-v1.zip again.")
 sys.path.insert(0, "camel-2dcc")
 try:
     from google.colab import output

@@ -40,13 +40,12 @@ them slightly.
   that's the point of the scientist's note. Accept any answer that ties the chosen stretch back to
   this real relief-to-width ratio.
 - **Task 2 (step height):** using a simple peak/trough detector run on every other row of the real
-  `atomic_staircase` scan, single step edges cluster **typical (25th–75th pct) ≈ 0.2–0.4 nm**,
-  **wider plausible range (10th–90th pct) ≈ 0.15–0.5 nm**, computed from roughly 700–1,500 step
-  edges (exact counts print live). The textbook SrTiO3 unit-cell step is **0.39 nm**, which sits at
-  the upper end of the typical range — a good real-data illustration that single-line student
-  readings will often run a bit low, and that's expected, not wrong. Accept any student estimate in
-  **0.15–0.6 nm** as reasonable; anything under 0.05 nm or over 1 nm means they likely read a
-  multi-step jump or misread the axis.
+  `atomic_staircase` scan (printed live: **1,470 step edges** measured), single step edges cluster
+  **typical (25th–75th pct) = 0.21–0.38 nm**, **wider plausible range (10th–90th pct) = 0.15–0.47 nm**.
+  The textbook SrTiO3 unit-cell step is **0.39 nm**, which sits right at the top of the typical
+  range — a good real-data illustration that single-line student readings will often run a bit low,
+  and that's expected, not wrong. Accept any student estimate in **0.15–0.5 nm** as reasonable;
+  anything under 0.05 nm or over 1 nm means they likely read a multi-step jump or misread the axis.
 - **Task 3 (unit conversion / hair widths):** deterministic arithmetic, not an estimate — the
   check cell verifies the exact formula `hair_nm / scan_nm`. For the default `tin_selenide_grains`
   (5 µm = 5,000 nm), the answer is **16.0** scans per hair width; for `atomic_staircase` (1 µm),
@@ -61,10 +60,11 @@ them slightly.
   to its median. Correct answer to 4b: **gallium selenide bumps has the bigger mean–median gap**,
   meaning it has the more extreme/more numerous height outliers of the two.
 - **Task 5 (spot the glitch):** the reveal cell finds the glitch programmatically: in
-  `wse2_triangles`, **row 1** (the 2nd row from the top) has a height standard deviation of
-  **≈130–140 nm**, versus **≈1–3 nm** for a typical row — roughly **50× noisier**. The scan's
-  overall height range is dominated by this one row (global min/max run to roughly **−455 nm /
-  +221 nm**, far beyond any plausible WSe2 triangle height of a few nm). Accept any answer that (a)
+  `wse2_triangles`, **row 1** (the 2nd row from the top, about **4 nm** down from the scan edge)
+  has a height standard deviation of **≈136.8 nm**, versus **≈0.6 nm** for a typical row — roughly
+  **230× noisier**. The scan's overall height range is dominated by this one row (global min/max
+  run to roughly **−455 nm / +221 nm**, far beyond any plausible WSe2 triangle height of a few nm).
+  Accept any answer that (a)
   identifies a single line/row that looks unlike the surrounding triangles, and (b) gives a
   mechanism tied to how AFM works — e.g., the needle briefly lost contact, a vibration or electrical
   spike hit mid-line, or the feedback loop overshot on that pass.
@@ -111,4 +111,6 @@ material column. Likely a mislabel introduced upstream of the slice build. Did n
 .venv/bin/jupytext --to ipynb notebooks/src/01_nano_landscapes.py -o notebooks/01_nano_landscapes.ipynb
 .venv/bin/python scripts/run_notebook.py notebooks/01_nano_landscapes.ipynb
 ```
-Last run: PENDING — fill in after execution.
+Last run: `OK   01_nano_landscapes.ipynb -> notebooks/executed/01_nano_landscapes.ipynb`
+(against `data/slice/camel-2dcc-v1.zip`, 12-sample gallery build). All numbers in this key are
+copied from that run's printed cell outputs.

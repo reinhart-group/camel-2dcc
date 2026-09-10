@@ -90,8 +90,11 @@ def surface_3d(scan: AFMScan, exaggeration: float = 1.0, colorscale: str = "Viri
     step = max(1, -(-z.shape[0] // max_pixels))  # ceiling division: never exceed max_pixels
     z = z[::step, ::step]
     axis_nm = np.linspace(0, scan.scan_um * 1000, z.shape[0])
+    # Colour by the 1st-99th percentile so one dust speck or glitch line
+    # doesn't wash out every other feature (the surface itself is unchanged).
+    lo, hi = np.percentile(z, [1, 99])
     fig = go.Figure(go.Surface(x=axis_nm, y=axis_nm, z=z, colorscale=colorscale,
-                               colorbar=dict(title="height (nm)")))
+                               cmin=lo, cmax=hi, colorbar=dict(title="height (nm)")))
     # Keep x and y true to scale; stretch z by the exaggeration factor.
     z_span = max(float(np.ptp(z)), 1e-9)
     xy_span = scan.scan_um * 1000

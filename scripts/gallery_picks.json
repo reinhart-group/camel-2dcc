@@ -33,6 +33,6 @@
   "material": "SnTe", "title": "Almost perfectly flat",
   "story": "Tin telluride (SnTe) grown on indium phosphide. Its surface is so flat that the typical bump is about 0.36 nm, roughly the width of two atoms."},
  {"key": "magnet_grains", "sample_id": 31779, "file": "1x1.spm",
-  "material": "CrSb", "title": "Magnet grains",
-  "story": "Chromium antimonide (CrSb), a magnetic material, grown by molecular beam epitaxy. Its surface is covered in small rounded grains."}
+  "material": "CrSb + Sb2Te3", "title": "Magnet grains",
+  "story": "A film from a study of chromium antimonide (CrSb), a magnetic material, grown by molecular beam epitaxy. The sample record lists two materials, CrSb and Sb2Te3. Its surface is covered in small rounded grains."}
 ]

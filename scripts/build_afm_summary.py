@@ -15,6 +15,7 @@ Resumable. Run from repo root with the .env loaded.
 from __future__ import annotations
 
 import json
+import os
 import logging
 import re
 import sys
@@ -106,7 +107,7 @@ def main() -> None:
     todo = [s for s in index if s not in done]
     log.info("%d indexed samples, %d measured, %d to go", len(index), len(done), len(todo))
     client = PublicLiST()
-    with ThreadPoolExecutor(max_workers=4) as pool:
+    with ThreadPoolExecutor(max_workers=int(os.environ.get("WORKERS", "4"))) as pool:
         futures = {pool.submit(measure, client, sid, index[sid]): sid for sid in todo}
         for n, fut in enumerate(as_completed(futures), 1):
             sid = futures[fut]

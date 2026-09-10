@@ -73,6 +73,7 @@ def build_afm_summary(samples: pd.DataFrame, meas: dict) -> pd.DataFrame:
         out.append({
             "sample_id": int(sid),
             "material": row["materials"].split("; ")[0] if row["materials"] else None,
+            "all_materials": row["materials"] or None,  # samples can list several (e.g. "Sb2Te3; CrSb")
             "substrate": row["substrate"] or None,
             "growth_method": row["growth_method"] or None,
             "date_created": row["date_created"],
