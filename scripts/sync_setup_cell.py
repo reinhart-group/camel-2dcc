@@ -18,13 +18,14 @@ BLOCK = re.compile(r"^DATA_URL = .*?^print\(\"✅ Data ready.*?$", re.S | re.M)
 
 def main() -> None:
     canonical = BLOCK.search((SRC / "_setup_cell.py").read_text()).group(0)
-    for path in sorted(SRC.glob("[0-9][0-9]_*.py")):
+    sources = sorted(SRC.glob("[0-9][0-9]_*.py")) + sorted((ROOT / "notebooks/algebra1/src").glob("A[0-9]_*.py"))
+    for path in sources:
         text = path.read_text()
         if not BLOCK.search(text):
             print(f"SKIP {path.name}: no setup block found")
             continue
         path.write_text(BLOCK.sub(lambda _: canonical, text, count=1))
-        out = ROOT / "notebooks" / (path.stem + ".ipynb")
+        out = path.parent.parent / (path.stem + ".ipynb")
         subprocess.run([str(ROOT / ".venv/bin/jupytext"), "--to", "ipynb", str(path), "-o", str(out)],
                        check=True, capture_output=True)
         print(f"synced {path.name} -> {out.name}")
