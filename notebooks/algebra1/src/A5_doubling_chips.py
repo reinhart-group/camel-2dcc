@@ -60,21 +60,26 @@ print("✅ Data ready:", sorted(os.listdir("camel-2dcc"))[:6], "...")
 
 # %% [markdown]
 # ## Part 1 — A table of real chips
-# `chips_timeline.csv` lists real transistor counts for famous chips, from 1971 to 2024.
+# `chips_timeline.csv` lists real transistor counts for famous chips, from 1971 to 2024. Most
+# rows are a single chip. The **chips in package** column shows when more than one chip is built
+# together — the newest row, the B200, is actually **two** chips in one package.
 
 # %%
 chips = load_table("chips_timeline")
-chips[["year", "chip", "maker", "transistors", "used_for"]]
+chips_display = chips[["year", "chip", "maker", "transistors", "dies_in_package", "used_for"]].rename(
+    columns={"dies_in_package": "chips in package"})
+chips_display
 
 # %% [markdown]
 # ### Task 1 — Fill in a doubling table
-# In 1971, the first chip (the Intel 4004) had **2,300** transistors. Since then, chip counts
-# have often followed a doubling pattern: the count doubles about every 2 years.
+# In 1971, the Intel 4004 — the first microprocessor sold to the public — had **2,300**
+# transistors. Since then, chip counts have often followed a doubling pattern: the count doubles
+# about every 2 years.
 #
 # Fill in the blanks below. Each number is **2 times** the number 2 years before it.
 
 # %%
-year_1971 = 2300   # given: the first chip (1971)
+year_1971 = 2300   # given: the Intel 4004 (1971)
 year_1973 = 0      # ✏️ type your answer here
 year_1975 = 0      # ✏️ type your answer here
 year_1977 = 0      # ✏️ type your answer here
@@ -117,13 +122,17 @@ else:
 
 # %% [markdown]
 # ### Task 3 — Which curve fits the real chips?
-# Now check the doubling pattern against real chip data. The dots below are real chips. The
-# lines are doubling models — one doubles every 2 years, one every 3 years.
+# Now check the doubling pattern against real chip data. The dots below are real **single**
+# chips — we leave out the B200 here, since it's two chips in one package and wouldn't be a fair
+# match for these single-chip doubling lines. The lines are doubling models — one doubles every
+# 2 years, one every 3 years.
 #
-# The early dots sit close to the bottom — that's normal. Early chips had far fewer transistors
-# than today's, so they look tiny next to billions.
+# The left graph shows the whole range, 1971 to 2022. The early dots sit close to the bottom —
+# that's normal, early chips had far fewer transistors than today's, so they look tiny next to
+# billions. The right graph zooms in on just 1971–2000, so you can actually see how well each
+# line fits those early dots.
 #
-# Which line follows the dots more closely, from the early years to the most recent one?
+# Which line follows the dots more closely, in **both** graphs?
 
 # %%
 # @title Helper code (just run this)
@@ -132,23 +141,33 @@ import matplotlib.pyplot as plt
 
 BLUE, GREEN, ORANGE = "#0072B2", "#009E73", "#E69F00"  # colour-blind-safe (Okabe-Ito palette)
 
-def plot_doubling(chips, doubling_times, colors):
+# one chip = one die, so this keeps every dot on the graph the same kind of count
+chips_single_die = chips[chips["dies_in_package"] == 1]
+
+def plot_doubling(chips_to_plot, doubling_times, colors):
     t0, N0 = 1971, 2300
     t_grid = np.linspace(1971, 2026, 200)
-    fig, ax = plt.subplots(figsize=(8, 5))
-    ax.scatter(chips["year"], chips["transistors"], color=ORANGE, s=70, zorder=3, label="real chips")
-    for d, color in zip(doubling_times, colors):
-        model = N0 * 2 ** ((t_grid - t0) / d)
-        ax.plot(t_grid, model, color=color, lw=3, label=f"doubles every {d:g} years")
-    ax.set(xlabel="year", ylabel="number of transistors",
-           title="Real chips (dots) vs. two doubling guesses (lines)")
-    ax.legend()
-    ax.grid(alpha=0.3)
+    fig, (ax_full, ax_zoom) = plt.subplots(1, 2, figsize=(12, 5))
+    panels = [
+        (ax_full, (1971, 2026), "Full range: real chips (dots) vs. two doubling guesses (lines)"),
+        (ax_zoom, (1971, 2000), "Zoomed in: the same graph, 1971 to 2000 only"),
+    ]
+    for ax, xlim, title in panels:
+        ax.scatter(chips_to_plot["year"], chips_to_plot["transistors"], color=ORANGE, s=70,
+                    zorder=3, label="real chips")
+        for d, color in zip(doubling_times, colors):
+            model = N0 * 2 ** ((t_grid - t0) / d)
+            ax.plot(t_grid, model, color=color, lw=3, label=f"doubles every {d:g} years")
+        ax.set(xlabel="year", ylabel="number of transistors", title=title, xlim=xlim)
+        ax.legend()
+        ax.grid(alpha=0.3)
+    zoom_max = chips_to_plot.loc[chips_to_plot["year"] <= 2000, "transistors"].max()
+    ax_zoom.set_ylim(0, zoom_max * 1.3)
     plt.tight_layout()
     plt.show()
 
 # %%
-plot_doubling(chips, [2, 3], [BLUE, GREEN])
+plot_doubling(chips_single_die, [2, 3], [BLUE, GREEN])
 
 # %%
 best_doubling_time = 0   # ✏️ type your answer here: 2 or 3
@@ -169,7 +188,7 @@ else:
 import ipywidgets as widgets
 
 def _one_line(years_to_double):
-    plot_doubling(chips, [years_to_double], [BLUE])
+    plot_doubling(chips_single_die, [years_to_double], [BLUE])
 
 widgets.interact(_one_line, years_to_double=widgets.FloatSlider(
     value=3.0, min=1.0, max=6.0, step=0.5, description="years to double", continuous_update=False))
@@ -183,7 +202,8 @@ widgets.interact(_one_line, years_to_double=widgets.FloatSlider(
 # %%
 # @title Helper code (just run this)
 fig, ax = plt.subplots(figsize=(8, 5))
-ax.scatter(chips["year"], chips["transistors"], color=ORANGE, s=70, zorder=3, label="real chips")
+ax.scatter(chips_single_die["year"], chips_single_die["transistors"], color=ORANGE, s=70,
+           zorder=3, label="real chips")
 t_grid = np.linspace(1971, 2026, 200)
 for d, color in zip([2, 3], [BLUE, GREEN]):
     model = 2300 * 2 ** ((t_grid - 1971) / d)
@@ -197,15 +217,20 @@ plt.tight_layout()
 plt.show()
 
 # %% [markdown]
-# ### Task 4 — How many doublings to 80 billion?
-# The newest chip in our table has about **80 billion** transistors. Starting from 2,300 in
-# 1971, how many times does the number have to double to reach about 80 billion?
+# ### Task 4 — How many doublings to reach the H100?
+# The 2022 chip in our table, the NVIDIA H100, has about **80 billion** transistors — it's a
+# single chip, not a two-chip package like the newer B200. Starting from 2,300 in 1971, how many
+# times does the number have to double to reach that count?
 #
-# You don't need logarithms — use the table below. Find the row closest to 80,000,000,000, and
+# You don't need logarithms — use the table below. Find the row closest to the H100's count, and
 # read off the number of doublings.
 
 # %%
 # @title Helper code (just run this)
+h100 = chips.loc[chips["year"] == 2022].iloc[0]
+target_transistors = int(h100["transistors"])
+target_name = f"{int(h100['year'])} {h100['maker']} {h100['chip']}"
+
 doublings = list(range(28))
 values = [2300 * 2 ** n for n in doublings]
 pd.DataFrame({"doublings": doublings, "value": values})
@@ -214,10 +239,12 @@ pd.DataFrame({"doublings": doublings, "value": values})
 my_doublings_guess = 0   # ✏️ type your answer here
 
 # %%
-if 23 <= my_doublings_guess <= 27:
-    print("✅ Nice! Around 25 doublings gets you from 2,300 to about 80 billion.")
+nearest_doublings = min(doublings, key=lambda n: abs(2300 * 2 ** n - target_transistors))
+if abs(my_doublings_guess - nearest_doublings) <= 1:
+    print(f"✅ Nice! About {nearest_doublings} doublings gets you from 2,300 to about "
+          f"{target_transistors:,} transistors ({target_name}).")
 else:
-    print("Hint: scroll the table for the row where value is closest to 80,000,000,000.")
+    print(f"Hint: scroll the table for the row where value is closest to {target_transistors:,}.")
 
 # %% [markdown]
 # ### Task 5 — Why thin materials matter
@@ -246,6 +273,10 @@ else:
 # > engineering, and it has been slowing down. Newer chips don't always double every 2 years
 # > anymore. Also, `chips_timeline.csv` is a hand-picked list of famous chips, not every chip ever
 # > made, so a different list could give a different doubling time.
+# >
+# > The newest row, the 2024 B200, packs **two** chips into one package for 208 billion
+# > transistors combined — about 104 billion per chip. That's why it's left out of the graphs
+# > above: it isn't counted the same way as the single chips.
 # >
 # > Some of today's biggest chips work inside **data centers** — buildings full of computer chips
 # > that power apps and websites.

@@ -21,7 +21,7 @@ All numbers below come from `scripts/run_notebook.py` against the real data slic
 | 2 | F.LE.1–2, A.CED.2 | Compare a linear table to the doubling table; find the crossover year |
 | 3 | F.IF.4–6 | Read a scatterplot against two model curves; judge fit |
 | *(optional)* | F.IF.6 | Slider (rate of change) and log-axis reading — not required |
-| 4 | A.SSE.1, N.Q.1 | Guess-and-check a table for "how many doublings" (no logs) |
+| 4 | A.SSE.1, N.Q.1 | Guess-and-check a table for "how many doublings" to reach the 2022 H100 (no logs) |
 | 5 | 7.RP (ratio review), N.Q.1 | Ratio/unit division: nm ÷ nm |
 
 ## Timing (30–40 min)
@@ -32,7 +32,7 @@ All numbers below come from `scripts/run_notebook.py` against the real data slic
 | 5–12 | Task 1 — doubling table |
 | 12–18 | Task 2 — doubling vs. adding |
 | 18–26 | Task 3 — fit check (+ optional slider/log-axis extras, ~5 more min if used) |
-| 26–32 | Task 4 — how many doublings to 80 billion |
+| 26–32 | Task 4 — how many doublings to the H100's 80 billion |
 | 32–37 | Task 5 — thin-layer ratio |
 | 37–40 | Exit ticket |
 
@@ -42,14 +42,18 @@ All numbers below come from `scripts/run_notebook.py` against the real data slic
   match required — the check reports how many of the 4 blanks are correct so far.
 - **Task 2:** doubling first passes adding in **1975** (doubling 9,200 vs. adding 6,900; the two
   patterns tie at 1973, 4,600 each, then doubling pulls ahead every step after).
-- **Task 3:** the **2-year** doubling line tracks the real chips better than the 3-year line. This
-  matches the actual best-fit doubling time for this dataset, about **2.05 years** (computed by
-  `numpy.polyfit` on log2-transformed data in the Explorer edition's parallel notebook) — close
-  enough to 2 that "2" is the intended answer, and no fitting is required of students here.
-- **Task 4:** accept **23–27 doublings** (the check accepts this range). 25 doublings from 2,300
-  gives about 77.2 billion; 26 doublings gives about 154.4 billion — the real newest chip (~80
-  billion single-die, or 208 billion for the two-die B200) sits right around this crossover, so
-  "about 25" is the expected read from the table.
+- **Task 3:** the **2-year** doubling line tracks the real chips better than the 3-year line, in
+  both the full-range graph and the 1971–2000 zoom panel. The graph plots only single-chip rows
+  (the two-die B200 is excluded, so every dot is the same kind of count). This matches the actual
+  best-fit doubling time for this filtered dataset, about **2.07 years** (`numpy.polyfit` on
+  log2-transformed data, computed from the same data slice) — close enough to 2 that "2" is the
+  intended answer, and no fitting is required of students here.
+- **Task 4:** the target is the **2022 NVIDIA H100**, the newest *single*-chip row (80,000,000,000
+  transistors) — the notebook computes this from the data table, not a typed number. The nearest
+  table row is **25 doublings** (2,300 x 2^25 ≈ 77.2 billion, the closest value to 80 billion; 24
+  doublings gives ≈38.6 billion and 26 gives ≈154.4 billion, both farther away). The check accepts
+  **24–26** (within 1 doubling of 25) and rejects anything farther off, so a guess of 23 or 27 —
+  nearly 4x away from the real count — no longer passes.
 - **Task 5:** **about 153,846 layers** (100,000 ÷ 0.65). The check accepts any guess within 10% of
   the exact value.
 
@@ -61,9 +65,11 @@ All numbers below come from `scripts/run_notebook.py` against the real data slic
 2. **Reading "first year doubling is bigger" as "first year they're different."** 1971 and 1973
    are *tied*; 1975 is the first year doubling is strictly larger. Point students at the table's
    equal row before the crossover.
-3. **Picking "3" in Task 3 because the curve "looks bigger."** Have students trace the line near
-   the *earliest* years too — the 3-year line undershoots early data and overshoots late data; the
-   2-year line stays closer across the whole range, not just at one end.
+3. **Picking "3" in Task 3 because the curve "looks bigger" near 1971.** Both lines start at the
+   same point (2,300 in 1971), so have students trace forward from there using the zoom panel —
+   the 3-year line falls behind almost immediately and **undershoots every real chip after 1971,
+   by more and more each year** (it never catches up or overshoots). The 2-year line stays much
+   closer across the whole range, not just at one end.
 
 ## If you have 10 more minutes
 
