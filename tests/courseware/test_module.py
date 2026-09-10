@@ -46,6 +46,14 @@ def test_missing_front_matter_is_an_error(tmp_path):
         load_module(p)
 
 
+def test_load_module_rejects_cell_tag_for_undeclared_dial():
+    """A cell tagged with a dial the front matter never declared must be a hard error, not a
+    silent drop (this is exactly the bug that deleted the exit ticket from every built notebook
+    while the build still reported OK)."""
+    with pytest.raises(ModuleError, match="register"):
+        load_module(FIX / "bad_undeclared_dial.py")
+
+
 def test_find_module_searches_subfolders():
     assert find_module("data_demo", [FIX]).kind == "dataset"
     with pytest.raises(ModuleError, match="not found"):

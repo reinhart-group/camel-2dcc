@@ -12,13 +12,18 @@
 # ---
 # %% [markdown] tags=["register:plain"]
 # ## Our data: tiny triangle crystals
-# Scientists grew tiny triangle-shaped crystals on a flat wafer and measured each one's area.
+# Scientists grew tiny triangle-shaped crystals on a wafer (the flat disk crystals grow on)
+# and measured each one's area.
 
 # %% [markdown] tags=["register:explorer"]
 # ## Data: WSe2 islands on sapphire (sample 17458)
 # Areas of islands found by a height rule in three 2 µm × 2 µm AFM fields.
 
 # %%
+# Reading-level note: the Algebra 1 grade-8 gate (courseware/cli.py `_grade`) is measured on the
+# COMPOSED notebook's markdown, across every module in the lesson. Running textstat on this one
+# module's markdown in isolation is not comparable (a 14-word excerpt swings wildly on one long
+# word) and is not how the gate is actually enforced — don't chase a phantom failure there.
 _scans, _grains = load_grain_scans("camel-2dcc")
 _pop = _grains[_grains["role"] == "population"]
 

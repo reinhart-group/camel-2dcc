@@ -70,7 +70,13 @@ def load_module(path: Path) -> Module:
     if meta["kind"] not in ("dataset", "concept", "frame"):
         raise ModuleError(f"{path}: kind must be dataset, concept, or frame")
     nb = jupytext.reads(text[m.end():], fmt="py:percent")
-    return Module(name=meta["module"], kind=meta["kind"], path=Path(path), meta=meta, cells=nb.cells)
+    module = Module(name=meta["module"], kind=meta["kind"], path=Path(path), meta=meta, cells=nb.cells)
+    declared = set(module.dials)
+    for cell in nb.cells:
+        for dial in _dial_tags(cell):
+            if dial not in declared:
+                raise ModuleError(f"{path}: cell tagged '{dial}:...' but front matter declares no '{dial}' dial")
+    return module
 
 
 def find_module(name: str, roots: list[Path]) -> Module:

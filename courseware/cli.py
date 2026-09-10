@@ -26,6 +26,11 @@ def _grade(nb) -> float:
     Note: This is not the same as scripts/readability.py's markdown_text(),
     which also strips links, pipes, and emoji. The CLI gate uses this narrower
     stripping to focus on mathematical and code-fence complexity only.
+
+    Important: ``nb`` here is a COMPOSED notebook (every module in the lesson,
+    concatenated). This grade is not comparable to running textstat on a single
+    module file's markdown in isolation — a short excerpt swings wildly on one
+    long word. Always re-measure via a built notebook, never a module alone.
     """
     text = "\n".join(c.source for c in nb.cells if c.cell_type == "markdown")
     text = re.sub(r"\$[^$]*\$|`[^`]*`|<[^>]+>", " ", text)

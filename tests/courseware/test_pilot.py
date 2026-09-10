@@ -3,6 +3,11 @@ from pathlib import Path
 from courseware.manifest import load_lesson
 from courseware.compose import compose
 
+# Reading-level note: the Algebra 1 grade-8 Flesch-Kincaid gate lives in courseware/cli.py
+# (`_grade`) and is measured on a COMPOSED notebook's full markdown, not on any one module file
+# in isolation. A per-module spot check is not comparable (a short excerpt swings wildly on a
+# single long word) — always re-measure against a built notebook, not a module's own text.
+
 ROOT = Path(__file__).resolve().parents[2]
 ROOTS = [ROOT / "courseware" / "modules"]
 
