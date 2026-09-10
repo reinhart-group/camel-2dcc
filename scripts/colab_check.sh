@@ -9,7 +9,10 @@ set -u
 SESSION="$1"; shift
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 WORK="$(mktemp -d)"
-timeout 60 colab status -s "$SESSION" >/dev/null 2>&1 || timeout 200 colab new -s "$SESSION" | tail -1
+# `colab status` does not fail for a pruned session, so look the name up in the live list.
+if ! timeout 60 colab sessions 2>/dev/null | grep -q "\[$SESSION\]"; then
+  timeout 200 colab new -s "$SESSION" | tail -1
+fi
 echo "import os, shutil; shutil.rmtree('/content/camel-2dcc', ignore_errors=True); [os.remove(p) for p in ['/content/camel-2dcc-v1.zip'] if os.path.exists(p)]" \
   | timeout 60 colab exec -s "$SESSION" >/dev/null 2>&1
 for nb in "$@"; do
