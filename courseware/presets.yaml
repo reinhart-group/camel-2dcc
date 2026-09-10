@@ -1,0 +1,4 @@
+# Named bundles of dial defaults. A lesson picks one; its own `dials` and each
+# module's overrides win over the preset.
+algebra1: {register: plain, guidance: fill, messiness: flagged}
+explorer: {register: explorer, guidance: open, messiness: real}
