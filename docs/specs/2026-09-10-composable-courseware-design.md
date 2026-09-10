@@ -124,12 +124,43 @@ Becca's framework.
    build and pass.
 4. Codex reviews the framework and one built lesson; Colab run of every built notebook.
 
+## Revisions after Codex design review (docs/codex/review-composable-design.md)
+
+All seven points accepted; they supersede the sections above where they conflict.
+
+1. **Build-time vs. run-time.** `guidance`, `register`, the module list, and exposed `variables`
+   are structural and fixed at build time. The notebook's runtime `PARAMS` holds only validated
+   numeric choices (`sample_size`, `seed`); changing them requires Restart & Run All. Answer checks
+   recompute references from immutable source data, never from student-edited objects.
+2. **Named editions, not free combinations.** Each lesson ships a small set of supported profiles
+   (e.g. `algebra1`, `explorer`). Modules declare machine-readable requirements
+   (`requires_columns`, `min_rows`, `requires_messiness`, `assumes`, `minutes`); the builder
+   rejects a manifest whose dial settings break a module, with a specific error.
+3. **Real contracts.** Outputs are namespaced (`roughness_table`, `grains_table`), and each dataset
+   module's contract (type, required columns, units, invariants) lives in YAML and is asserted at
+   runtime right after the module runs. The builder checks manifest order for missing inputs and
+   duplicate producers. No claim of static proof.
+4. **Variants via Jupytext cell tags** (`variant-guidance-scaffolded`, `variant-register-plain`),
+   parsed with Jupytext/nbformat; every alternative group must resolve to exactly one cell.
+   `task_id` is explicit cell metadata, independent of notebook cell IDs.
+5. **Testing.** Build and execute every shipped manifest, fail closed on conversion or any
+   unexpected cell error, snapshot module order/task IDs; exhaustive over shipped profiles,
+   property tests only for runtime numeric ranges; human review stays for prose and pacing.
+6. **Telemetry deferred.** The slot ships as a no-op. Before it activates: deterministic semantic IDs
+   (`lesson/module/task/cell_role`), build profile + runtime-config hash on every event, no source,
+   outputs, or secrets sent, consent, async queue with short timeouts, silent bounded failures.
+7. **Smaller pilot.** One dataset module (`data_afm_summary`) + one task
+   (`task_mean_median_by_hand`), two named manifests (`algebra1`: plain/scaffolded/small sample;
+   `explorer`: explorer/open/larger sample). Acceptance: deterministic outputs, contract and order
+   validation, fail-closed execution on the real slice, independent answer checks, one Colab smoke
+   test, and visibly shared task logic. Add a dial only after the pilot passes.
+
 ## Open questions for Wes
 
 1. Copy MATSE 219's build code into CAMEL, or factor a shared tiny package both repos import?
    (Recommend: copy now, factor later if a third course appears.)
-2. Should teachers turn dials only by picking a manifest, or also by editing the parameters cell in
-   Colab? (Recommend: both; the parameters cell is how the proposal's "teacher adjusts difficulty"
-   becomes real in class.)
+2. Teachers pick an edition (build-time) and may change only numeric data dials such as sample size
+   and seed in Colab (revision 1). Is that enough control for the partner teachers, or do they need
+   more editions per lesson?
 3. Does Becca's telemetry framework already define an event schema (xAPI/Caliper per the proposal)
    that the hook should emit?

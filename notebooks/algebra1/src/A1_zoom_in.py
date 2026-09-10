@@ -168,15 +168,14 @@ else:
 # %%
 layer_thickness_m = 0.00000000065   # one crystal layer, in metres (0.65 nm)
 layer_scaled_m = ...  # ✏️ type your answer here: layer_thickness_m * scale_factor
-print(f"At football-field scale, one layer would look {layer_scaled_m * 100:.1f} cm tall.")
 
 # %%
 # @title Helper code (just run this)
 expected_layer_m = layer_thickness_m * scale_factor
-if abs(layer_scaled_m - expected_layer_m) < 1e-4:
-    print(f"✅ Nice! About {expected_layer_m * 100:.1f} cm tall — roughly as thick as a phone!")
-elif layer_scaled_m == ...:
+if layer_scaled_m == ...:
     print("🔁 Replace the `...`: layer_thickness_m * scale_factor.")
+elif abs(layer_scaled_m - expected_layer_m) < 1e-4:
+    print(f"✅ Nice! About {expected_layer_m * 100:.1f} cm tall — roughly as thick as a phone!")
 else:
     print(f"🔁 Check your formula. It should give about {expected_layer_m * 100:.1f} cm.")
 

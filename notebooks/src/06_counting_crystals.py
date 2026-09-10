@@ -26,8 +26,9 @@
 #   atoms landed and grew.
 # - **Wafer / substrate:** the sapphire disc the crystals grow on.
 # - **MOCVD:** the growth method used here — reactive gases deposit atoms on a heated wafer.
-# - **Population:** literally *every* member of the group you care about — here, every whole,
-#   cleanly separated triangle anywhere on this wafer.
+# - **Population:** literally *every* member of the group you care about. In this notebook, our
+#   population is every whole, cleanly separated triangle *we measured* in three small 2 µm × 2 µm
+#   scans on wafer 17458 — not every triangle on the whole wafer, which we never fully scanned.
 # - **Sample:** a smaller group you actually measure, used to estimate something about the whole
 #   population.
 # - **Random sample:** a sample chosen so every member of the population has an equal chance of
@@ -77,6 +78,13 @@ except ImportError:
 from camel_data.classroom import *
 print("✅ Data ready:", sorted(os.listdir("camel-2dcc"))[:6], "...")
 
+# %%
+try:
+    import skimage  # noqa: F401 — the grain outlines and line profiles below need this
+except ImportError:
+    raise ImportError("This notebook needs scikit-image. Run `%pip install -q scikit-image` in a "
+                       "new cell above, choose Runtime ▸ Restart session, then run this cell again.")
+
 # %% [markdown]
 # ## Load the grain data
 # `scans` holds the AFM height maps (and the computer's grain outlines); `table` is one row per
@@ -97,8 +105,11 @@ print("grains.csv rows:", len(table))
 # A simple computer rule looked at every pixel of the `wse2_17458_center` scan (2 µm × 2 µm, the
 # middle of the wafer) and outlined every grain it found, colored by what kind of blob it thinks
 # each one is:
-# - 🟩 **single** — one clean triangle, fully inside the scan.
-# - 🟧 **merged** — two or more triangles that grew into each other.
+# - 🟩 **single** — one blob that passed simple shape checks (not too tall, not too stretched-out,
+#   not too concave). A good candidate for "one clean triangle" — but the rule never actually
+#   checks that the shape *is* a triangle, so treat this label as "our best guess," not a proof.
+# - 🟧 **merged** — a blob shaped like two things stuck together (low solidity) — probably two or
+#   more triangles that grew into each other.
 # - 🩷 **dust** — a blob much taller than a typical triangle (probably a stray particle, not a crystal).
 # - 🟦 **streak** — a thin, stretched-out sliver (probably a scan glitch, not a crystal).
 #
@@ -156,15 +167,16 @@ print(mistake[["grain", "kind", "area_nm2", "height_nm", "row", "touches_edge", 
 # > throws out *any* grain that touches a bad row or the scan's edge, before it ever gets counted.
 
 # %%
-print("all detected grains in this scan:      ", len(table[table.scan == "wse2_17458_center"]))
-print("whole, single, undamaged triangles only:", len(whole_single(table, "wse2_17458_center")))
+print("all detected blobs in this scan:            ", len(table[table.scan == "wse2_17458_center"]))
+print("whole, single-candidate, undamaged blobs only:", len(whole_single(table, "wse2_17458_center")))
 
 # %% [markdown]
 # ## Part 2 — Why triangles, and how big is one?
 #
-# WSe2's atoms bond in a repeating hexagonal pattern, so the crystal's edges naturally grow along
-# directions 60° apart. That's why these grains come out as triangles (or hexagons, if growth
-# happens evenly in every direction) instead of blobs or squares. For an **equilateral** triangle
+# WSe2's atoms bond in a repeating hexagonal pattern, which only allows crystal edges along
+# directions 60° apart — and the growth conditions here favor two of those three edge directions
+# over the third, which is why these grains come out as triangles instead of hexagons, blobs, or
+# squares. For an **equilateral** triangle
 # with side length $s$, geometry gives its area directly:
 #
 # $$A = \frac{\sqrt{3}}{4} s^2$$
@@ -173,26 +185,38 @@ print("whole, single, undamaged triangles only:", len(whole_single(table, "wse2_
 # The table already lists a `side_nm` for every grain — but that number was calculated *backward*
 # from the measured area using this exact formula, so comparing it to the formula would just prove
 # the formula equals itself. Instead, **measure a side yourself** from the picture's nm grid, then
-# check it against the area the computer measured by counting pixels — two genuinely independent
-# numbers.
+# check it against the area the computer measured by counting pixels. These are two differently
+# measured numbers, not two *independent* ones — both come from the same thresholded image and the
+# same x-y calibration, so a shared calibration error would show up in both.
 
 # %%
-# @title Helper code (just run this) — zoom on one grain with a measuring grid
-GRAIN = 217  # <-- change me: try another id from the picture in Part 1 (e.g. read one off the map)
+# @title Helper code (just run this) — pick a numbered grain, then zoom in to measure it
+GRAIN = 217  # <-- change me: pick any numbered id from the left-hand map below
 
+candidates = set(whole_single(table, "wse2_17458_center")["grain"])
+if GRAIN not in candidates:
+    raise ValueError(f"grain {GRAIN} isn't one of the whole single-candidate triangles in this scan "
+                      f"— pick one of these ids instead: {sorted(candidates)[:20]} ...")
 row = table[(table.scan == "wse2_17458_center") & (table.grain == GRAIN)].iloc[0]
 px = scan["pixel_nm"]
 cx, cy = row.col * px, row.row * px
 print(f"grain {GRAIN}: area = {row.area_nm2:.0f} nm² (measured by counting its pixels), "
-      f"height = {row.height_nm:.2f} nm")
+      f"measured height = {row.height_nm:.2f} nm")
 
-fig, ax = plt.subplots(figsize=(6, 6))
-show_grains(scan, table, ax=ax)
-ax.set_xlim(cx - 80, cx + 80)
-ax.set_ylim(cy + 80, cy - 80)
-ax.set_xticks(np.arange(round(cx - 80, -1), cx + 81, 20))
-ax.set_yticks(np.arange(round(cy - 80, -1), cy + 81, 20))
-ax.grid(True, color="white", alpha=0.5)
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 6))
+show_grains(scan, table, ax=ax1, kinds=("single",), number=True)
+ax1.set_xlim(cx - 150, cx + 150)
+ax1.set_ylim(cy + 150, cy - 150)
+ax1.set_title("numbered candidates — pick any id shown here")
+
+show_grains(scan, table, ax=ax2)
+ax2.set_xlim(cx - 80, cx + 80)
+ax2.set_ylim(cy + 80, cy - 80)
+ax2.set_xticks(np.arange(round(cx - 80, -1), cx + 81, 20))
+ax2.set_yticks(np.arange(round(cy - 80, -1), cy + 81, 20))
+ax2.grid(True, color="white", alpha=0.5)
+ax2.set_title(f"grain {GRAIN} — measure a side (nm grid)")
+plt.tight_layout()
 plt.show()
 
 # %%
@@ -205,11 +229,11 @@ print(f"area the computer measured (pixels):  {row.area_nm2:.0f} nm²")
 # %%
 # @title Helper code (just run this) — check yourself
 ratio = predicted_area_nm2 / row.area_nm2
-if 0.5 <= ratio <= 2.0:
-    print(f"Reasonable! Your grid estimate predicts an area within 2x of the measured area "
+if 0.75 <= ratio <= 1.25:
+    print(f"Reasonable! Your grid estimate predicts an area within 25% of the measured area "
           f"(ratio = {ratio:.2f}).")
 else:
-    print(f"That's more than 2x off (ratio = {ratio:.2f}) — look at the grid again and re-measure "
+    print(f"That's more than 25% off (ratio = {ratio:.2f}) — look at the grid again and re-measure "
           f"the triangle's side.")
 
 # %% [markdown]
@@ -241,7 +265,7 @@ def plot_grain_profile(scan, table, grain, angle_deg=0.0, reach=1.6):
     ax2.grid(alpha=0.3)
     plt.tight_layout()
     plt.show()
-    print(f"peak height on this line: {h.max():.2f} nm")
+    print(f"measured peak height on this line: {h.max():.2f} nm")
     return d, h
 
 # %%
@@ -255,12 +279,14 @@ d, h = plot_grain_profile(scans["wse2_17458_center"], table, GRAIN, angle_deg=90
 #
 # > **Scientist's note:** This triangle's peak height usually reads about **1.5–1.8 nm** — but a
 # > textbook WSe2 monolayer step is only about **0.65–0.7 nm**. AFM height can read high on
-# > sapphire: a thin layer of adsorbed water, tip shape, and calibration all add error. We're not
-# > going to claim this tells us a layer count — just that "measured height" and "true crystal
-# > thickness" aren't automatically the same number.
+# > sapphire for reasons that have nothing to do with the crystal itself: a thin layer of adsorbed
+# > water on the surface, how the scan was leveled, and where the calibration sets the "substrate"
+# > level can all shift the reported height. (A microscope tip's shape mostly affects *lateral*
+# > size, not vertical height.) We're not going to claim this tells us a layer count — just that
+# > "measured height" and "true crystal thickness" aren't automatically the same number.
 
 # %% [markdown]
-# ### Task 3b (Core) — Two more surfaces
+# ### Task 3b (Explore, optional — skip this if you're short on time)
 # Same idea, on scans that don't have a grain table — just raw height maps. `wse2_24111_center` has
 # **bigger** WSe2 triangles with brighter rims and bright inner patches. `snse_39166_top` is a
 # completely different material, SnSe, grown as stacked pyramids.
@@ -304,9 +330,10 @@ d2, h2 = plot_line_scan(scans["snse_39166_top"], (3200, 1550), (4900, 1550), "sn
 # ## Part 4 — Population vs. sample
 #
 # This is the big idea of the notebook. Sample 17458 was scanned at **three spots on the same
-# wafer** — center, toward the flat, toward the edge. Every whole, undamaged single triangle found
-# across *all three* spots together is our **population**: everything we could possibly measure
-# about grain size on this wafer.
+# wafer** — center, toward the flat, toward the edge — each a small 2 µm × 2 µm field. Every whole,
+# undamaged single-candidate triangle found across *all three* fields together is **our
+# population**: every triangle we measured, in these three scans. It is *not* every triangle on the
+# whole wafer — we never scanned the rest of it, so we can't say what's out there.
 
 # %%
 POP_KEYS = ["wse2_17458_center", "wse2_17458_flat", "wse2_17458_edge"]
@@ -314,7 +341,8 @@ pop_grains = whole_single(table)
 pop_grains = pop_grains[pop_grains["scan"].isin(POP_KEYS)]
 population = pop_grains["area_nm2"].to_numpy()
 mu = population.mean()
-print(f"population size N = {len(population)} triangles")
+print(f"population size N = {len(population)} triangles (every triangle we measured in these three "
+      f"2 µm × 2 µm fields — not the whole wafer)")
 print(f"population mean area μ = {mu:.0f} nm²   (population SD σ = {population.std():.0f} nm²)")
 
 # %%
@@ -323,7 +351,8 @@ fig, ax = plt.subplots(figsize=(8, 5))
 ax.hist(population, bins=30, color="#0072B2", alpha=0.75, edgecolor="white")
 ax.axvline(mu, color="black", lw=2, ls="--", label=f"population mean μ = {mu:.0f} nm²")
 ax.set(xlabel="grain area (nm²)", ylabel="number of grains",
-       title=f"Population: all {len(population)} whole single triangles, wafer 17458 (3 spots)")
+       title=f"Our population: all {len(population)} triangles we measured, in 3 scanned fields "
+             f"on wafer 17458")
 ax.legend()
 plt.tight_layout()
 plt.show()
@@ -331,8 +360,11 @@ plt.show()
 # %% [markdown]
 # ### Task 4 (Core) — Draw one random sample
 # A real scientist can't measure all 501 triangles every time — they scan a smaller area and
-# **sample** it. `random_sample` picks values at random, like drawing names from a hat. Changing
-# the `seed` picks a *different* random sample (same seed = same sample, every time).
+# **sample** it. `random_sample` picks values at random, like drawing names from a hat, giving every
+# triangle in our 501 an equal chance — that's a simplified stand-in for scanning a smaller area: a
+# real area scan grabs whichever triangles happen to sit inside that patch, not an equal-chance draw
+# from every triangle we know about. Changing the `seed` picks a *different* random sample (same
+# seed = same sample, every time).
 
 # %%
 SEED = 3  # <-- change me: try a few different whole numbers
@@ -413,30 +445,40 @@ for k in POP_KEYS:
 # ### Task 6 (Core) — The lazy scientist
 # Imagine a scientist who is always in a hurry, and *always* scans "toward the edge" because it's
 # the first spot on the sample holder.
+#
+# > **Careful:** we only scanned *one* field at each position. The "toward the edge" field's
+# > triangles really are bigger than the "center" field's, in this data — but one field per
+# > position can't prove that's true of the whole edge of this wafer. It might be a real
+# > wafer-position effect, or it might just be how this one patch happened to look. To find out for
+# > sure you'd need to scan several separate fields near the edge and see whether they agree.
 
 # %%
 edge_mean = pop_grains.loc[pop_grains["scan"] == "wse2_17458_edge", "area_nm2"].mean()
 percent_off = 100 * (edge_mean - mu) / mu
-print(f"'toward the edge' spot only: mean = {edge_mean:.0f} nm²")
-print(f"true population mean μ:      {mu:.0f} nm²")
-print(f"that's {percent_off:+.0f}% off — every single time, no matter how many grains they measure")
+print(f"'toward the edge' field only: mean = {edge_mean:.0f} nm²")
+print(f"our pooled 3-field mean μ:    {mu:.0f} nm²")
+print(f"that's {percent_off:+.0f}% off — and every grain in that number came from the same one "
+      f"field, so measuring more grains *from that same field* can't change which field it is")
 
 # %% [markdown]
 # **Your answer:** A random sample of n=10 (Task 4) was sometimes off from μ by a lot, sometimes by
-# a little — that's **random error**, and more grains would shrink it (Task 5). The lazy scientist's
-# edge-only number is off by a *predictable* amount, in the *same direction*, every time — that's
-# **bias**. Would scanning *more* grains at the edge fix the lazy scientist's problem? Why or why
-# not?
+# a little — that's **random error**, and more grains would shrink it (Task 5). The lazy scientist
+# always scans the *same* one edge field, so their number is off by roughly the same amount, in the
+# same direction, *systematically* — that's what **bias** means: an error that comes from *how* (or
+# *where*) you sampled, not one that random chance produces and more data from that same biased
+# place would shrink. Would scanning *more* grains at that same edge field fix the lazy scientist's
+# problem? Would scanning several *different* edge-area fields tell you something one field can't?
 #
 # _(write your answer here)_
 
 # %% [markdown]
 # ## Complexity dials
-# - **Core:** Tasks 1–6 — judge the rule, measure a grain two ways, read three line scans, build a
-#   population, sample it, and compare spots on the wafer.
-# - **Explore:** the "Your answer" reflections throughout — write out your reasoning, not just a
-#   number.
-# - **Extend:** Task 7 below — a second wafer, and a source of measurement error we deliberately
+# - **Core (the 45-minute path):** Tasks 1, 2, 3, 4, 5, 6 — judge the rule, measure a grain two
+#   ways, read one line scan, build our 501-triangle set, sample it, and compare fields on the
+#   wafer.
+# - **Explore:** Task 3b (two more line scans) if there's time, plus the "Your answer" reflections
+#   throughout — write out your reasoning, not just a number.
+# - **Extend:** Task 7 below — a second recipe, and a source of measurement error we deliberately
 #   excluded all along.
 
 # %% [markdown]
