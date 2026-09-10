@@ -1,0 +1,19 @@
+year,chip,maker,transistors,used_for,note
+1971,4004,Intel,2300,calculator,first commercial microprocessor
+1974,8080,Intel,6000,early personal computers,
+1978,8086,Intel,29000,IBM PC ancestor,
+1982,80286,Intel,134000,personal computers,
+1985,80386,Intel,275000,personal computers,
+1989,80486,Intel,1200000,personal computers,
+1993,Pentium,Intel,3100000,personal computers,
+1997,Pentium II,Intel,7500000,personal computers,
+2000,Pentium 4,Intel,42000000,personal computers,
+2006,Core 2 Duo,Intel,291000000,laptops and desktops,
+2010,Core i7 (Westmere),Intel,1170000000,laptops and desktops,
+2013,Apple A7,Apple,1000000000,smartphones,
+2016,GP100 (Pascal),NVIDIA,15300000000,AI and graphics,
+2017,GV100 (Volta),NVIDIA,21100000000,AI data centers,
+2020,Apple M1,Apple,16000000000,laptops,
+2020,GA100 (A100),NVIDIA,54200000000,AI data centers,
+2022,GH100 (H100),NVIDIA,80000000000,AI data centers,
+2024,B200 (Blackwell),NVIDIA,208000000000,AI data centers,two dies in one package
