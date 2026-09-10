@@ -51,6 +51,8 @@ if not _ready():
     if not _ready():
         raise RuntimeError("The data file is incomplete or the wrong version. Download camel-2dcc-v1.zip again.")
 sys.path.insert(0, "camel-2dcc")
+import importlib, camel_data.classroom  # reload so an updated data file never runs old helper code
+importlib.reload(camel_data.classroom)
 try:
     from google.colab import output
     output.enable_custom_widget_manager()

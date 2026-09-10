@@ -16,8 +16,8 @@
 #   a 60° crystal.
 # - Read real height profiles across a WSe2 triangle, a bigger WSe2 flake, and a stack of SnSe
 #   crystals — and meet a case where AFM height doesn't mean quite what you'd expect.
-# - Build a **population** of 501 real triangles from one wafer, draw random **samples** from it,
-#   and watch sample means converge on the population mean as sample size grows.
+# - Build a **population** of 501 real triangles measured in three scans on one wafer, draw random
+#   **samples** from it, and watch sample means converge on the population mean as sample size grows.
 #
 # **Time:** about 45 minutes, plus an optional extension.
 #
@@ -70,6 +70,8 @@ if not _ready():
     if not _ready():
         raise RuntimeError("The data file is incomplete or the wrong version. Download camel-2dcc-v1.zip again.")
 sys.path.insert(0, "camel-2dcc")
+import importlib, camel_data.classroom  # reload so an updated data file never runs old helper code
+importlib.reload(camel_data.classroom)
 try:
     from google.colab import output
     output.enable_custom_widget_manager()
@@ -484,9 +486,12 @@ print(f"that's {percent_off:+.0f}% off — and every grain in that number came f
 # %% [markdown]
 # ## Extension (optional)
 #
-# ### Task 7 (Extend) — Seeds vs. islands, and the grains we threw away
-# `wse2_17464_center` is the *same recipe family* as 17458, but grown with no growth step at all —
-# just the seeds that nucleate before growth begins.
+# ### Task 7 (Extend) — Comparing two different recipes, and the grains we threw away
+# `wse2_17464_center` and `wse2_17458_center` are two *different* growth recipes, not a
+# before/after pair: 17458 was nucleated at 850 °C with no ripening step, while 17464 was
+# nucleated at 875 °C and then given a 10-minute ripening step. That's two things different at
+# once (temperature *and* ripening), so nothing below can tell us which one — if either — caused
+# any difference we see. Treat this as a descriptive comparison, not a controlled experiment.
 
 # %%
 # @title Helper code (just run this)
@@ -494,17 +499,21 @@ for key in ["wse2_17458_center", "wse2_17464_center"]:
     s = scans[key]
     ws = whole_single(table, key)
     density = len(ws) / s["scan_um"] ** 2
+    min_area_nm2 = 12 * s["pixel_nm"] ** 2  # the smallest blob the rule can keep, in nm² at this pixel size
     print(f"{key}: {s['growth_note']}")
-    print(f"  wafer coverage:        {100*s['covered_fraction']:.1f}%")
-    print(f"  whole single triangles: {len(ws)}  ({density:.1f} per µm²)")
-    print(f"  mean triangle area:     {ws['area_nm2'].mean():.0f} nm²\n")
+    print(f"  above-threshold pixel fraction in this field: {100*s['covered_fraction']:.1f}%  "
+          f"(every detected blob — merged, dust, streak, and single — not just clean triangles)")
+    print(f"  whole single-candidate triangles: {len(ws)}  ({density:.1f} per µm²)")
+    print(f"  mean triangle area:     {ws['area_nm2'].mean():.0f} nm²")
+    print(f"  pixel size {s['pixel_nm']:.2f} nm → smallest detectable blob ≈ {min_area_nm2:.0f} nm²\n")
 
 # %% [markdown]
-# **Your answer:** The no-growth-step wafer covers *less* of the surface — but is that because its
-# triangles are smaller, or because there are fewer of them, or both? Use the printed numbers, not
-# just a guess. (One honest caveat: this scan is 5 µm across at coarser pixel spacing than the 2 µm
-# population scans, so it can miss the very smallest seeds — keep that in mind before comparing too
-# strongly.)
+# **Your answer:** These two scans also don't share a pixel size — look at the "smallest detectable
+# blob" line above. A scan with bigger pixels can't detect a small triangle that a finer scan would
+# catch, so any density or coverage difference between the two is only *approximate*, not a clean
+# apples-to-apples count. Given all the printed numbers (and that caveat), does the lower coverage
+# on `wse2_17464_center` look like it comes from smaller triangles, fewer triangles, or is the
+# resolution difference too large to say confidently? Explain your reasoning.
 #
 # _(write your answer here)_
 #

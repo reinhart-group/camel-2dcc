@@ -18,7 +18,10 @@ BLOCK = re.compile(r"^DATA_URL = .*?^print\(\"✅ Data ready.*?$", re.S | re.M)
 
 def main() -> None:
     canonical = BLOCK.search((SRC / "_setup_cell.py").read_text()).group(0)
-    sources = sorted(SRC.glob("[0-9][0-9]_*.py")) + sorted((ROOT / "notebooks/algebra1/src").glob("A[0-9]_*.py"))
+    import sys
+
+    sources = ([Path(p).resolve() for p in sys.argv[1:]] or
+               sorted(SRC.glob("[0-9][0-9]_*.py")) + sorted((ROOT / "notebooks/algebra1/src").glob("A[0-9]_*.py")))
     for path in sources:
         text = path.read_text()
         if not BLOCK.search(text):
