@@ -65,6 +65,23 @@ def load_table(name: str, data_dir: str | Path | None = None):
     return pd.read_csv(_data_dir(data_dir) / f"{name}.csv")
 
 
+def load_extra(name: str, data_dir: str | Path | None = None):
+    """Load a non-AFM file from ``extras/``: ``.csv`` → DataFrame, ``.json`` → dict,
+    ``.png`` → 2D NumPy array (grey levels 0-255)."""
+    path = _data_dir(data_dir) / "extras" / name
+    if path.suffix == ".csv":
+        import pandas as pd
+
+        return pd.read_csv(path)
+    if path.suffix == ".json":
+        return json.loads(path.read_text())
+    if path.suffix == ".png":
+        from PIL import Image
+
+        return np.asarray(Image.open(path).convert("L"))
+    raise ValueError(f"unsupported file type: {name}")
+
+
 def load_small_maps(data_dir: str | Path | None = None) -> dict[int, np.ndarray]:
     """Every AFM scan shrunk to 64 x 64 (heights in nm), keyed by sample id."""
     blob = np.load(_data_dir(data_dir) / "afm_small.npz")

@@ -245,6 +245,12 @@ def main() -> None:
         if p.suffix in (".npz", ".csv", ".json"):
             shutil.copy(p, OUT / "grains" / p.name)
 
+    # Non-AFM data for notebook 07 (built by scripts/build_extras.py).
+    (OUT / "extras").mkdir()
+    for p in sorted((RAW / "extras/clean").glob("*")):
+        if p.suffix in (".csv", ".json", ".png"):
+            shutil.copy(p, OUT / "extras" / p.name)
+
     gallery = build_gallery(picks, meas, samples)
     (OUT / "stl").mkdir()
     for g in gallery[:2]:
