@@ -7,12 +7,20 @@ equations), A.SSE.1 (interpreting scale-factor expressions).
 
 ## Goals
 Students convert between metre/mm/µm/nm, use a ratio to compare sizes, and compute a scale
-factor to connect a microscopic crystal scan to a human-scale object (a football field).
+factor to connect a microscopic crystal scan to a human-scale object (a soccer field, 100 m
+long).
+
+**Task 1's widget is optional.** Students see a static 3D plot first and can answer from that
+alone; the dropdown/slider cell after it is clearly labelled optional so a stalled widget
+never blocks the rest of the lesson. **Task 5's 3D-print/download step is gated** behind
+`MAKE_MY_PRINT = False` — it does not run (and does not start a download) until a student
+flips it to `True`, so Run All finishes cleanly.
 
 ## Answers (from the executed notebook)
 - **Task 2** (5 µm → nm): `scan_width_nm = 5000`.
 - **Task 3** (hair ÷ scan ratio): `scans_per_hair = 16` (80 µm ÷ 5 µm).
-- **Task 4** (scale factor): `scale_factor = 20,000,000×` (100 m ÷ 0.000005 m).
+- **Task 4** (scale factor): `scale_factor = 20,000,000×` (100 m ÷ 0.000005 m) — this one is
+  worked for students, since the next step (`layer_scaled_m`) is the checked task that uses it.
   Scaled layer height: `layer_scaled_m ≈ 0.013 m = 1.3 cm` — about a phone's thickness.
 - **Exit ticket:**
   1. 3 µm = 3,000 nm.
@@ -34,7 +42,7 @@ factor to connect a microscopic crystal scan to a human-scale object (a football
 ## If you have 10 more minutes
 - Have students redo Task 4 with a different "model" size (e.g., a basketball court, 28 m)
   and compare how the scaled layer height changes.
-- Ask: "If the crystal layer were twice as thick in real life, would the football-field
+- Ask: "If the crystal layer were twice as thick in real life, would the soccer-field
   model need a *bigger* or *smaller* scale factor to stay the same size?" (Trick question —
   scale factor doesn't depend on layer thickness at all; it's set by the scan width and the
   field length.)

@@ -1,9 +1,9 @@
 # %% [markdown]
 # # How Bumpy Is It? Mean, Median, and Samples
 #
-# Computer chips only work if the crystal layers inside them are very flat. To check, Penn
-# State scientists scan a surface with a microscope and get thousands of height numbers back.
-# One number can't tell the whole story — so they use statistics.
+# Many computer-chip-making steps need very flat surfaces. To check, Penn State scientists
+# scan a surface with a microscope and get thousands of height numbers back. One number can't
+# tell the whole story — so they use statistics.
 #
 # Today's math: mean, median, range, and how to trust a sample instead of measuring
 # everything.
@@ -93,7 +93,7 @@ else:
 
 # %% [markdown]
 # ## Task 2 — Two real surfaces: which is bumpier?
-# `smoothest_surface` grew almost perfectly flat. `gallium_selenide_bumps` grew covered in
+# Below are two real surfaces. One grew almost perfectly flat. The other grew covered in
 # little mounds. Look at both pictures, then their histograms (a bar chart of how many pixels
 # had each height).
 
@@ -129,9 +129,18 @@ show_surface_and_histogram(gallery["gallium_selenide_bumps"])
 
 # %% [markdown]
 # **Your answer:** Which surface's histogram is wider — meaning its heights are more spread
-# out? Which surface is bumpier: `smoothest_surface` or `gallium_selenide_bumps`?
+# out? Which surface is bumpier: the flat one or the mounded one?
 #
 # _(write here)_
+
+# %% [markdown]
+# **Check your thinking:** ▶ run the cell below to see one good answer.
+
+# %%
+# @title Helper code (just run this) — reveals a model answer
+print("Model answer: the mounded surface (little bumps everywhere) has the wider histogram — "
+      "its heights are more spread out — so it's the bumpier one. The flat surface's "
+      "histogram is a narrow spike near one height.")
 
 # %% [markdown]
 # ## Task 3 — One speck of dust
@@ -162,9 +171,19 @@ else:
 # _(write here)_
 
 # %% [markdown]
+# **Check your thinking:** ▶ run the cell below to see one good answer.
+
+# %%
+# @title Helper code (just run this) — reveals a model answer
+print("Model answer: the mean adds every value and divides by the count, so one huge number "
+      "pulls that total way up. The median just picks the middle value of the sorted list — "
+      "one extreme value can only ever be one item in that list, so it barely moves.")
+
+# %% [markdown]
 # ## Task 4 — Sampling real triangles
-# `wse2_17458_center` is a real scan of a wafer covered in tiny triangle-shaped crystals. The
-# green outlines below are triangles the computer found and measured.
+# Below is a real scan of a small patch of a wafer (the flat disk crystals grow on), covered
+# in tiny triangle-shaped crystals. A simple computer rule outlined every blob that passed its
+# size-and-shape checks and looks like one whole triangle.
 
 # %%
 scans, table = load_grain_scans()
@@ -172,13 +191,16 @@ scan = scans["wse2_17458_center"]
 
 fig, ax = plt.subplots(figsize=(6, 6))
 show_grains(scan, table, ax=ax, kinds=("single",))
-ax.plot([], [], color="#2ca02c", lw=3, label="green = one triangle")
+ax.set_title("Triangle crystals (one scanned patch of the wafer)")
+ax.plot([], [], color="#2ca02c", lw=3, label="green = passed the checks")
 ax.legend(loc="upper right")
 plt.show()
 
 # %% [markdown]
-# Across the whole wafer (three scanned spots), there are **501** whole, clean triangles —
-# that's our whole group. Each one has an area, in nm². Below is the whole group's mean area.
+# The computer checked three small patches of the wafer like this one. Across all three
+# patches, it kept **501** triangles that passed its checks — that's all the triangles we
+# measured, our whole group for this lesson. Each one has an area, in nm² (square
+# nanometres). Below is the whole group's average area.
 
 # %%
 population = whole_single(table)
@@ -188,27 +210,40 @@ group_mean = whole_group.mean()
 print(f"Whole group: {len(whole_group)} triangles, mean area = {group_mean:.0f} nm²")
 
 # %% [markdown]
-# Now pull a **random sample** of just 10 triangles — like drawing 10 names out of a hat —
-# and compare its mean to the whole group's mean.
+# Now pull a **random sample** of triangles — like drawing names out of a hat — and compare
+# its mean to the whole group's average. Try changing `sample_size` too, not just `seed`.
 
 # %%
-seed = 1   # <-- change me: try a few different whole numbers
-my_sample = random_sample(whole_group, 10, seed=seed)
+sample_size = 10   # <-- change me: try 10, then 30, then 80
+seed = 1           # <-- change me: try a few different whole numbers
+my_sample = random_sample(whole_group, sample_size, seed=seed)
 sample_mean = my_sample.mean()
-print(f"My sample (n=10): mean area = {sample_mean:.0f} nm²")
-print(f"Whole group:       mean area = {group_mean:.0f} nm²")
+print(f"My sample (n={sample_size}): mean area = {sample_mean:.0f} nm²")
+print(f"Whole group:        mean area = {group_mean:.0f} nm²")
 print(f"Difference: {sample_mean - group_mean:+.0f} nm²")
 
 # %% [markdown]
-# **Your answer:** Try at least 3 different seed numbers. Does the sample mean land exactly
-# on the whole group's mean? Does it get closer if you imagine using more than 10 triangles?
+# **Your answer:** Try `sample_size = 10` with at least 3 different seeds, then try
+# `sample_size = 80` with at least 3 different seeds. Does the sample mean ever land exactly
+# on the whole group's average? Do the bigger samples usually land closer than the small ones?
 #
 # _(write here)_
 
 # %% [markdown]
+# **Check your thinking:** ▶ run the cell below to see one good answer.
+
+# %%
+# @title Helper code (just run this) — reveals a model answer
+print("Model answer: the sample mean almost never lands exactly on the whole group's "
+      "average — it's usually a little above or below by chance. But samples of 80 tend to "
+      "land closer to the whole group's average than samples of 10, because averaging more "
+      "triangles smooths out more of the ups and downs.")
+
+# %% [markdown]
 # ## Task 5 — Is the lazy scientist being fair?
 # Imagine a scientist who is always in a hurry and only ever scans **near the edge** of the
-# wafer, because it's the closest spot to reach.
+# wafer, because it's the closest spot to reach. We only have one scan from near the edge, so
+# this is a question to think about — not something we've proven.
 
 # %%
 edge_group = population.loc[population["scan"] == "wse2_17458_edge", "area_nm2"]
@@ -216,15 +251,25 @@ edge_mean = edge_group.mean()
 percent_off = 100 * (edge_mean - group_mean) / group_mean
 print(f"'Near the edge' only: mean area = {edge_mean:.0f} nm²")
 print(f"Whole group:          mean area = {group_mean:.0f} nm²")
-print(f"That's {percent_off:+.0f}% off the whole group's true mean.")
+print(f"That's {percent_off:+.0f}% off the whole group's average.")
 
 # %% [markdown]
 # **Your answer:** Compare this to Task 4. A random sample of 10 landed a little above or
-# below the whole group's mean by chance — but the "near the edge" number is off by the same
-# amount *every single time*. Is always scanning near the edge a fair way to describe the
-# whole wafer? Why or why not?
+# below the whole group's average by chance. This one edge scan landed even farther off. If a
+# scientist only ever looks in one place, could their answer end up not matching the whole
+# group? Why or why not?
 #
 # _(write here)_
+
+# %% [markdown]
+# **Check your thinking:** ▶ run the cell below to see one good answer.
+
+# %%
+# @title Helper code (just run this) — reveals a model answer
+print("Model answer: maybe. If a scientist only ever measures one place, they have no way to "
+      "know whether that place happens to be higher or lower than the whole group — random "
+      "samples from many different spots are the only way to check. (We'd need more edge "
+      "scans to know for sure whether this one spot is unusual or typical.)")
 
 # %% [markdown]
 # ## Exit ticket

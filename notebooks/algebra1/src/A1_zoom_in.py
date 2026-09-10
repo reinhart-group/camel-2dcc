@@ -13,7 +13,7 @@
 # - Fly over a real crystal surface in 3D.
 # - Convert metres → millimetres → micrometres → nanometres.
 # - Use a ratio to see how many scans fit across a human hair.
-# - Blow a scan up to the size of a football field.
+# - Blow a scan up to the size of a soccer field.
 #
 # **Time:** about 30–40 minutes.
 
@@ -63,27 +63,37 @@ print("✅ Data ready:", sorted(os.listdir("camel-2dcc"))[:6], "...")
 
 # %% [markdown]
 # ## Task 1 — Meet a real crystal
-# `gallery` holds 12 real scans. Pick one from the dropdown below, then drag the **Stretch**
-# slider — it stretches the height so tiny bumps are easy to see (without it, most crystals
-# look almost flat).
+# Here's a real crystal surface. The picture stretches the height so tiny bumps are easy to
+# see (without stretching, most crystals look almost flat). Turn it around and zoom in.
 
 # %%
 gallery = load_gallery()
-explore_3d(gallery)
-
-# %% [markdown]
-# **No sliders showing? Here's a scan that always works, no matter what:**
-
-# %%
 surface_3d(gallery["mos2_film"], exaggeration=30).show()
 
 # %% [markdown]
-# **Try it:** set the sample to **Molybdenum disulfide film** (or leave the static plot
-# above). Move the Stretch slider from low to high. Write one sentence: what changes on the
-# plot when Stretch goes up?
+# **Optional — try more crystals:** the cell below adds a dropdown of 12 scans and a
+# **Stretch** slider. It's optional — if it doesn't load, the picture above already has
+# everything you need for the question below.
+
+# %%
+explore_3d(gallery)
+
+# %% [markdown]
+# **Try it:** if the dropdown loaded, set the sample to **Smooth MoS2 carpet (MoS2)** and
+# move the Stretch slider from low to high (otherwise just look at the picture above). Write
+# one sentence: what changes on the plot when Stretch goes up?
 #
 # **Your answer:**
 # _(write here)_
+
+# %% [markdown]
+# **Check your thinking:** ▶ run the cell below to see one good answer.
+
+# %%
+# @title Helper code (just run this) — reveals a model answer
+print("Model answer: as Stretch goes up, the same bumps look taller and easier to see. "
+      "Flat, low areas barely change height — only the up-and-down is being stretched, "
+      "not the width.")
 
 # %% [markdown]
 # ## Task 2 — The conversion ladder
@@ -134,35 +144,28 @@ else:
     print(f"🔁 Check your formula. It should divide hair_um by scan_um and give {expected_ratio:g}.")
 
 # %% [markdown]
-# ## Task 4 — Blow it up to a football field
+# ## Task 4 — Blow it up to a soccer field
 # A **scale factor** tells you how many times bigger a model is than the real thing:
 # $$\text{scale factor} = \dfrac{\text{model size}}{\text{real size}}$$
-# Let's turn the 5 µm-wide scan into a model the length of a football field (100 m,
-# goal line to goal line).
+# Let's turn the 5 µm-wide scan into a model the length of a soccer field (100 m long).
 #
 # First, both numbers need the *same* unit. The scan is in micrometres, the field is in
 # metres — so convert the scan to metres. There are 1,000,000 µm in 1 m, so:
 # $$5\ \mu m \times \dfrac{1\ m}{1{,}000{,}000\ \mu m} = 0.000005\ m$$
+#
+# **Worked example** (read it — you'll use `scale_factor` in the next step):
 
 # %%
-field_length_m = 100          # a football field, in metres
+field_length_m = 100          # a soccer field, in metres
 scan_width_m = 0.000005        # the 5 µm scan, converted to metres (given above)
 scale_factor = field_length_m / scan_width_m   # model size ÷ real size
-print(f"Scale factor: {scale_factor:,.0f}×")
-
-# %%
-# @title Helper code (just run this)
-expected_sf = field_length_m / scan_width_m
-if abs(scale_factor - expected_sf) < 1:
-    print(f"✅ Nice! Scale factor ≈ {expected_sf:,.0f}× — the field is {expected_sf:,.0f} times "
-          "wider than the scan.")
-else:
-    print(f"🔁 Check the formula: field_length_m / scan_width_m should give {expected_sf:,.0f}.")
+print(f"Scale factor: {scale_factor:,.0f}× — the field is {scale_factor:,.0f} times wider "
+      "than the scan.")
 
 # %% [markdown]
 # ### Now stretch a crystal layer by that same factor
 # One layer of this crystal (MoS₂, used inside some computer chips) is only **0.00000000065
-# metres** thick — that's 0.65 nanometres. If we blow the whole scan up to a football field,
+# metres** thick — that's 0.65 nanometres. If we blow the whole scan up to a soccer field,
 # how tall would one layer look at that same scale?
 #
 # $$\text{scaled height} = \text{real height} \times \text{scale factor}$$
@@ -183,18 +186,23 @@ else:
 
 # %% [markdown]
 # ## Task 5 (optional) — 3D print your crystal
-# Turn the scan into a file you could send to a 3D printer. (**Safety note:** this only
-# creates a digital file — if you send it to a real printer, follow your school's printer
-# rules.)
+# Turn the scan into a file you could send to a 3D printer. This step is optional and does
+# **not** run by itself — change `MAKE_MY_PRINT` to `True` below, then run the cell, when
+# you're ready to make your file. (**Safety note:** this only creates a digital file — if you
+# send it to a real printer, follow your school's printer rules.)
 
 # %%
-stl_path = to_stl(gallery["mos2_film"], "my_crystal.stl", width_mm=100, relief_mm=15)
-print(f"Saved {stl_path}")
-try:
-    from google.colab import files
-    files.download(str(stl_path))
-except ImportError:
-    print(f"Not running in Colab — find {stl_path} in this notebook's working folder.")
+MAKE_MY_PRINT = False  # ✏️ change to True to make the file
+if MAKE_MY_PRINT:
+    stl_path = to_stl(gallery["mos2_film"], "my_crystal.stl", width_mm=100, relief_mm=15)
+    print(f"Saved {stl_path}")
+    try:
+        from google.colab import files
+        files.download(str(stl_path))
+    except ImportError:
+        print(f"Not running in Colab — find {stl_path} in this notebook's working folder.")
+else:
+    print("Set MAKE_MY_PRINT = True above and run this cell again to make your file.")
 
 # %% [markdown]
 # ## Exit ticket
@@ -202,10 +210,10 @@ except ImportError:
 #
 # 1. A scan is 3 µm wide. How many nanometres is that?
 # 2. A hair is 80 µm wide and a scan is 4 µm wide. How many scans span the hair?
-# 3. If you doubled the scale factor in Task 4, would the football-field layer look thicker
+# 3. If you doubled the scale factor in Task 4, would the soccer-field layer look thicker
 #    or thinner — and by how many times?
 
 # %% [markdown]
 # **Nice work!** You used ratios and scale factor to turn a crystal too small to see into a
-# picture the size of a football field — the same math engineers use to design anything from
+# picture the size of a soccer field — the same math engineers use to design anything from
 # a computer chip to a bridge.
