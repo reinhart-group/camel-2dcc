@@ -10,11 +10,24 @@ Students convert between metre/mm/µm/nm, use a ratio to compare sizes, and comp
 factor to connect a microscopic crystal scan to a human-scale object (a soccer field, 100 m
 long).
 
+## No code on screen
+Every step in this notebook is a Colab **form cell**: students see a grey bar with a title, a
+▶ button, and any boxes they need to fill in. The Python is hidden. To read or edit the code
+for a step, double-click its grey bar; to hide it again, use Cell > Form > Hide code.
+
+Students answer in the boxes, not in code:
+- **Task 2** is a number box. Type 5000 and the step re-runs itself.
+- **Tasks 3 and 4** are text boxes that take a **formula**, e.g. `hair_um / scan_um`. The
+  notebook evaluates it against just those two names, so a typo gives a friendly message
+  rather than a traceback. A student who does the arithmetic in their head and types `16`
+  is also marked correct — if you want the formula specifically, say so out loud.
+- **Task 5** is a tickbox.
+
 **Task 1's widget is optional.** Students see a static 3D plot first and can answer from that
-alone; the dropdown/slider cell after it is clearly labelled optional so a stalled widget
-never blocks the rest of the lesson. **Task 5's 3D-print/download step is gated** behind
-`MAKE_MY_PRINT = False` — it does not run (and does not start a download) until a student
-flips it to `True`, so Run All finishes cleanly.
+alone; the dropdown/slider step after it is clearly labelled optional so a stalled widget
+never blocks the rest of the lesson. **Task 5's 3D-print/download step is gated** behind an
+unticked box — it does not run (and does not start a download) until a student ticks it, so
+Run All finishes cleanly.
 
 ## Answers (from the executed notebook)
 - **Task 2** (5 µm → nm): `scan_width_nm = 5000`.

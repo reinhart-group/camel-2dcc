@@ -19,17 +19,20 @@
 # - Blow a scan up to the size of a soccer field.
 #
 # **Time:** about 30–40 minutes.
+#
+# **How this notebook works:** you will not write any code. Each grey bar below is a step —
+# click its ▶ button to run it. Where there's a box to fill in, type your answer in the box
+# and run the step again.
 
 # %% [markdown]
-# ## 🔧 Setup (run this first)
-# Click the ▶ button on the cell below. It downloads the real data (about 20 MB) and takes
-# 10–30 seconds.
+# ## 🔧 Setup
+# Run the step below first. It downloads the real data (about 20 MB) and takes 10–30 seconds.
 #
-# *Teachers:* if your school hosts its own copy of the data, paste its link into `DATA_URL`.
-# No internet link? Upload `camel-2dcc-v1.zip` with the 📁 Files panel on the left, then run
-# this cell.
+# *Teachers:* the data link and all helper code live inside this step. To see any code in
+# this notebook, double-click its grey bar.
 
-# %%
+# %% cellView="form"
+#@title 🔧 Setup — run this first { display-mode: "form" }
 DATA_URL = "https://pennstateoffice365-my.sharepoint.com/:u:/g/personal/wfr5091_psu_edu/IQCkNUoFnJNJSK8lUEepTJeSAT3NukSFJzB9-9fS5GB5mp0?e=KafIFG"  # teacher: the only line you may need to change
 
 import io, json, os, shutil, sys, zipfile, requests
@@ -62,23 +65,25 @@ try:
 except ImportError:
     pass  # running outside Colab
 from camel_data.classroom import *
-print("✅ Data ready:", sorted(os.listdir("camel-2dcc"))[:6], "...")
+print("✅ Data ready — you can go on to Task 1.")
 
 # %% [markdown]
 # ## Task 1 — Meet a real crystal
 # Here's a real crystal surface. The picture stretches the height so tiny bumps are easy to
 # see (without stretching, most crystals look almost flat). Turn it around and zoom in.
 
-# %%
+# %% cellView="form"
+#@title ▶ Task 1 — fly over a real crystal { display-mode: "form" }
 gallery = load_gallery()
 surface_3d(gallery["mos2_film"], exaggeration=30).show()
 
 # %% [markdown]
-# **Optional — try more crystals:** the cell below adds a dropdown of 12 scans and a
+# **Optional — try more crystals:** the step below adds a dropdown of 12 scans and a
 # **Stretch** slider. It's optional — if it doesn't load, the picture above already has
 # everything you need for the question below.
 
-# %%
+# %% cellView="form"
+#@title ▶ Optional — dropdown of 12 scans and a Stretch slider { display-mode: "form" }
 explore_3d(gallery)
 
 # %% [markdown]
@@ -89,11 +94,8 @@ explore_3d(gallery)
 # **Your answer:**
 # _(write here)_
 
-# %% [markdown]
-# **Check your thinking:** ▶ run the cell below to see one good answer.
-
-# %%
-# @title Helper code (just run this) — reveals a model answer
+# %% cellView="form"
+#@title ▶ Check your thinking — reveals one good answer { display-mode: "form" }
 print("Model answer: as Stretch goes up, the same bumps look taller and easier to see. "
       "Flat, low areas barely change height — only the up-and-down is being stretched, "
       "not the width.")
@@ -110,19 +112,19 @@ print("Model answer: as Stretch goes up, the same bumps look taller and easier t
 # | micrometre | µm | 0.000001 | 1 µm = 1,000 nm |
 # | nanometre | nm | 0.000000001 | — |
 #
-# The crystal scan you just saw is **5 µm** wide. Fill in the missing conversion below.
+# The crystal scan you just saw is **5 µm** wide. How many nanometres is that?
+# Type the number in the box below and run the step.
 
-# %%
+# %% cellView="form"
+#@title ✏️ Task 2 — your answer { display-mode: "form", run: "auto" }
+scan_width_nm = 0  #@param {type:"number"}
+
 scan_width_um = gallery["mos2_film"].scan_um   # 5 micrometres wide
-scan_width_nm = ...  # ✏️ type your answer here: convert scan_width_um to nanometres
-
-# %%
-# @title Helper code (just run this) — checks your conversion
 expected_nm = scan_width_um * 1000
-if scan_width_nm == expected_nm:
+if scan_width_nm == 0:
+    print("✏️ Type your answer in the box above: micrometres × 1,000 = nanometres.")
+elif scan_width_nm == expected_nm:
     print(f"✅ Nice! {scan_width_um:g} µm = {scan_width_nm:g} nm.")
-elif scan_width_nm == ...:
-    print("🔁 Replace the `...` with a number: micrometres × 1,000 = nanometres.")
 else:
     print(f"🔁 Not quite. Remember: µm → nm means ×1,000. Try again — it should be {expected_nm:.0f} nm.")
 
@@ -130,21 +132,34 @@ else:
 # ## Task 3 — How many scans fit across a hair?
 # A human hair is about **80 µm** wide. The scan you're studying is 5 µm wide. That's a
 # ratio: hair width ÷ scan width tells you how many scans, laid edge to edge, span one hair.
+#
+# In the box below, write the ratio **as a formula** using the two names `hair_um` and
+# `scan_um` — for example, `hair_um * scan_um` would be a (wrong) formula. Which operation
+# belongs there?
 
-# %%
-hair_um = 80        # a human hair, in micrometres
+# %% cellView="form"
+#@title ✏️ Task 3 — write the ratio as a formula { display-mode: "form", run: "auto" }
+hair_um = 80         # a human hair, in micrometres
 scan_um = 5          # the crystal scan, in micrometres
-scans_per_hair = ...  # ✏️ type your answer here: write the ratio as a formula (hair_um / scan_um)
 
-# %%
-# @title Helper code (just run this)
+my_formula = ""  #@param {type:"string"}
+
 expected_ratio = hair_um / scan_um
-if scans_per_hair == expected_ratio:
-    print(f"✅ Nice! About {expected_ratio:g} scans, laid side by side, span one hair's width.")
-elif scans_per_hair == ...:
-    print("🔁 Replace the `...` with a formula: hair_um / scan_um.")
+if not my_formula.strip():
+    print("✏️ Type a formula in the box above, using hair_um and scan_um.")
 else:
-    print(f"🔁 Check your formula. It should divide hair_um by scan_um and give {expected_ratio:g}.")
+    try:
+        scans_per_hair = eval(my_formula, {"__builtins__": {}}, {"hair_um": hair_um, "scan_um": scan_um})
+    except Exception:
+        print("🔁 That isn't a formula this notebook can read. Use only hair_um, scan_um, "
+              "and one of + - * /.")
+    else:
+        if scans_per_hair == expected_ratio:
+            print(f"✅ Nice! {my_formula} = {expected_ratio:g}. About {expected_ratio:g} scans, "
+                  "laid side by side, span one hair's width.")
+        else:
+            print(f"🔁 Your formula gives {scans_per_hair:g}. A ratio divides the big width by "
+                  f"the small one, and the answer should be {expected_ratio:g}.")
 
 # %% [markdown]
 # ## Task 4 — Blow it up to a soccer field
@@ -156,9 +171,10 @@ else:
 # metres — so convert the scan to metres. There are 1,000,000 µm in 1 m, so:
 # $$5\ \mu m \times \dfrac{1\ m}{1{,}000{,}000\ \mu m} = 0.000005\ m$$
 #
-# **Worked example** (read it — you'll use `scale_factor` in the next step):
+# **Worked example** — run the step below and read what it prints.
 
-# %%
+# %% cellView="form"
+#@title ▶ Task 4 — worked example: the scale factor { display-mode: "form" }
 field_length_m = 100          # a soccer field, in metres
 scan_width_m = 0.000005        # the 5 µm scan, converted to metres (given above)
 scale_factor = field_length_m / scan_width_m   # model size ÷ real size
@@ -172,31 +188,44 @@ print(f"Scale factor: {scale_factor:,.0f}× — the field is {scale_factor:,.0f}
 # how tall would one layer look at that same scale?
 #
 # $$\text{scaled height} = \text{real height} \times \text{scale factor}$$
+#
+# Write that as a formula in the box below, using the names `layer_thickness_m` and
+# `scale_factor`.
 
-# %%
+# %% cellView="form"
+#@title ✏️ Task 4 — write the scaled height as a formula { display-mode: "form", run: "auto" }
 layer_thickness_m = 0.00000000065   # one crystal layer, in metres (0.65 nm)
-layer_scaled_m = ...  # ✏️ type your answer here: layer_thickness_m * scale_factor
 
-# %%
-# @title Helper code (just run this)
+my_height_formula = ""  #@param {type:"string"}
+
 expected_layer_m = layer_thickness_m * scale_factor
-if layer_scaled_m == ...:
-    print("🔁 Replace the `...`: layer_thickness_m * scale_factor.")
-elif abs(layer_scaled_m - expected_layer_m) < 1e-4:
-    print(f"✅ Nice! About {expected_layer_m * 100:.1f} cm tall — roughly as thick as a phone!")
+if not my_height_formula.strip():
+    print("✏️ Type a formula in the box above, using layer_thickness_m and scale_factor.")
 else:
-    print(f"🔁 Check your formula. It should give about {expected_layer_m * 100:.1f} cm.")
+    try:
+        layer_scaled_m = eval(my_height_formula, {"__builtins__": {}},
+                              {"layer_thickness_m": layer_thickness_m, "scale_factor": scale_factor})
+    except Exception:
+        print("🔁 That isn't a formula this notebook can read. Use only layer_thickness_m, "
+              "scale_factor, and one of + - * /.")
+    else:
+        if abs(layer_scaled_m - expected_layer_m) < 1e-4:
+            print(f"✅ Nice! About {expected_layer_m * 100:.1f} cm tall — roughly as thick as a phone!")
+        else:
+            print(f"🔁 Your formula gives {layer_scaled_m * 100:.4g} cm. Scaling up means "
+                  f"multiplying — it should give about {expected_layer_m * 100:.1f} cm.")
 
 # %% [markdown]
 # ## Task 5 (optional) — 3D print your crystal
-# Turn the scan into a file you could send to a 3D printer. This step is optional and does
-# **not** run by itself — change `MAKE_MY_PRINT` to `True` below, then run the cell, when
-# you're ready to make your file. (**Safety note:** this only creates a digital file — if you
-# send it to a real printer, follow your school's printer rules.)
+# Turn the scan into a file you could send to a 3D printer. Tick the box below, then run the
+# step. (**Safety note:** this only creates a digital file — if you send it to a real
+# printer, follow your school's printer rules.)
 
-# %%
-MAKE_MY_PRINT = False  # ✏️ change to True to make the file
-if MAKE_MY_PRINT:
+# %% cellView="form"
+#@title ✏️ Task 5 (optional) — make my 3D print file { display-mode: "form" }
+make_my_print = False  #@param {type:"boolean"}
+
+if make_my_print:
     stl_path = to_stl(gallery["mos2_film"], "my_crystal.stl", width_mm=100, relief_mm=15)
     print(f"Saved {stl_path}")
     try:
@@ -205,7 +234,7 @@ if MAKE_MY_PRINT:
     except ImportError:
         print(f"Not running in Colab — find {stl_path} in this notebook's working folder.")
 else:
-    print("Set MAKE_MY_PRINT = True above and run this cell again to make your file.")
+    print("Tick the box above and run this step again to make your file.")
 
 # %% [markdown]
 # ## Exit ticket
