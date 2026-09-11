@@ -1,4 +1,7 @@
 # %% [markdown]
+# [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/reinhart-group/camel-2dcc/blob/main/notebooks/00_teacher_live_list.ipynb)
+
+# %% [markdown]
 # # Teacher & Researcher Guide: Live LiST Access
 #
 # The classroom notebooks (01–05) all run on an offline **data slice** — a downloaded snapshot of

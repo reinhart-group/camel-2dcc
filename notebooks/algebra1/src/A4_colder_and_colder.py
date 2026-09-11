@@ -1,4 +1,7 @@
 # %% [markdown]
+# [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/reinhart-group/camel-2dcc/blob/main/notebooks/algebra1/A4_colder_and_colder.ipynb)
+
+# %% [markdown]
 # # Colder and Colder: Graphs With a Surprise
 #
 # Electricity is a flow of tiny charged particles moving through a wire. Most materials

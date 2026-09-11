@@ -1,4 +1,7 @@
 # %% [markdown]
+# [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/reinhart-group/camel-2dcc/blob/main/notebooks/05_chips_for_ai.ipynb)
+
+# %% [markdown]
 # # Chips for AI: Exponents, Light, and Super-Cold Wires
 #
 # Every AI chatbot, image generator, and self-driving car runs on chips built from billions of

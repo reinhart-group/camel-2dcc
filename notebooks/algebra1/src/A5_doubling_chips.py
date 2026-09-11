@@ -1,4 +1,7 @@
 # %% [markdown]
+# [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/reinhart-group/camel-2dcc/blob/main/notebooks/algebra1/A5_doubling_chips.ipynb)
+
+# %% [markdown]
 # # Doubling Chips: The Power of 2
 #
 # A computer chip is built from billions of tiny switches called **transistors**. Think of a

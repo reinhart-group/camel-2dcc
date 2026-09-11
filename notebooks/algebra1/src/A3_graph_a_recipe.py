@@ -1,4 +1,7 @@
 # %% [markdown]
+# [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/reinhart-group/camel-2dcc/blob/main/notebooks/algebra1/A3_graph_a_recipe.ipynb)
+
+# %% [markdown]
 # # Graph a Recipe: Slope Is a Rate
 #
 # Scientists don't just mix chemicals — they follow a recipe, like a recipe for cookies.

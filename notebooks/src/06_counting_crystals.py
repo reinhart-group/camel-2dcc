@@ -1,4 +1,7 @@
 # %% [markdown]
+# [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/reinhart-group/camel-2dcc/blob/main/notebooks/06_counting_crystals.ipynb)
+
+# %% [markdown]
 # # Counting Crystals: Grains, Samples, and Populations
 #
 # WSe2 is a semiconductor that comes in sheets only about **three atoms thick** (a

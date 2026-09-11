@@ -1,4 +1,7 @@
 # %% [markdown]
+# [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/reinhart-group/camel-2dcc/blob/main/notebooks/04_build_a_crystal.ipynb)
+
+# %% [markdown]
 # # Build a Crystal: Reading a Real Recipe as a Graph
 #
 # Growing a 2D crystal is a lot like cooking, except the "ingredients" are atoms and the "oven" is

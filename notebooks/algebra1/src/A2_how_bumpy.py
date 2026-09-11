@@ -1,4 +1,7 @@
 # %% [markdown]
+# [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/reinhart-group/camel-2dcc/blob/main/notebooks/algebra1/A2_how_bumpy.ipynb)
+
+# %% [markdown]
 # # How Bumpy Is It? Mean, Median, and Samples
 #
 # Many computer-chip-making steps need very flat surfaces. To check, Penn State scientists

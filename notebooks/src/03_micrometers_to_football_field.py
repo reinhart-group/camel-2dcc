@@ -1,4 +1,7 @@
 # %% [markdown]
+# [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/reinhart-group/camel-2dcc/blob/main/notebooks/03_micrometers_to_football_field.ipynb)
+
+# %% [markdown]
 # # From Micrometres to a Football Field: Scaling, Stacking, and 3D Printing a Crystal
 #
 # A real AFM scan of a crystal is only a few **micrometres** wide — millionths of a

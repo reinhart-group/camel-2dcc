@@ -1,4 +1,7 @@
 # %% [markdown]
+# [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/reinhart-group/camel-2dcc/blob/main/notebooks/02_how_smooth_is_smooth.ipynb)
+
+# %% [markdown]
 # # How Smooth Is Smooth? Statistics of Atom-Scale Surfaces
 #
 # A silicon chip fails if the films inside it are bumpier than a few atoms. The only way

@@ -1,4 +1,7 @@
 # %% [markdown]
+# [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/reinhart-group/camel-2dcc/blob/main/notebooks/01_nano_landscapes.ipynb)
+
+# %% [markdown]
 # # Nano Landscapes: Fly Over Crystal Surfaces Atom-Step by Atom-Step
 #
 # A microscope probe traces the surface of a real crystal, one scan line at a time — and you get

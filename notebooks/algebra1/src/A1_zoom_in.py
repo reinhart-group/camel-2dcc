@@ -1,4 +1,7 @@
 # %% [markdown]
+# [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/reinhart-group/camel-2dcc/blob/main/notebooks/algebra1/A1_zoom_in.ipynb)
+
+# %% [markdown]
 # # Zoom In! How Small Is a Nanometre?
 #
 # At Penn State, scientists grow crystals so thin that no regular microscope can see their

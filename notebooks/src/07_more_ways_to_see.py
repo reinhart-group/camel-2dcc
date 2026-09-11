@@ -1,4 +1,7 @@
 # %% [markdown]
+# [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/reinhart-group/camel-2dcc/blob/main/notebooks/07_more_ways_to_see.ipynb)
+
+# %% [markdown]
 # # More Ways to See a Crystal: X-rays, Light, Electrons, and Electricity
 #
 # An atomic force microscope (AFM) feels a surface with a tiny needle. But that's only one way

@@ -7,15 +7,28 @@ atomic force microscope (AFM) scans and growth recipes from Penn State's 2D Crys
 
 ## Notebooks (`notebooks/`)
 
-| # | Notebook | Math |
-|---|----------|------|
-| 00 | `00_teacher_live_list` — pull live public records from LiST (Penn State network only) | teachers |
-| 01 | `01_nano_landscapes` — fly over crystals in 3D, line profiles, height distributions | geometry, intro statistics |
-| 02 | `02_how_smooth_is_smooth` — RMS roughness, box plots across 1,004 real scans | statistics |
-| 03 | `03_micrometers_to_football_field` — scale factors, layer counting, hexagons, 3D printing | algebra, geometry |
-| 04 | `04_build_a_crystal` — a real growth recipe as a piecewise function | algebra, functions |
-| 05 | `05_chips_for_ai` — Moore's law, light from 2D materials, superconductors, data-centre energy | exponential and inverse functions |
-| 06 | `06_counting_crystals` — triangle grains on one wafer, line scans, random samples vs the population | statistics, geometry |
+| # | Notebook | Math | Open |
+|---|----------|------|------|
+| 00 | `00_teacher_live_list` — pull live public records from LiST (Penn State network only) | teachers | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/reinhart-group/camel-2dcc/blob/main/notebooks/00_teacher_live_list.ipynb) |
+| 01 | `01_nano_landscapes` — fly over crystals in 3D, line profiles, height distributions | geometry, intro statistics | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/reinhart-group/camel-2dcc/blob/main/notebooks/01_nano_landscapes.ipynb) |
+| 02 | `02_how_smooth_is_smooth` — RMS roughness, box plots across 1,004 real scans | statistics | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/reinhart-group/camel-2dcc/blob/main/notebooks/02_how_smooth_is_smooth.ipynb) |
+| 03 | `03_micrometers_to_football_field` — scale factors, layer counting, hexagons, 3D printing | algebra, geometry | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/reinhart-group/camel-2dcc/blob/main/notebooks/03_micrometers_to_football_field.ipynb) |
+| 04 | `04_build_a_crystal` — a real growth recipe as a piecewise function | algebra, functions | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/reinhart-group/camel-2dcc/blob/main/notebooks/04_build_a_crystal.ipynb) |
+| 05 | `05_chips_for_ai` — Moore's law, light from 2D materials, superconductors, data-centre energy | exponential and inverse functions | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/reinhart-group/camel-2dcc/blob/main/notebooks/05_chips_for_ai.ipynb) |
+| 06 | `06_counting_crystals` — triangle grains on one wafer, line scans, random samples vs the population | statistics, geometry | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/reinhart-group/camel-2dcc/blob/main/notebooks/06_counting_crystals.ipynb) |
+| 07 | `07_more_ways_to_see` — transport, Raman, X-ray diffraction and electron microscopy on the same samples | statistics, geometry | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/reinhart-group/camel-2dcc/blob/main/notebooks/07_more_ways_to_see.ipynb) |
+
+### Algebra 1 edition (`notebooks/algebra1/`)
+
+Grade-8 reading level or below, for a typical 9th-grade algebra class.
+
+| # | Notebook | Math | Open |
+|---|----------|------|------|
+| A1 | `A1_zoom_in` — how small a nanometre is, by scale factor | unit conversion, ratios | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/reinhart-group/camel-2dcc/blob/main/notebooks/algebra1/A1_zoom_in.ipynb) |
+| A2 | `A2_how_bumpy` — how bumpy a surface is, mean vs median | centre and spread | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/reinhart-group/camel-2dcc/blob/main/notebooks/algebra1/A2_how_bumpy.ipynb) |
+| A3 | `A3_graph_a_recipe` — a growth recipe as a graph | slope, piecewise graphs | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/reinhart-group/camel-2dcc/blob/main/notebooks/algebra1/A3_graph_a_recipe.ipynb) |
+| A4 | `A4_colder_and_colder` — resistance falling to zero | reading graphs, rate of change | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/reinhart-group/camel-2dcc/blob/main/notebooks/algebra1/A4_colder_and_colder.ipynb) |
+| A5 | `A5_doubling_chips` — chips doubling every two years | exponential growth | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/reinhart-group/camel-2dcc/blob/main/notebooks/algebra1/A5_doubling_chips.ipynb) |
 
 Teacher keys with timing, standards, and expected answer ranges are in `notebooks/teacher/`.
 Notebook sources are jupytext percent-format files in `notebooks/src/`; build with
