@@ -1,0 +1,10 @@
+id: demo-afm-scale-geometry
+title: "A Microscopic Landscape: Scale, Shape, and 3D Printing"
+objective: "Use units, scale factors, and geometric measurements to interpret a height map."
+standards: [HSN.Q.A.1, HSN.Q.A.2, HSN.Q.A.3, HSG.MG.A.1, HSG.MG.A.3]
+minutes: 40
+preset: novice_demo
+modules:
+  - setup
+  - data_afm_surface
+  - objective_scale_geometry: {reasoning: model}

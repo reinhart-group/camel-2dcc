@@ -20,7 +20,7 @@ DEFAULT_MODULES = ROOT / "courseware" / "modules"
 PLAIN_MAX_GRADE = 8.0
 
 
-def _grade(nb) -> float:
+def _grade(nb, plain_only: bool = False) -> float:
     """Flesch-Kincaid grade of markdown cells, with math/code/HTML stripped.
 
     Note: This is not the same as scripts/readability.py's markdown_text(),
@@ -32,21 +32,24 @@ def _grade(nb) -> float:
     module file's markdown in isolation — a short excerpt swings wildly on one
     long word. Always re-measure via a built notebook, never a module alone.
     """
-    text = "\n".join(c.source for c in nb.cells if c.cell_type == "markdown")
+    cells = [c for c in nb.cells if c.cell_type == "markdown"]
+    if plain_only:
+        cells = [c for c in cells
+                 if c.metadata.get("camel", {}).get("dials", {}).get("register", "plain") == "plain"]
+    text = "\n".join(c.source for c in cells)
     text = re.sub(r"\$[^$]*\$|`[^`]*`|<[^>]+>", " ", text)
     return textstat.flesch_kincaid_grade(text)
 
 
 def _is_plain(lesson: Lesson) -> bool:
-    return all(rm.settings.get("register", "plain") == "plain" for rm in lesson.modules)
+    return any(rm.settings.get("register", "plain") == "plain" for rm in lesson.modules)
 
 
-def _write(lesson: Lesson, out: Path) -> tuple[Path, nbformat.NotebookNode]:
+def _write(lesson: Lesson, nb: nbformat.NotebookNode, out: Path) -> Path:
     out.mkdir(parents=True, exist_ok=True)
     path = out / f"{lesson.id}.ipynb"
-    nb = compose(lesson)
     nbformat.write(nb, path)
-    return path, nb
+    return path
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -86,13 +89,14 @@ def main(argv: list[str] | None = None) -> int:
             failures += 1
             continue
         for lesson in lessons:
-            path, nb = _write(lesson, out)
+            nb = compose(lesson)
             if _is_plain(lesson):
-                grade = _grade(nb)
+                grade = _grade(nb, plain_only=True)
                 if grade > PLAIN_MAX_GRADE:
                     print(f"FAIL {lesson.id}: reading grade {grade:.1f} > {PLAIN_MAX_GRADE} for register=plain")
                     failures += 1
                     continue
+            path = _write(lesson, nb, out)
             built.append((lesson, path))
             print(f"built {path.relative_to(ROOT) if path.is_relative_to(ROOT) else path}")
 

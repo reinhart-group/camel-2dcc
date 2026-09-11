@@ -1,0 +1,11 @@
+id: demo-grain-sampling
+title: "How Many Triangles? Samples, Variability, and Bias"
+objective: "Distinguish random sampling variation from bias in a sampling method."
+standards: [HSS.IC.A.1, HSS.IC.A.2, HSS.IC.B.4]
+minutes: 40
+preset: novice_demo
+params: {sample_size: 120, seed: 3}
+modules:
+  - setup
+  - data_grain_population
+  - objective_sampling_bias: {reasoning: model}

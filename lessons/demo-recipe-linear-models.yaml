@@ -1,0 +1,10 @@
+id: demo-recipe-linear-models
+title: "Graph a Recipe: Slope and Piecewise Functions"
+objective: "Interpret slope and write a linear rule for one interval of a piecewise graph."
+standards: [HSA.CED.A.2, HSA.REI.B.3, HSF.IF.B.4, HSF.IF.B.6]
+minutes: 40
+preset: novice_demo
+modules:
+  - setup
+  - data_growth_recipe_curve
+  - objective_linear_piecewise: {reasoning: model}

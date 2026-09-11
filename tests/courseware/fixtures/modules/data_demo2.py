@@ -8,6 +8,10 @@
 #   sample_size: {default: 100, min: 50, max: 200}
 # minutes: 2
 # ---
+# %% tags=["messiness:real"]
+pass
+# %% tags=["messiness:flagged"]
+pass
 # %%
 import numpy as np
 groups_values = np.arange(1.0, PARAMS["sample_size"] + 1)

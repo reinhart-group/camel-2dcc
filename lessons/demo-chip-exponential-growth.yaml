@@ -1,0 +1,10 @@
+id: demo-chip-exponential-growth
+title: "Doubling Chips: Exponential Growth"
+objective: "Distinguish additive and multiplicative change and interpret an exponential model."
+standards: [HSA.SSE.A.1, HSF.LE.A.1, HSF.LE.A.2, HSF.LE.B.5]
+minutes: 40
+preset: novice_demo
+modules:
+  - setup
+  - data_chip_timeline: {realism: annotated}
+  - objective_exponential_growth: {reasoning: model}

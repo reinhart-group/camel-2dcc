@@ -2,3 +2,4 @@
 # module's overrides win over the preset.
 algebra1: {register: plain, guidance: fill, messiness: flagged}
 explorer: {register: explorer, guidance: open, messiness: real}
+novice_demo: {reasoning: calculate, support: guided, realism: curated}

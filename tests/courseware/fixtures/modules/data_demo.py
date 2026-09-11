@@ -8,6 +8,10 @@
 #   sample_size: {default: 5, min: 3, max: 10}
 # minutes: 2
 # ---
+# %% tags=["messiness:real"]
+pass
+# %% tags=["messiness:flagged"]
+pass
 # %%
 import numpy as np
 series_values = np.arange(1.0, PARAMS["sample_size"] + 1)

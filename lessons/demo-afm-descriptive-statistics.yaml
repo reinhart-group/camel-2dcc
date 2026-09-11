@@ -1,0 +1,11 @@
+id: demo-afm-descriptive-statistics
+title: "How Bumpy Is It? Describe Real AFM Data"
+objective: "Describe a numerical distribution using shape, center, and spread."
+standards: [HSS.ID.A.1, HSS.ID.A.2, HSS.ID.A.3]
+minutes: 40
+preset: novice_demo
+params: {sample_size: 180, seed: 4}
+modules:
+  - setup
+  - data_afm_roughness: {register: plain, messiness: flagged}
+  - objective_descriptive_statistics

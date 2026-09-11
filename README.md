@@ -96,6 +96,28 @@ A lesson's own `dials:` and a module's inline overrides win over the preset. Bui
 Add `--execute --random N --seed S` to also execute every built notebook plus `N`
 random valid dial combinations per lesson (used before a real Colab check).
 
+### Curated curriculum demos
+
+The public pilot is a fixed, reviewed set of six lessons rather than a promise that every possible
+dataset/objective combination works. Materials science stays at novice context: it explains where
+the numbers came from, but is not prerequisite content. A manifest chooses the learning objective;
+three four-step dials control the task within supported combinations:
+
+- `reasoning`: `notice`, `calculate`, `model`, `justify`
+- `support`: `worked`, `guided`, `partial`, `independent`
+- `realism`: `clean`, `curated`, `annotated`, `research`
+
+Build and execute the curated set:
+
+```bash
+.venv/bin/python -m courseware build lessons/demo-*.yaml --execute
+```
+
+The six demos cover AFM descriptive statistics, AFM scale/geometry/STL export, grain sampling and
+bias, slope and piecewise functions, exponential growth, and visual/randomization-based comparison
+of groups. Each manifest records one primary learning objective and its CCSS alignment. Only these
+named combinations are shipped; new pairings are added after review and execution testing.
+
 ## The public LiST key
 
 The key reads only `Published` records. It is not a secret, but it is never written into code or

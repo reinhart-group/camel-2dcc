@@ -34,6 +34,8 @@ class Lesson:
     params: dict[str, int]
     modules: list[ResolvedModule] = field(default_factory=list)
     preset: str | None = None
+    objective: str | None = None
+    standards: list[str] = field(default_factory=list)
 
 
 def _entries(items):
@@ -60,24 +62,46 @@ def lesson_from_dict(data: dict, module_roots: list[Path]) -> Lesson:
         except ModuleError as exc:
             raise ManifestError(str(exc)) from exc
         wanted = {**lesson_dials, **override}
+        unknown_overrides = set(override) - set(mod.dials)
+        if unknown_overrides:
+            raise ManifestError(f"{name}: unknown dial override(s) {sorted(unknown_overrides)}")
         settings = {}
         for dial, allowed in mod.dials.items():
             value = wanted.get(dial, allowed[0])
             if value not in allowed:
                 raise ManifestError(f"{name}: dial {dial}={value!r} not supported (allowed: {allowed})")
             settings[dial] = value
-        for dial, allowed in mod.requires.items():
-            if wanted.get(dial) not in allowed:
-                raise ManifestError(f"{name}: requires {dial} in {allowed}, lesson has {wanted.get(dial)!r}")
         resolved.append(ResolvedModule(mod, settings))
 
-    produced: set[str] = set()
+    produced: dict[str, ResolvedModule] = {}
     for rm in resolved:
         missing = [s for s in rm.module.accepts if s not in produced]
         if missing:
             raise ManifestError(f"{rm.module.name}: needs data shape(s) {missing}; add a dataset module "
                                 f"that produces them earlier in the lesson")
-        produced |= set(rm.module.produces)
+        for dial, allowed in rm.module.requires.items():
+            owners = [produced[s] for s in rm.module.accepts
+                      if s in produced and dial in produced[s].settings]
+            values = {owner.settings[dial] for owner in owners}
+            actual = next(iter(values)) if len(values) == 1 else lesson_dials.get(dial)
+            if actual not in allowed:
+                source = owners[0].module.name if len(owners) == 1 else "lesson"
+                raise ManifestError(
+                    f"{rm.module.name}: requires {dial} in {allowed}, "
+                    f"{source} has {actual!r}"
+                )
+        for shape in rm.module.produces:
+            if shape in produced:
+                raise ManifestError(
+                    f"duplicate producer for data shape '{shape}': "
+                    f"{produced[shape].module.name} and {rm.module.name}"
+                )
+            produced[shape] = rm
+
+    declared_dials = {dial for rm in resolved for dial in rm.module.dials}
+    unknown_lesson_dials = set(data.get("dials") or {}) - declared_dials
+    if unknown_lesson_dials:
+        raise ManifestError(f"lesson has unknown dial(s) {sorted(unknown_lesson_dials)}")
 
     # Collect all params declared by modules and their specs
     param_specs: dict[str, list[tuple[str, dict]]] = {}  # param_name -> [(module_name, spec), ...]
@@ -130,8 +154,15 @@ def lesson_from_dict(data: dict, module_roots: list[Path]) -> Lesson:
     if minutes and need > minutes:
         raise ManifestError(f"modules need {need} minutes but the lesson allows {minutes}")
 
+    standards = data.get("standards") or []
+    if not isinstance(standards, list) or not all(isinstance(s, str) for s in standards):
+        raise ManifestError("standards must be a list of strings")
+    objective = data.get("objective")
+    if objective is not None and not isinstance(objective, str):
+        raise ManifestError("objective must be a string")
+
     return Lesson(id=data["id"], title=data["title"], minutes=minutes, params=params,
-                  modules=resolved, preset=preset)
+                  modules=resolved, preset=preset, objective=objective, standards=standards)
 
 
 def load_lesson(path: Path, module_roots: list[Path]) -> Lesson:

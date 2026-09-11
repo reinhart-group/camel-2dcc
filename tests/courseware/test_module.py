@@ -69,3 +69,8 @@ def test_find_module_searches_subfolders():
     assert find_module("data_demo", [FIX]).kind == "dataset"
     with pytest.raises(ModuleError, match="not found"):
         find_module("nope", [FIX])
+
+
+def test_declared_dial_value_without_a_cell_is_rejected():
+    with pytest.raises(ModuleError, match="guided.*no cell"):
+        load_module(FIX / "bad_missing_dial_value.py")

@@ -1,0 +1,11 @@
+id: demo-afm-compare-groups
+title: "Do These Groups Differ? Evidence and Uncertainty"
+objective: "Compare two groups using graphs, a difference in means, and a randomization test."
+standards: [HSS.ID.A.1, HSS.ID.A.2, HSS.IC.B.5, HSS.IC.B.6]
+minutes: 40
+preset: novice_demo
+params: {sample_size: 400, seed: 8}
+modules:
+  - setup
+  - data_afm_roughness: {register: plain, messiness: flagged}
+  - objective_compare_groups: {reasoning: model}

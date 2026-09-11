@@ -72,6 +72,7 @@ def load_module(path: Path) -> Module:
     nb = jupytext.reads(text[m.end():], fmt="py:percent")
     module = Module(name=meta["module"], kind=meta["kind"], path=Path(path), meta=meta, cells=nb.cells)
     declared = module.dials
+    seen: dict[str, set[str]] = {dial: set() for dial in declared}
     for cell in nb.cells:
         for dial, values in _dial_tags(cell).items():
             if dial not in declared:
@@ -84,6 +85,14 @@ def load_module(path: Path) -> Module:
                         f"'{value}' is not a declared value of dial '{dial}' "
                         f"(allowed: {allowed})"
                     )
+            seen[dial].update(values)
+    for dial, allowed in declared.items():
+        missing = set(allowed) - seen[dial]
+        if missing:
+            raise ModuleError(
+                f"{path}: module '{meta['module']}' declares {dial} value(s) {sorted(missing)} "
+                "but no cell uses them"
+            )
     return module
 
 

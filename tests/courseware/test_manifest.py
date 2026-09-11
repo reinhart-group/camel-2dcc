@@ -85,3 +85,14 @@ def test_non_numeric_minutes_raises_manifest_error():
     """Non-numeric lesson minutes must raise ManifestError, not ValueError."""
     with pytest.raises(ManifestError, match="minutes.*not an integer"):
         lesson_from_dict(base(minutes="invalid"), FIX)
+
+
+def test_duplicate_shape_producer_is_rejected():
+    with pytest.raises(ManifestError, match="duplicate producer.*series"):
+        lesson_from_dict(base(modules=["data_demo", "data_demo", "concept_demo"]), FIX)
+
+
+def test_objective_and_standards_are_preserved():
+    lesson = lesson_from_dict(base(objective="Find a mean.", standards=["HSS.ID.A.2"]), FIX)
+    assert lesson.objective == "Find a mean."
+    assert lesson.standards == ["HSS.ID.A.2"]

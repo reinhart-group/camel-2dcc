@@ -42,3 +42,14 @@ def test_every_cell_has_camel_metadata_and_stable_id():
 def test_variants_follow_resolved_settings():
     text = "\n".join(c.source for c in nb_cells())
     assert "fair-share" in text and "answer = float" in text and "answer = ..." not in text
+
+
+def test_repeated_module_has_unique_stable_cell_and_task_ids():
+    repeated = lesson(modules=["frame_demo", "data_demo",
+                               {"concept_demo": {"guidance": "worked"}},
+                               {"concept_demo": {"guidance": "worked"}}])
+    nb = compose(repeated)
+    ids = [c.id for c in nb.cells]
+    tasks = [c.metadata["camel"]["task"] for c in nb.cells]
+    assert len(ids) == len(set(ids))
+    assert len(tasks) == len(set(tasks))
