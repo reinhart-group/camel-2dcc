@@ -25,9 +25,10 @@ and 8 minutes, in your order, with your language. What is in each round:
   unlabelled pile of 894 numbers. The picture has a real instrument glitch in it, and teams find
   it. That glitch inflated the recorded roughness for that sample from 0.80 nm to 6.10 nm, and the
   wrong number is still in the table.
-- **Round 2, find the mess.** Thirty-five hand-typed spellings of the material name to sort (no
-  chemistry needed — every spelling has a plain-English gloss); then the one we would protect time
-  for, where a reasonable-sounding rule, "only use samples where both values were recorded", keeps
+- **Round 2, find the mess.** One text box that people typed into by hand for years and that now
+  holds 35 different answers: teams switch cleaning rules on and off and watch the count fall to
+  25 and the chart tidy up, with no chemistry needed at any point. Then the one we would protect
+  time for, where a reasonable-sounding rule, "only use samples where both values were recorded", keeps
   740 of 772 samples from one growth method and 14 of 233 from the other; then the extreme
   readings, where marking rows for removal moves the mean from 1.83 to 1.01 nm and the median
   barely at all.

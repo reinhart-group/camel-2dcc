@@ -82,32 +82,6 @@ def _bg_rough(flagged_ids):
             if r.get("rough") is not None and r["id"] not in flagged_ids]
 
 
-_M05_MERGE = "Same substance, different spelling"
-_M05_DISC = "Names the disc it was grown on, not the crystal"
-_M05_FINE = "Leave it alone — it's fine as is"
-
-
-def _m05_rows():
-    """The 22 no-semicolon material spellings, each tagged with the bucket a naive cleanup
-    script would put it in. The script (courseware/catalog_data.py's canonical()/SUBSTRATES)
-    knows exactly two tricks: rewrite a spelling that differs from its canonical form (only
-    "2H-MoS2" -> "MoS2" here), and drop a spelling that exactly matches a known substrate name
-    (Al2O3, GaAs). Everything else -- including the raw element Se, the alloys Mo-WSe2/SnTe-Sb/
-    SnTe-Bi, and the two-crystal-looking MoS2-WS2 -- falls through to "leave it alone," because
-    the script has no rule for any of those. That gap is the point of the reveal mapping."""
-    out = []
-    for d in cda.material_labels():
-        if ";" in d["raw"]:
-            continue
-        if d["canon"] != d["raw"]:
-            script = _M05_MERGE
-        elif d["is_sub"]:
-            script = _M05_DISC
-        else:
-            script = _M05_FINE
-        out.append(dict(d, script=script))
-    return out
-
 
 def _flagged_with_bg(rows, keys):
     ids = {r["id"] for r in rows}
@@ -351,48 +325,41 @@ ITEMS = [
                     "science done in any year, only about what got written down.",
         },
     },
-    # ---------------------------------------------------------------- clean_labels (mess)
+    # ---------------------------------------------------------------- label_rules (mess)
     {
         "id": "M-05",
         "round": "mess",
-        "title": "Sort the messy material list",
-        "blurb": "22 spellings were typed by hand into one “material” field. You don't need to know "
-                 "any chemistry — every spelling gets a plain-English gloss. Sort each by what kind "
-                 "of labeling problem it has, then see where an automatic cleanup script disagrees "
-                 "with you.",
+        "title": "How many ways can one box be filled in?",
+        "blurb": "One text box, typed into by hand for years, holds 35 different spellings. Switch "
+                 "general cleaning rules on and off and watch the count fall and the bar chart "
+                 "tidy up. No chemistry required: every rule is decided from the text itself.",
         "grades": "6-12",
-        "source": "951 of 1,005 samples, raw “material” text field, 2DCC LiST records",
-        "item": "clean_labels",
-        "data": _m05_rows,
+        "source": "1,005 samples, raw “material” text field beside the “grown on” field",
+        "item": "label_rules",
+        "data": cda.label_pairs,
         "opts": {
-            "question": "Every spelling below comes with a plain-English gloss. Tap a spelling, "
-                        "then tap the kind of problem its label has — not which chemical it is.",
-            "targets": [
-                "Same substance, different spelling",
-                "An alloy — still one substance",
-                "Names the disc it was grown on, not the crystal",
-                "A raw ingredient, not a grown crystal",
-                "Names two different crystals, not one",
-                "Leave it alone — it's fine as is",
-            ],
-            "mapping": True,
-            "reveal_button": "How did an automatic cleanup script sort these?",
+            "question": "This chart counts samples by whatever someone typed into the material "
+                        "box. You do not need to know what any of these substances are. Turn on "
+                        "a rule and watch what happens to the chart and to the count.",
+            "top": 12,
+            "rare_below": 5,
+            "reveal_title": "All five rules together take 35 spellings down to 25. Here is what "
+                            "no rule written from the text can fix:",
             "reveal_lines": [
-                "The script only knows two tricks: rewrite “2H-MoS2” as “MoS2,” "
-                "and drop any spelling that exactly matches a known substrate name (Al2O3 or GaAs). "
-                "Everything else it leaves standing as its own group.",
-                "That means it never notices that Se is a raw element, that Mo-WSe2, SnTe-Sb, and "
-                "SnTe-Bi are alloys, or that MoS2-WS2 reads like two crystals in one label — it "
-                "files every one of those under “fine as is,” same as MoS2 or WSe2.",
-                "Al2O3 and GaAs together are only 5 of these 951 rows; Se is 1 more — 6 in all. "
-                "None of the alloys or the two-crystal label get caught by the script at all.",
-                "Look at the mapping above: wherever your bucket and the script's bucket disagree, "
-                "that gap is real information the script throws away, not a mistake you'd ever "
-                "notice just from the chart totals.",
+                "MoS2 has 338 samples, 2H-MoS2 has 2, MoS2-WS2 has 1 and Mo-WSe2 has 18. They "
+                "look related and they are four separate labels. Deciding which of them are the "
+                "same substance is not something you can read off the text.",
+                "A rule that stripped everything before a dash would merge all four. It would be "
+                "right about one of them and wrong about the others, and the chart would look "
+                "just as tidy either way.",
+                "So the mechanical mess — repeats, orderings, a stray 0, the disc typed into the "
+                "crystal box — is fixable by anyone. The rest needs someone who knows the field, "
+                "and if you do not have that person, the honest move is to say the labels are "
+                "unresolved rather than to pick a rule that looks tidy.",
+                "Fifteen samples had nothing typed in the box at all. No rule fixes those either.",
             ],
-            "note": "There is no single right answer for every spelling here — that is the point. "
-                    "13 more spellings name two materials at once (separated by a semicolon) and are "
-                    "sorted separately in the next item.",
+            "note": "Nothing here was invented for the workshop. These are the spellings in the "
+                    "records as they stand today.",
         },
     },
     {

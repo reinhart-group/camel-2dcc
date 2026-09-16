@@ -164,3 +164,20 @@ def recipe_trace(sample_id: int) -> dict:
 
 def transport_points() -> list[list[float]]:
     return [[r["T"], r["R"]] for r in cd.transport()]
+
+
+def label_pairs() -> dict:
+    """Every distinct (material, substrate) pair in the raw records, with its row count.
+
+    Small on purpose: the widget replays the cleaning rules in the browser, so it needs the
+    typed text and the substrate beside it, not a thousand rows. The substrate travels with
+    each pair because one of the rules is a cross-column check -- a material value that
+    matches the same row's substrate is the name of the disc, typed into the wrong box --
+    and that check is the one piece of the activity that needs no knowledge of chemistry at
+    all, only the observation that two columns of one row hold the same word.
+    """
+    from collections import Counter
+
+    pairs = Counter((d["mat"] or "", d["sub"] or "") for d in cd.samples(clean=False))
+    rows = [[m, s, n] for (m, s), n in pairs.most_common()]
+    return {"rows": rows}

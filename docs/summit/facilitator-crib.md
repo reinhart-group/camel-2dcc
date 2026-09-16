@@ -71,15 +71,36 @@ that is the point of round 2.
 
 ### Round 2 · 10 min — find the mess
 
-**M-05, hand-typed material names.** Teams sort spellings by *what kind of problem the
-label has*, not by chemistry, and every spelling carries a plain-English gloss, so no
-chemistry knowledge is needed. Then they compare against an automatic cleanup script.
+**M-05, one text box with thirty-five answers.** Teams switch general cleaning rules on
+and off and watch a bar chart of samples per label tidy up. Nobody has to know what any
+of these substances are: every rule is decided from the shape of the text, or by noticing
+that two columns of the same row hold the same word.
 
-The script only knows two tricks: rewrite `2H-MoS2` as `MoS2`, and drop anything that
-exactly matches a known substrate name. It therefore never notices that `Se` is a raw
-ingredient rather than a grown crystal, and never notices the alloys. Expect
-disagreement between teams about the alloys — there is no single right answer, and saying
-so out loud is better than adjudicating.
+What each rule does, in the order they appear:
+
+| Rule | Distinct spellings | What it catches |
+|---|---|---|
+| none | 35 | |
+| the same name typed twice | 30 | `SnSe; SnSe`, `MoS2; MoS2` |
+| the same list in a different order | 28 | `FeSe; FeTe` and `FeTe; FeSe` |
+| a piece that isn't a name | 27 | `MoS2; 0` |
+| the value matches this row's "grown on" column | 25 | 5 rows set aside |
+| fold labels under 5 samples into "rare" | 25 | hides 10 labels, changes nothing |
+
+The last rule is deliberately the one that tidies the chart most and fixes nothing. It is
+worth pointing at.
+
+**The punchline, which the reveal button gives them:** after every rule, `MoS2` (338
+samples), `2H-MoS2` (2), `MoS2-WS2` (1) and `Mo-WSe2` (18) are still four separate labels.
+They look related, and no rule written from the text can tell you which of them name the
+same substance. A rule that stripped everything before a dash would merge all four, would
+be right about one and wrong about the others, and the chart would look equally tidy
+either way.
+
+So the mechanical mess is fixable by anyone, and the rest needs someone who knows the
+field. If you do not have that person, the honest move is to report the labels as
+unresolved rather than to pick a rule that looks tidy. That is the transferable lesson and
+it is the one to name out loud if a team gets there.
 
 **M-02, the rule that deletes a method.** This is the strongest single finding in the
 dataset and the one to protect time for.

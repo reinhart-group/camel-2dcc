@@ -189,10 +189,11 @@ ROUNDS = [
             "mess, and write down the rule you would apply — not just the verdict on one "
             "row. A rule is something a computer could follow. A verdict is not.",
         "items": [
-            ("M-05", "Sorting out hand-typed material names",
-             "The material was typed into a text box by hand, by many people, over several "
-             "years. No chemistry needed: every spelling comes with a plain-English gloss, "
-             "and you are sorting by *what kind of problem the label has*."),
+            ("M-05", "One text box, thirty-five answers",
+             "One box, filled in by hand by many people over several years. You do not need "
+             "to know what any of these substances are — every rule you can switch on is "
+             "decided from the shape of the text, or by noticing that two columns of the same "
+             "row hold the same word. Turn one on and watch the chart."),
             ("M-02", "A reasonable rule that deletes a whole method",
              "A sensible-sounding rule — \"only use samples where both the growth time and "
              "the roughness were recorded\" — turns out to delete almost one entire growth "
