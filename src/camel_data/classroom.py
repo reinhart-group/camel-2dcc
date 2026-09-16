@@ -144,7 +144,38 @@ def surface_3d(scan: AFMScan, exaggeration: float = 1.0, colorscale: str = "Viri
 PLOTLYJS_URL = "https://cdn.plot.ly/plotly-2.35.2.min.js"
 
 
-def figure_html(fig, height: int = 520, url: str = PLOTLYJS_URL) -> str:
+def surface_preview(scan, size: int = 320, exaggeration: float = 1.0) -> str:
+    """A still 3D render of a scan as a base64 PNG, drawn with matplotlib.
+
+    Used as the poster image for a lazily-drawn Plotly scene, so a page can show several
+    scans while only ever holding one live WebGL context (see ``figure_html``).
+    """
+    import base64
+    import io
+
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+
+    z = _square(scan)
+    step = max(1, -(-z.shape[0] // 120))
+    z = z[::step, ::step]
+    lo, hi = np.percentile(z, [1, 99])
+    grid = np.linspace(0, scan.scan_um * 1000, z.shape[0])
+    xx, yy = np.meshgrid(grid, grid)
+    fig, ax = plt.subplots(figsize=(size / 100, size / 100 * 0.78), dpi=100,
+                           subplot_kw={"projection": "3d"})
+    ax.plot_surface(xx, yy, z * exaggeration, cmap="viridis", vmin=lo, vmax=hi,
+                    linewidth=0, antialiased=False, rcount=90, ccount=90)
+    ax.set_axis_off()
+    ax.view_init(elev=42, azim=-56)
+    buf = io.BytesIO()
+    fig.savefig(buf, format="png", bbox_inches="tight", pad_inches=0, transparent=False)
+    plt.close(fig)
+    return base64.b64encode(buf.getvalue()).decode()
+
+
+def figure_html(fig, height: int = 520, url: str = PLOTLYJS_URL, preview: str | None = None) -> str:
     """Self-contained HTML for a Plotly figure that actually draws inside Colab.
 
     Plotly's own ``to_html(include_plotlyjs="cdn")`` emits a plain ``<script src>`` tag. That
@@ -161,6 +192,8 @@ def figure_html(fig, height: int = 520, url: str = PLOTLYJS_URL) -> str:
     import uuid
 
     spec = json.loads(fig.to_json())
+    if preview is not None:
+        return _lazy_figure_html(spec, preview, height, url)
     if "bdata" in json.dumps(spec)[:200000]:  # pragma: no cover - guarded by tests
         raise ValueError("figure contains base64 arrays; build traces from Python lists")
     div = "camel-plot-" + uuid.uuid4().hex[:12]
@@ -180,6 +213,68 @@ def figure_html(fig, height: int = 520, url: str = PLOTLYJS_URL) -> str:
         "    \"drawing library from the internet, and the connection blocked it. Every other \"+\n"
         "    \"picture in these notebooks works offline.</p>\"; };\n"
         "  document.head.appendChild(s);\n"
+        "})();</script>"
+    )
+
+
+def _lazy_figure_html(spec: dict, preview_png: str, height: int, url: str) -> str:
+    """A still picture that becomes a live 3D plot when tapped, one at a time.
+
+    Safari in a Colab notebook cannot keep several Plotly 3D scenes alive on one page: with
+    three on screen every one of them loses its WebGL context and goes blank, while a single
+    scene on its own page draws perfectly. Measured on the operator's device, 2026-09-16.
+
+    So each scan ships as a poster image and is drawn only on request, and starting one tears
+    the previous one down with ``Plotly.purge``. At most one live context exists at any moment,
+    which is the condition under which 3D is known to work here.
+    """
+    import json
+    import uuid
+
+    div = "camel-plot-" + uuid.uuid4().hex[:12]
+    return (
+        f'<div id="{div}-wrap" style="position:relative;height:{height}px;width:100%">\n'
+        f'  <img id="{div}-img" src="data:image/png;base64,{preview_png}" alt="3D view of the scan"'
+        '   style="width:100%;height:100%;object-fit:contain">\n'
+        f'  <div id="{div}" style="display:none;height:{height}px;width:100%"></div>\n'
+        f'  <button id="{div}-go" style="position:absolute;left:50%;bottom:8px;'
+        'transform:translateX(-50%);padding:11px 18px;font-size:15px;border-radius:8px;'
+        'border:1px solid #2b6cb0;background:#2b6cb0;color:#fff">spin this one</button>\n'
+        "</div>\n"
+        "<script>(function(){\n"
+        f'  var spec = {json.dumps(spec, separators=(",", ":"))};\n'
+        f'  var el = document.getElementById("{div}"), img = document.getElementById("{div}-img");\n'
+        f'  var btn = document.getElementById("{div}-go");\n'
+        "  window.__camelLive = window.__camelLive || null;\n"
+        "  function release(){\n"
+        "    var live = window.__camelLive;\n"
+        "    if (live && live.el !== el){ try { Plotly.purge(live.el); } catch(e){}\n"
+        "      live.el.style.display = 'none'; live.img.style.display = ''; live.btn.style.display = '';\n"
+        "    }\n"
+        "  }\n"
+        "  function draw(){\n"
+        "    release();\n"
+        "    img.style.display = 'none'; el.style.display = ''; btn.style.display = 'none';\n"
+        f'    window.__camelLive = {{el: el, img: img, btn: btn}};\n'
+        "    Plotly.newPlot(el, spec.data, spec.layout, {responsive:true}).then(function(){\n"
+        "      var cv = el.querySelector('canvas');\n"
+        "      if (cv) cv.addEventListener('webglcontextlost', function(){\n"
+        "        el.style.display = 'none'; img.style.display = ''; btn.style.display = '';\n"
+        "        btn.textContent = 'the browser reclaimed the 3D view \u2014 tap to redraw';\n"
+        "      });\n"
+        "    });\n"
+        "  }\n"
+        "  btn.addEventListener('click', function(){\n"
+        "    if (window.Plotly) { draw(); return; }\n"
+        "    btn.textContent = 'loading\u2026';\n"
+        "    var amd = window.define; window.define = undefined;\n"
+        "    var s = document.createElement('script');\n"
+        f'    s.src = "{url}"; s.charset = "utf-8";\n'
+        "    s.onload = function(){ window.define = amd; draw(); };\n"
+        "    s.onerror = function(){ window.define = amd;\n"
+        "      btn.textContent = 'could not reach the 3D library \u2014 the picture above is still real'; };\n"
+        "    document.head.appendChild(s);\n"
+        "  });\n"
         "})();</script>"
     )
 

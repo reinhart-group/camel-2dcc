@@ -23,6 +23,15 @@ def html():
     return surface_3d(scan, exaggeration=3).to_html()
 
 
+@pytest.fixture(scope="module")
+def html_lazy():
+    if not (SLICE / "afm_gallery/gallery.json").exists():
+        pytest.skip(f"data slice not present at {SLICE}")
+    from camel_data.classroom import figure_html, surface_preview
+    scan = load_gallery(SLICE)["triangle_pyramids"]
+    return figure_html(surface_3d(scan).fig, preview=surface_preview(scan, size=120))
+
+
 def test_no_base64_arrays(html):
     """Heights must travel as plain JSON arrays, readable by any plotly.js build."""
     assert "bdata" not in html
@@ -52,3 +61,19 @@ def test_offline_failure_is_explained(html):
     """A blocked CDN must say so rather than leaving a silent empty box."""
     assert "onerror" in html
     assert "works offline" in html
+
+
+def test_lazy_figure_holds_one_context(html_lazy):
+    """Safari tears down every WebGL context on a Colab page that holds more than one
+    Plotly 3D scene: with three on screen all three go blank, while one alone draws
+    perfectly. So a lazily-drawn figure must purge the previously live plot before
+    starting its own, and must survive the browser reclaiming it anyway."""
+    assert "Plotly.purge" in html_lazy, "must tear down the previous plot"
+    assert "__camelLive" in html_lazy, "must track which plot is currently live"
+    assert "webglcontextlost" in html_lazy, "must recover if the context is reclaimed"
+
+
+def test_lazy_figure_shows_something_without_plotly(html_lazy):
+    """The still render must be real data, visible with no tap, no library and no network."""
+    assert 'src="data:image/png;base64,' in html_lazy
+    assert "the picture above is still real" in html_lazy
