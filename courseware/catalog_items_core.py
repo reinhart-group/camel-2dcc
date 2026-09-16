@@ -22,9 +22,17 @@ ITEMS = [
                           {"key": "mat", "label": "material"},
                           {"key": "sub", "label": "substrate"}],
             "value_key": "rough", "value_label": "roughness (nm)", "unit": "nm",
-            "allow_log": True, "max_groups": 5, "min_n": 8,
-            "note": "Roughness depends on how big an area the microscope scanned, so groups "
-                    "measured at different scan sizes are not a fair comparison.",
+            "max_groups": 5, "min_n": 8,
+            "range_toggle": True, "default_view": "full",
+            "full_label": "full range (with outliers)",
+            "clip_label": "typical range (zoomed in, hides the biggest outliers)",
+            "note": "This chart starts by showing every sample, including the roughest outliers, "
+                    "because the spread — not just the middle — is the point of this comparison. "
+                    "Switch to the zoomed-in view to see the typical samples more clearly, but "
+                    "remember the note it gives you: some samples get pinned to the top edge "
+                    "there, not shown at their real height. Roughness also depends on how big an "
+                    "area the microscope scanned, so groups measured at different scan sizes are "
+                    "not a perfectly fair comparison either.",
         },
     },
 ]

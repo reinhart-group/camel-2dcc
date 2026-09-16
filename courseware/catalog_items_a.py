@@ -82,6 +82,33 @@ def _bg_rough(flagged_ids):
             if r.get("rough") is not None and r["id"] not in flagged_ids]
 
 
+_M05_MERGE = "Same substance, different spelling"
+_M05_DISC = "Names the disc it was grown on, not the crystal"
+_M05_FINE = "Leave it alone — it's fine as is"
+
+
+def _m05_rows():
+    """The 22 no-semicolon material spellings, each tagged with the bucket a naive cleanup
+    script would put it in. The script (courseware/catalog_data.py's canonical()/SUBSTRATES)
+    knows exactly two tricks: rewrite a spelling that differs from its canonical form (only
+    "2H-MoS2" -> "MoS2" here), and drop a spelling that exactly matches a known substrate name
+    (Al2O3, GaAs). Everything else -- including the raw element Se, the alloys Mo-WSe2/SnTe-Sb/
+    SnTe-Bi, and the two-crystal-looking MoS2-WS2 -- falls through to "leave it alone," because
+    the script has no rule for any of those. That gap is the point of the reveal mapping."""
+    out = []
+    for d in cda.material_labels():
+        if ";" in d["raw"]:
+            continue
+        if d["canon"] != d["raw"]:
+            script = _M05_MERGE
+        elif d["is_sub"]:
+            script = _M05_DISC
+        else:
+            script = _M05_FINE
+        out.append(dict(d, script=script))
+    return out
+
+
 def _flagged_with_bg(rows, keys):
     ids = {r["id"] for r in rows}
     return {"flagged": cd.compact(rows, keys), "bg": _bg_rough(ids)}
@@ -329,30 +356,39 @@ ITEMS = [
         "id": "M-05",
         "round": "mess",
         "title": "Sort the messy material list",
-        "blurb": "22 different single spellings were typed into one field for “material” — some "
-                 "are crystals, some are substrates or raw elements. Tap each one and sort it into "
-                 "a group; watch the chart change.",
+        "blurb": "22 spellings were typed by hand into one “material” field. You don't need to know "
+                 "any chemistry — every spelling gets a plain-English gloss. Sort each by what kind "
+                 "of labeling problem it has, then see where an automatic cleanup script disagrees "
+                 "with you.",
         "grades": "6-12",
         "source": "951 of 1,005 samples, raw “material” text field, 2DCC LiST records",
         "item": "clean_labels",
-        "data": lambda: [d for d in cda.material_labels() if ";" not in d["raw"]],
+        "data": _m05_rows,
         "opts": {
-            "question": "Scientists typed the material name by hand for every sample, so the spelling "
-                        "varies, and a few entries are not a crystal at all. Tap a spelling, then tap "
-                        "the group it belongs in.",
-            "targets": ["MoS2", "WSe2", "WS2", "GaSe", "In2Se3", "MoSe2", "SnSe", "Mo-WSe2", "FeSe",
-                        "InSe", "SnTe", "MnTe", "Bi2Se3", "not a crystal: a substrate or raw element",
-                        "something else / not sure"],
+            "question": "Every spelling below comes with a plain-English gloss. Tap a spelling, "
+                        "then tap the kind of problem its label has — not which chemical it is.",
+            "targets": [
+                "Same substance, different spelling",
+                "An alloy — still one substance",
+                "Names the disc it was grown on, not the crystal",
+                "A raw ingredient, not a grown crystal",
+                "Names two different crystals, not one",
+                "Leave it alone — it's fine as is",
+            ],
+            "mapping": True,
             "reveal_button": "How did an automatic cleanup script sort these?",
             "reveal_lines": [
-                "One simple rule: treat “2H-MoS2” as “MoS2,” and drop any spelling that exactly "
-                "matches a known substrate name (like Al2O3 or GaAs) or a bare element (like Se).",
-                "That rule still leaves about two dozen distinct spellings standing — most of "
-                "this mess is not typos. It is real variety (alloys, multi-material growths, and "
-                "substrate names) squeezed into one text field.",
-                "Al2O3, GaAs, and Se together are only 6 of these 951 rows, but a script that never "
-                "learned they are not crystals would happily count them as one in an uncleaned chart.",
-                "Did your groups match the script's choices for every spelling? Where did you disagree?",
+                "The script only knows two tricks: rewrite “2H-MoS2” as “MoS2,” "
+                "and drop any spelling that exactly matches a known substrate name (Al2O3 or GaAs). "
+                "Everything else it leaves standing as its own group.",
+                "That means it never notices that Se is a raw element, that Mo-WSe2, SnTe-Sb, and "
+                "SnTe-Bi are alloys, or that MoS2-WS2 reads like two crystals in one label — it "
+                "files every one of those under “fine as is,” same as MoS2 or WSe2.",
+                "Al2O3 and GaAs together are only 5 of these 951 rows; Se is 1 more — 6 in all. "
+                "None of the alloys or the two-crystal label get caught by the script at all.",
+                "Look at the mapping above: wherever your bucket and the script's bucket disagree, "
+                "that gap is real information the script throws away, not a mistake you'd ever "
+                "notice just from the chart totals.",
             ],
             "note": "There is no single right answer for every spelling here — that is the point. "
                     "13 more spellings name two materials at once (separated by a semicolon) and are "
@@ -389,9 +425,9 @@ ITEMS = [
     {
         "id": "M-08",
         "round": "mess",
-        "title": "Which material has the roughest film? (before controlling for scan size)",
-        "blurb": "Compare roughness across materials, then control for scan size and watch the "
-                 "comparison change.",
+        "title": "Which material's film measures roughest — and does that hold up?",
+        "blurb": "Compare roughness across six materials, then lock the comparison to one scan "
+                 "size and watch the sample count (n) for each material, not just the medians.",
         "grades": "6-12",
         "source": "samples with AFM roughness, restricted to the six most-measured materials",
         "item": "scan_size_trap",
@@ -399,48 +435,79 @@ ITEMS = [
             _scan_rows([r for r in cd.samples(clean=True) if r["mat"] in TOP_MATERIALS], "mat"),
             ["g", "scan", "rough"]),
         "opts": {
-            "question": "These materials were not all scanned at the same size. Compare them, then "
-                        "tap the button to compare fairly.",
+            "mode": "compare", "low_n": 10,
+            "question": "An atomic force microscope measures roughness by scanning a small patch "
+                        "of the film; “scan size” is how wide that patch is, in "
+                        "micrometers (µm — millionths of a meter). A bigger patch is more "
+                        "likely to catch one unusually tall bump, which can push a material's "
+                        "roughness number up for a reason that has nothing to do with the crystal "
+                        "itself. These six materials were not all scanned at the same size. "
+                        "Compare them as measured, then lock the comparison to one scan size and "
+                        "see what changes — and what that costs you.",
             "compare_key": "mat", "compare_label": "material",
-            "note": "A bigger scan window is more likely to catch a rare tall bump, which pushes its "
-                    "roughness number up — so scan size alone can make one material look rougher "
-                    "than another.",
+            "note": "Locking to one scan size is supposed to make the comparison fairer, and mostly "
+                    "the ranking barely moves. The one material whose number moves a lot, In2Se3, "
+                    "moves because its sample shrinks from 32 films down to 2 once you require the "
+                    "same scan size — not because controlling revealed some hidden truth. A median "
+                    "from 2 samples is not more trustworthy than one from 32; it is just smaller. "
+                    "Watch n for every material in both views before you trust any of these medians.",
         },
     },
     {
         "id": "M-09",
         "round": "mess",
-        "title": "Does growth method change roughness? (before controlling for scan size)",
-        "blurb": "Compare roughness across the two growth methods, then control for scan size.",
+        "title": "Does growth method change roughness, even after controlling for scan size?",
+        "blurb": "Compare roughness between two ways of growing these crystals, then check the gap "
+                 "at specific scan sizes to see whether it survives.",
         "grades": "6-12",
         "source": "samples with AFM roughness, both growth methods",
         "item": "scan_size_trap",
         "data": lambda: cd.compact(_scan_rows(cd.samples(clean=True), "meth"), ["g", "scan", "rough"]),
         "opts": {
-            "question": "MOCVD and Hybrid MBE samples were not all scanned at the same size either. "
-                        "Compare them, then tap the button to compare fairly.",
+            "mode": "compare", "low_n": 10,
+            "question": "These crystals were grown two different ways: MOCVD (metal-organic "
+                        "chemical vapor deposition — gas-phase chemicals react and build up the "
+                        "film) and Hybrid MBE (molecular beam epitaxy — atoms are deposited more "
+                        "slowly, layer by layer). “Scan size” is how wide a patch of film "
+                        "the microscope measured, in micrometers (µm); it can affect the "
+                        "roughness number on its own, regardless of growth method. Compare the two "
+                        "methods as measured, then lock to one scan size at a time and see whether "
+                        "the gap between them survives.",
             "compare_key": "meth", "compare_label": "growth method",
-            "note": "Locking to one scan size can leave very few samples for one of the two methods "
-                    "— a fair comparison is sometimes a small one.",
+            "note": "The gap does not close at any scan size with enough samples to check: Hybrid "
+                    "MBE films measure rougher than MOCVD films whether you look at every scan "
+                    "together or lock to one size. That is a real pattern that held up under a "
+                    "plausible check — even though the group sizes shift a lot as you lock to "
+                    "different scan sizes. These are observational records, not a controlled "
+                    "experiment, so the most this shows is that growth method is associated with "
+                    "rougher films here, not that it causes the difference.",
         },
     },
     {
         "id": "M-10",
         "round": "mess",
-        "title": "Does scan size alone change roughness, even for one material?",
-        "blurb": "Every scan here is the same material (WSe2). See how the reported roughness still "
-                 "shifts with the size of the scan.",
+        "title": "Does scan size alone change the roughness number, even for one material?",
+        "blurb": "Every sample here is the same material, WSe2. Step through scan sizes and watch "
+                 "the distribution, its median, and its sample count (n) move together.",
         "grades": "6-12",
         "source": "WSe2 samples with AFM roughness, 2DCC LiST records",
         "item": "scan_size_trap",
         "data": lambda: cd.compact(_scan_rows([r for r in cd.samples(clean=True) if r["mat"] == "WSe2"]),
                                     ["scan", "rough"]),
         "opts": {
-            "question": "All of these scans are the same material, WSe2. Does the scan size still "
-                        "seem to matter?",
-            "note": "Nothing about the crystal changed here — only the size of the window used "
-                    "to measure it. That is why comparing roughness across different scan sizes is "
-                    "not a fair comparison, even within one material.",
+            "mode": "step", "low_n": 4,
+            "question": "Nothing about the crystal changes in this data — every scan below is the "
+                        "same material, WSe2 (tungsten diselenide). Only the “scan size” "
+                        "changes: how wide a patch of the film the microscope measured, in "
+                        "micrometers (µm, millionths of a meter). Step through the scan sizes "
+                        "and watch what happens to the measured roughness — and to how many "
+                        "samples back up each step.",
+            "note": "Roughness tends to rise as the scan window grows, at least across the three "
+                    "sizes with enough samples to trust: 1 µm (4 samples), 2 µm (28 "
+                    "samples), and 5 µm (171 samples). The larger scan sizes shown, from 10 "
+                    "µm up, have only one to three samples each — not enough to know whether "
+                    "they continue that trend or are just noise from a couple of unusual scans. "
+                    "Both facts are on screen at once so neither one hides the other.",
         },
     },
     # ---------------------------------------------------------------- odd_values (mess)

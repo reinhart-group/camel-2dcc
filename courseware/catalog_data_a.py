@@ -8,11 +8,60 @@ from collections import Counter
 import catalog_data as cd
 
 
+# Plain-English glosses for the 22 no-semicolon spellings, written for a reader who knows no
+# materials science. Sourced from data/slice/camel-2dcc/materials_reference.csv and
+# data/slice/camel-2dcc/afm_gallery/gallery.json (both shipped with this repo) wherever those
+# name the substance; a few (MnTe, PtSe2, and the SnTe-Sb/SnTe-Bi/2H-MoS2/MoS2-WS2 readings) are
+# general chemistry knowledge or an inferred reading of the naming pattern, not text lifted from
+# either source, and are marked as such below.
+MATERIAL_GLOSS = {
+    "MoS2": "molybdenum disulfide — a thin semiconductor crystal, a leading candidate for "
+            "ultra-thin computer-chip transistors.",
+    "WSe2": "tungsten diselenide — another semiconductor crystal, often paired with MoS2 to "
+            "build transistor logic.",
+    "WS2": "tungsten disulfide — a semiconductor crystal that glows brightly as a single layer.",
+    "GaSe": "gallium selenide — used in nonlinear optics, changing the colour of laser light.",
+    "In2Se3": "indium selenide — a ferroelectric crystal that can hold a memory state with no power.",
+    "MoSe2": "molybdenum diselenide — a light-emitting semiconductor crystal, often grown "
+             "alongside WSe2.",
+    "SnSe": "tin selenide — a thermoelectric crystal that can turn heat into electricity.",
+    "Mo-WSe2": "an alloy: tungsten diselenide grown with some molybdenum mixed in — still one "
+               "substance, just not pure WSe2.",
+    "FeSe": "iron selenide — a superconductor: it carries electricity with zero resistance "
+            "once cooled.",
+    "InSe": "indium selenide — prized for very fast-moving electrons in future transistors.",
+    "(Bi1-x, Inx)2Se3": "an alloy of bismuth selenide with some indium swapped in, grown to study "
+                        "how the mix changes its properties.",
+    "SnTe": "tin telluride — a semiconductor crystal that can grow extremely flat.",
+    "MnTe": "manganese telluride — a semiconductor crystal. (General chemistry knowledge; not "
+            "described anywhere else in this repo's data.)",
+    "Bi2Se3": "bismuth selenide — a topological insulator: its surface conducts electricity "
+              "while its interior does not.",
+    "SnTe-Sb": "likely tin telluride with antimony mixed in, an alloy. (Read from the naming "
+               "pattern used elsewhere for Mo-WSe2; not directly documented.)",
+    "Al2O3": "aluminum oxide — this is sapphire, the disc many crystals are grown ON. It is "
+             "not the crystal itself.",
+    "SnTe-Bi": "likely tin telluride with bismuth mixed in, an alloy. (Read from the naming "
+               "pattern used elsewhere for Mo-WSe2; not directly documented.)",
+    "GaAs": "gallium arsenide — a substrate wafer some crystals are grown ON here, not a "
+            "grown crystal itself.",
+    "2H-MoS2": "the same substance as MoS2 — “2H” just names which way its atomic "
+               "layers stack.",
+    "MoS2-WS2": "reads like two crystal names joined by a hyphen instead of a semicolon — "
+                "maybe two materials grown in one run. (Only 1 row; genuinely ambiguous.)",
+    "Se": "selenium — a raw chemical element, not a crystal that was grown.",
+    "PtSe2": "platinum diselenide — a layered semiconductor crystal in the same family as "
+             "MoS2. (General chemistry knowledge; not described anywhere else in this repo's data.)",
+}
+
+
 def material_labels() -> list[dict]:
-    """Every raw material spelling as typed, with its row count and what auto-cleanup would call it."""
+    """Every raw material spelling as typed, with its row count, what auto-cleanup would call it,
+    and (for the 22 no-semicolon spellings) a plain-English gloss of what the substance actually is."""
     rows = cd.samples(clean=False)
     c = Counter(r["mat"] for r in rows if r["mat"] is not None)
-    return [{"raw": raw, "n": n, "canon": cd.canonical(raw), "is_sub": raw in cd.SUBSTRATES}
+    return [{"raw": raw, "n": n, "canon": cd.canonical(raw), "is_sub": raw in cd.SUBSTRATES,
+             "gloss": MATERIAL_GLOSS.get(raw)}
             for raw, n in c.most_common()]
 
 

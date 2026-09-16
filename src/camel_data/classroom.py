@@ -110,8 +110,16 @@ def surface_3d(scan: AFMScan, exaggeration: float = 1.0, colorscale: str = "Viri
     # Colour by the 1st-99th percentile so one dust speck or glitch line
     # doesn't wash out every other feature (the surface itself is unchanged).
     lo, hi = np.percentile(z, [1, 99])
-    fig = go.Figure(go.Surface(x=axis_nm, y=axis_nm, z=z, colorscale=colorscale,
-                               cmin=lo, cmax=hi, colorbar=dict(title="height (nm)")))
+    # Hand Plotly plain Python lists, never numpy arrays. plotly.py 6+ encodes numpy
+    # as base64 ("bdata"), which older plotly.js builds silently fail to decode: the
+    # axes and colourbar draw and the surface is simply absent. Lists are understood
+    # by every version. See PLOTLYJS_URL below for the other half of this.
+    fig = go.Figure(go.Surface(
+        x=[round(float(v), 3) for v in axis_nm],
+        y=[round(float(v), 3) for v in axis_nm],
+        z=[[round(float(v), 3) for v in row] for row in z],
+        colorscale=colorscale, cmin=float(lo), cmax=float(hi),
+        colorbar=dict(title="height (nm)")))
     # Keep x and y true to scale; stretch z by the exaggeration factor.
     z_span = max(float(np.ptp(z)), 1e-9)
     xy_span = scan.scan_um * 1000
@@ -129,6 +137,13 @@ def surface_3d(scan: AFMScan, exaggeration: float = 1.0, colorscale: str = "Viri
     return _Viewable(fig)
 
 
+# plotly.py 7.0.0 reports get_plotlyjs_version() == "4.0.0" while writing arrays in the
+# 6.x+ base64 format, so include_plotlyjs="cdn" loads a 2019 build that cannot read its
+# own output. Pin a version confirmed to render these figures on a phone instead of
+# trusting the library to describe itself.
+PLOTLYJS_URL = "https://cdn.plot.ly/plotly-2.35.2.min.js"
+
+
 class _Viewable:
     """Wraps a Plotly figure so ``.show()`` leaves a picture behind in the saved notebook.
 
@@ -144,7 +159,7 @@ class _Viewable:
         return getattr(self.fig, name)
 
     def to_html(self, **kw):
-        kw.setdefault("include_plotlyjs", "cdn")
+        kw.setdefault("include_plotlyjs", PLOTLYJS_URL)
         kw.setdefault("full_html", False)
         return self.fig.to_html(**kw)
 

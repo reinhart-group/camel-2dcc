@@ -7,10 +7,15 @@ from __future__ import annotations
 import catalog_data as cd
 import catalog_data_b as cdb
 
-# Two real, complete growth recipes used by recipe_timeline: 17458 is the MOCVD WSe2
-# recipe used elsewhere in the grain-scan materials (850 C nucleation, no ripening);
-# 69173 is a Hybrid MBE SnSe recipe with every step's duration recorded.
+# Three real, complete growth recipes used by recipe_timeline. 17458 is the MOCVD WSe2
+# recipe used elsewhere in the grain-scan materials, but its temperature column is a flat
+# 850 C target for all six recorded steps (two blank) -- a setpoint table, not a
+# measurement, and it has no shape to read. 28363 is a different MOCVD recipe (MoS2, 11
+# steps, verified 2026-09-16) with real shape: 800 C anneal, a step up to 850 C, a further
+# step up to 950 C for growth, then two 0 C cooldown steps. 69173 is a Hybrid MBE SnSe
+# recipe with every step's duration recorded.
 _MOCVD_META = {"label": "MOCVD, WSe2 on sapphire, 850 °C nucleation (sample 17458)"}
+_MOCVD_SHAPE_META = {"label": "MOCVD, MoS2 on sapphire (sample 28363)"}
 _MBE_META = {"label": "Hybrid MBE, SnSe (sample 69173)"}
 
 ITEMS = [
@@ -175,13 +180,14 @@ ITEMS = [
         "blurb": "Temperature versus elapsed time for one real growth recipe, step by step, with "
                  "each step's duration and its rate of temperature change from the step before.",
         "grades": "3-12",
-        "source": "one recipe (6 steps) from growth_recipes.csv, sample 17458, 2DCC LiST records",
+        "source": "one recipe (11 steps) from growth_recipes.csv, sample 28363, 2DCC LiST records",
         "item": "recipe_timeline",
-        "data": lambda: cd.recipe(17458),
+        "data": lambda: cd.recipe(28363),
         "opts": {
-            "question": "This is exactly how one real WSe2 crystal was grown: temperature held "
-                        "and changed step by step. What happens right before the crystal grows?",
-            "mode": "single", "a": _MOCVD_META,
+            "question": "This is exactly how one real MoS2 crystal was grown: temperature held "
+                        "and changed step by step, from an 800 °C anneal up to 950 °C for growth "
+                        "and back down. What happens right before the crystal grows?",
+            "mode": "single", "a": _MOCVD_SHAPE_META,
             "note": "A blank temperature or duration means it was not recorded, not that it was zero.",
         },
     },
@@ -225,18 +231,26 @@ ITEMS = [
     {
         "id": "G-12",
         "round": "model",
-        "title": "Read heights off an atomic staircase",
+        "title": "Read heights off terraced triangle crystals",
         "blurb": "A real height map of a crystal surface, with a draggable line whose height "
-                 "profile plots below, so a learner can read off the height of each atomic step.",
+                 "profile plots below, so a learner can read off the height of each terrace.",
         "grades": "3-8",
-        "source": "one AFM scan, 1 µm across, sample 20390 (SrTiO3), 2DCC gallery",
+        "source": "one AFM scan, 2 µm across, sample 17853 (InSe), 2DCC gallery",
         "item": "profile_reader",
-        "data": lambda: cdb.heightmap_profile("atomic_staircase", size=96),
+        # 128 pixels across natively; cd.heightmap always halves once more after its own
+        # size-based stride, so any size >= 128 gives the same full-resolution 64x64 grid
+        # (about 31 KB). Verified 2026-09-16: the height histogram has 7 distinct levels
+        # spanning 6.7 nm, and the level spacings are uneven, clustering near 0.27 nm and
+        # 0.95 nm -- not one fixed step height.
+        "data": lambda: cdb.heightmap_profile("terraced_triangles", size=128),
         "opts": {
             "question": "Drag the line up and down the crystal. Each flat terrace is one step "
-                        "down. About how tall is one step, in nanometers?",
+                        "down, but the steps are not all the same height. About how tall are the "
+                        "smaller steps, and how tall are the bigger ones, in nanometers?",
             "note": "Heights are levelled per scan line and shifted so the median is 0, the "
-                    "instrument's standard processing step.",
+                    "instrument's standard processing step. This scan is only 128 pixels across "
+                    "(most gallery scans are about 512), so the profile is coarser than usual, "
+                    "but the terrace steps still show clearly.",
         },
     },
     {
@@ -247,7 +261,9 @@ ITEMS = [
         "grades": "3-8",
         "source": "one AFM scan, 1 µm across, sample 50210 (Bi2Se3), 2DCC gallery",
         "item": "profile_reader",
-        "data": lambda: cdb.heightmap_profile("triangle_pyramids", size=96),
+        # Raised from size=96 (53x53, ~22 KB) to size=128 (66x66, ~33 KB): sharper profile,
+        # still well under the ~60 KB budget.
+        "data": lambda: cdb.heightmap_profile("triangle_pyramids", size=128),
         "opts": {
             "question": "These triangles stack like steps. Drag the line across a stack: how many "
                         "different height levels does it cross?",
