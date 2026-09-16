@@ -1,0 +1,55 @@
+<div id="__ID__" class="camel-dials">
+  <style>
+    .camel-dials { font-family: -apple-system, system-ui, sans-serif; max-width: 560px; }
+    .camel-dials h3 { margin: 0 0 4px 0; font-size: 18px; }
+    .camel-dials p.q { margin: 0 0 10px 0; font-size: 14px; color: #333; }
+    .camel-dials .dials { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 10px; }
+    .camel-dials .dial { flex: 1 1 160px; }
+    .camel-dials label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 3px; }
+    .camel-dials select { width: 100%; font-size: 16px; padding: 9px; border: 1px solid #999;
+      border-radius: 6px; background: #fff; }
+    .camel-dials #count { font-size: 14px; margin: 8px 0; }
+    .camel-dials ul { font-size: 13px; color: #444; margin: 4px 0 10px 18px; padding: 0; }
+    .camel-dials table { border-collapse: collapse; font-size: 12px; width: 100%; }
+    .camel-dials th, .camel-dials td { border: 1px solid #ccc; padding: 3px 5px; text-align: left;
+      white-space: nowrap; }
+    .camel-dials th { background: #eef2f7; }
+    .camel-dials td.miss { background: #fdecea; }
+    .camel-dials .scroll { overflow-x: auto; }
+    .camel-dials .key { font-size: 12px; margin-top: 4px; }
+  </style>
+  <h3>Growing tiny crystals: turn the dials</h3>
+  <p class="q">Penn State's 2D Crystal Consortium grew these samples and measured how rough each
+  film came out. How do the recorded recipe settings relate to that measurement?</p>
+  <div class="dials">
+    <div class="dial">
+      <label for="st">Structural</label>
+      <select id="st">
+        <option value="few">few variables</option>
+        <option value="some" selected>some variables</option>
+        <option value="all">all variables</option>
+      </select>
+    </div>
+    <div class="dial">
+      <label for="pr">Provenance</label>
+      <select id="pr">
+        <option value="resolved" selected>resolved</option>
+        <option value="surfaced">surfaced</option>
+      </select>
+    </div>
+    <div class="dial">
+      <label for="sa">Statistical</label>
+      <select id="sa">
+        <option value="implicit" selected>noise implicit</option>
+        <option value="explicit">noise explicit</option>
+      </select>
+    </div>
+  </div>
+  <div id="count"></div>
+  <ul id="notes"></ul>
+  <div id="plot"></div>
+  <div class="scroll" id="tbl"></div>
+  <p class="q" style="margin-top:8px">The data never change. The dials only change what you meet
+  first.</p>
+</div>
+<script>__JS__</script>
