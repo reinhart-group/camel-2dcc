@@ -144,6 +144,46 @@ def surface_3d(scan: AFMScan, exaggeration: float = 1.0, colorscale: str = "Viri
 PLOTLYJS_URL = "https://cdn.plot.ly/plotly-2.35.2.min.js"
 
 
+def figure_html(fig, height: int = 520, url: str = PLOTLYJS_URL) -> str:
+    """Self-contained HTML for a Plotly figure that actually draws inside Colab.
+
+    Plotly's own ``to_html(include_plotlyjs="cdn")`` emits a plain ``<script src>`` tag. That
+    is enough in JupyterLab and not enough in Colab: Colab defines requirejs, and plotly.js
+    is a UMD bundle, so with ``define.amd`` present it registers as an anonymous AMD module
+    and never assigns ``window.Plotly``. The following ``Plotly.newPlot`` call then throws and
+    the reader is left with an empty box -- axes, colourbar and all, but no data.
+
+    So load the library by hand with AMD hidden for the duration, put ``define`` back
+    afterwards, and only then draw. The figure travels as JSON from ``to_json()``, which is
+    free of the base64 array encoding as long as the trace was built from Python lists.
+    """
+    import json
+    import uuid
+
+    spec = json.loads(fig.to_json())
+    if "bdata" in json.dumps(spec)[:200000]:  # pragma: no cover - guarded by tests
+        raise ValueError("figure contains base64 arrays; build traces from Python lists")
+    div = "camel-plot-" + uuid.uuid4().hex[:12]
+    return (
+        f'<div id="{div}" style="height:{height}px;width:100%;"></div>\n'
+        "<script>(function(){\n"
+        f'  var spec = {json.dumps(spec, separators=(",", ":"))};\n'
+        f'  var el = document.getElementById("{div}");\n'
+        "  function draw(){ Plotly.newPlot(el, spec.data, spec.layout, {responsive:true}); }\n"
+        "  if (window.Plotly) { draw(); return; }\n"
+        "  var amd = window.define; window.define = undefined;\n"
+        "  var s = document.createElement('script');\n"
+        f'  s.src = "{url}"; s.charset = "utf-8";\n'
+        "  s.onload = function(){ window.define = amd; draw(); };\n"
+        "  s.onerror = function(){ window.define = amd; el.innerHTML =\n"
+        "    \"<p style='font:14px system-ui;color:#b45309'>This 3D picture needs to fetch a \"+\n"
+        "    \"drawing library from the internet, and the connection blocked it. Every other \"+\n"
+        "    \"picture in these notebooks works offline.</p>\"; };\n"
+        "  document.head.appendChild(s);\n"
+        "})();</script>"
+    )
+
+
 class _Viewable:
     """Wraps a Plotly figure so ``.show()`` leaves a picture behind in the saved notebook.
 
@@ -158,10 +198,12 @@ class _Viewable:
     def __getattr__(self, name):  # update_layout(), add_trace(), ... still work
         return getattr(self.fig, name)
 
-    def to_html(self, **kw):
-        kw.setdefault("include_plotlyjs", PLOTLYJS_URL)
-        kw.setdefault("full_html", False)
-        return self.fig.to_html(**kw)
+    def to_html(self, height: int = 520, **kw):
+        if kw:
+            kw.setdefault("include_plotlyjs", PLOTLYJS_URL)
+            kw.setdefault("full_html", False)
+            return self.fig.to_html(**kw)
+        return figure_html(self.fig, height=height)
 
     def _repr_html_(self):
         return self.to_html()
