@@ -31,11 +31,22 @@ def render(item: dict) -> str:
     return html.replace("__ITEM__", js.strip().rstrip(";"))
 
 
+BRANCH = "summit-menu"
+REPO = "reinhart-group/camel-2dcc"
+
+
+def badge(path: str) -> str:
+    """An Open in Colab badge, so the notebook is one tap away from the GitHub file view."""
+    url = f"https://colab.research.google.com/github/{REPO}/blob/{BRANCH}/{path}"
+    return f"[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)]({url})"
+
+
 def notebook_for(round_key: str, entries: list[dict]) -> nbformat.NotebookNode:
     nb = nbformat.v4.new_notebook()
     title = catalog.ROUNDS[round_key]
     index = "\n".join(f"- **{e['id']}** {e['title']} — {e['blurb']}" for e in entries)
     nb.cells.append(nbformat.v4.new_markdown_cell(
+        f"{badge(f'notebooks/catalog/{round_key}.ipynb')}\n\n"
         f"# {title}\n\n"
         "Every item below already works: tap, drag, and choose. Nothing needs to be signed in to "
         "or run. Tell us which item IDs you want and we will refine those.\n\n"
