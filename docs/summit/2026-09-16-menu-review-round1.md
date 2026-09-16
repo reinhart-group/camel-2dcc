@@ -155,3 +155,65 @@ rather than asserted.
   M-05 covers 22 spellings over 951 rows; M-07 covers 13 spellings over 39 rows; 15 rows have a
   blank material field and appear in neither; the non-crystal entries Al2O3, GaAs and Se account
   for 6 rows, not the 7 the old note claimed; M-11 66 rows, M-12 110, M-13 174.
+
+## Round 2 of operator review
+
+- **W-01's image** was rendered from a 96-pixel downsample and palette-quantised to 64 colours,
+  which banded a continuous colour map. The operator saw both faults: "weird color effect in the
+  reproduction; low resolution still."
+- **M-01 needed its outliers back.** The automatic axis clipping suits the warmup histograms but
+  works against a group comparison where the spread is the point. It now defaults to the full range
+  and offers a zoomed view, stating in both cases how many samples sit off the chart.
+- **M-05 required chemistry nobody in the room has.** "i guarantee high school math teachers won't
+  know what FeTe is or that Al2O3 is a substrate." It now sorts by the *kind of problem a label
+  has* rather than by which chemical it names, every spelling carries a plain-English gloss, and
+  the cleanup script's choices appear as a mapping table with the reader's disagreements marked
+  rather than as three sentences of prose.
+- **M-08, M-09 and M-10** promised changes the data does not deliver. Controlling for scan size
+  barely moves the material ranking, and the one material that does move, In2Se3, moves because
+  its sample collapses from 32 rows to 2. The MOCVD versus hybrid MBE gap survives every scan size
+  that has enough samples to check. M-10 had no control at all. All three were rebuilt around what
+  the numbers actually show.
+- **G-06, G-07 and G-08 were broken.** The sample-size slider fired on every drag tick and the draw
+  function cleared the accumulated sample means each time, so the histogram could never hold more
+  than one bar. Changing n now redraws a batch of 300 sample means at once, and the horizontal axis
+  is pinned so raising n visibly narrows the distribution instead of an auto-scaling axis hiding
+  it. Observed spreads track the standard errors: 592, 470, 315, 219, 154 and 122 nm² at n of 3, 5,
+  10, 20, 40 and 60, against a theoretical 592, 458, 324, 229, 162 and 132.
+- **G-09 plotted another setpoint table.** Recipe 17458 records 850 °C for all six steps. It now
+  uses sample 28363, an MOCVD MoS2 growth whose eleven steps run 800 → 850 → 950 with both
+  cooldowns recorded as 0.
+- **G-12 measured a staircase that processing had removed**, and its drag line was nearly the same
+  colour as the heat map beneath it. It now uses the InSe `terraced_triangles` scan, whose height
+  histogram has seven distinct levels over 6.7 nm, and the drag line is a black and white striped
+  bar with arrowheads, so the cue survives desaturation on a projector.
+- **The K-2 and grades 3-5 dial variants are gone.** The operator: "are you seriously suggesting
+  1st graders are looking at 2D material nanometer scale roughness measurements?" They are right,
+  and Kathy's own email puts this session at the high-school level, so the bands were outside the
+  brief as well as implausible. Grade labels of "3-8" and "3-12" elsewhere were corrected to
+  "6-12". The menu is 40 items.
+- **D-01 is the one the operator called excellent**, and it is the model the rest should follow.
+
+## Two defects in how the notebooks are delivered
+
+**The code cells do not run.** Every catalog cell contains a single comment,
+`# M-01: the working version is saved below.` Connecting a runtime and pressing run does nothing.
+The saved-output floor works exactly as designed, but the "Colab ceiling" — a teacher signing in to
+see how the thing was built — was never built. Making it real means packaging the item definitions
+so a cell can rebuild its own widget, or writing each cell as the underlying analysis in plain
+pandas. That decision is still open.
+
+**Helper code shipped inside the data zip.** The notebooks imported `camel_data` from the 31 MB
+slice rather than from `src/`, so a fix to `src/camel_data/classroom.py` could not reach any reader
+until someone re-uploaded that zip by hand, and notebooks silently ran the stale copy. `pyproject`
+now declares a build backend and src layout, so a runtime installs the helper code from the public
+repo and the zip carries data only. Verified by installing into a clean virtualenv.
+
+## A process failure worth recording
+
+Commit `a5627ae`, whose message describes only the plotly fix, actually contains thirteen files of
+three subagents' in-progress work. The cause was a blanket `git add -A` run in a working tree
+shared with running agents. Anyone reverting that commit expecting a plotly-only change would also
+delete the M-01, M-05, M-08, M-09, M-10, G-06, G-07, G-08 and G-12 rebuilds. The content is
+verified and correct; only the message is wrong. Do not use blanket staging while agents share the
+tree.

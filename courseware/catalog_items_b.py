@@ -179,7 +179,7 @@ ITEMS = [
         "title": "Read a real MOCVD growth recipe",
         "blurb": "Temperature versus elapsed time for one real growth recipe, step by step, with "
                  "each step's duration and its rate of temperature change from the step before.",
-        "grades": "3-12",
+        "grades": "6-12",
         "source": "one recipe (11 steps) from growth_recipes.csv, sample 28363, 2DCC LiST records",
         "item": "recipe_timeline",
         "data": lambda: cd.recipe(28363),
@@ -197,7 +197,7 @@ ITEMS = [
         "title": "Read a real hybrid MBE growth recipe",
         "blurb": "The same kind of temperature-versus-time reading, for a longer 13-step hybrid "
                  "MBE recipe.",
-        "grades": "3-12",
+        "grades": "6-12",
         "source": "one recipe (13 steps) from growth_recipes.csv, sample 69173, 2DCC LiST records",
         "item": "recipe_timeline",
         "data": lambda: cd.recipe(69173),
@@ -234,7 +234,7 @@ ITEMS = [
         "title": "Read heights off terraced triangle crystals",
         "blurb": "A real height map of a crystal surface, with a draggable line whose height "
                  "profile plots below, so a learner can read off the height of each terrace.",
-        "grades": "3-8",
+        "grades": "6-12",
         "source": "one AFM scan, 2 µm across, sample 17853 (InSe), 2DCC gallery",
         "item": "profile_reader",
         # 128 pixels across natively; cd.heightmap always halves once more after its own
@@ -258,7 +258,7 @@ ITEMS = [
         "round": "model",
         "title": "Read heights off stacked triangle crystals",
         "blurb": "A real height map of stacked triangular crystals, with a draggable profile line.",
-        "grades": "3-8",
+        "grades": "6-12",
         "source": "one AFM scan, 1 µm across, sample 50210 (Bi2Se3), 2DCC gallery",
         "item": "profile_reader",
         # Raised from size=96 (53x53, ~22 KB) to size=128 (66x66, ~33 KB): sharper profile,
@@ -365,7 +365,7 @@ ITEMS = [
         "title": "A simplified two-dial version",
         "blurb": "Only the structural and statistical dials; provenance is fixed at 'resolved' so "
                  "a beginner meets one fewer decision at once.",
-        "grades": "3-8",
+        "grades": "6-12",
         "source": "1,005 samples, 2DCC LiST records, resolved provenance held fixed",
         "item": "dial_panel",
         "data": lambda: cd.compact(cd.samples(clean=False),
@@ -378,39 +378,6 @@ ITEMS = [
             "fixed": {"provenance": "resolved"},
             "note": "The data are already cleaned of misspelled materials and rows naming a "
                     "substrate as the material, so this version only asks about variables and noise.",
-        },
-    },
-    {
-        "id": "D-03",
-        "round": "dials",
-        "title": "What a K-2 classroom would see",
-        "blurb": "The dials start at the simplest, cleanest, quietest setting: two variables, "
-                 "resolved names, common scan size only.",
-        "grades": "K-2",
-        "source": "1,005 samples, 2DCC LiST records, K-2 starting position",
-        "item": "dial_panel",
-        "data": lambda: cd.compact(cd.samples(clean=False),
-                                   ["id", "mat", "sub", "meth", "time", "temp", "rough", "scan"]),
-        "opts": {
-            "question": "How long did it grow, and how bumpy did it come out?",
-            "grade": "K-2", "show": ["structural", "provenance", "statistical"],
-            "start": {"structural": "few", "provenance": "resolved", "statistical": "implicit"},
-        },
-    },
-    {
-        "id": "D-04",
-        "round": "dials",
-        "title": "What a grades 3-5 classroom would see",
-        "blurb": "The dials start with a few more variables, still resolved and quiet.",
-        "grades": "3-5",
-        "source": "1,005 samples, 2DCC LiST records, 3-5 starting position",
-        "item": "dial_panel",
-        "data": lambda: cd.compact(cd.samples(clean=False),
-                                   ["id", "mat", "sub", "meth", "time", "temp", "rough", "scan"]),
-        "opts": {
-            "question": "What was grown, how, and how rough did it come out?",
-            "grade": "3-5", "show": ["structural", "provenance", "statistical"],
-            "start": {"structural": "some", "provenance": "resolved", "statistical": "implicit"},
         },
     },
     {
