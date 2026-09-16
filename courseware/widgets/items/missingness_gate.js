@@ -1,16 +1,26 @@
-/* Two on/off requirements gate which rows survive, shown overall and per group. */
+/* Two on/off requirements gate which rows survive, shown as a live bar chart and a table,
+   overall and per group. */
 function(root, RAW, OPT){
   var DATA = CAMEL.expand(RAW);
   var body = root.querySelector(".cw-body");
   var id = root.id;
   var state = {time: true, rough: true};
 
+  function btnStyle(on){
+    return "padding:9px 12px;margin:3px 6px 3px 0;font-size:14px;border-radius:6px;" +
+      "border:1px solid #2b6cb0;" +
+      (on ? "background:#2b6cb0;color:#fff;" : "background:#fff;color:#2b6cb0;");
+  }
+
   body.innerHTML =
     '<p class="cw-q">' + CAMEL.esc(OPT.question) + '</p>' +
     '<div class="cw-ctls">' +
-      CAMEL.ui.button(id + "-t", "require growth time recorded: ON") +
-      CAMEL.ui.button(id + "-r", "require roughness recorded: ON") +
+      '<button id="' + id + '-t" class="cw-btn" style="' + btnStyle(true) +
+        '">require growth time recorded: ON</button>' +
+      '<button id="' + id + '-r" class="cw-btn" style="' + btnStyle(true) +
+        '">require roughness recorded: ON</button>' +
     '</div>' +
+    '<div id="' + id + '-chart"></div>' +
     '<div class="cw-read" id="' + id + '-read"></div>' +
     '<div class="cw-scroll"><table id="' + id + '-table"></table></div>' +
     '<p class="cw-note">' + CAMEL.esc(OPT.note || "") + '</p>';
@@ -34,6 +44,11 @@ function(root, RAW, OPT){
     var keepAll = 0;
     order.forEach(function(g){ keepAll += groups[g].keep; });
 
+    document.getElementById(id + "-chart").innerHTML = CAMEL.bars({
+      items: order.map(function(g){ return {name: g, value: groups[g].keep, back: groups[g].total}; }),
+      ylab: "rows kept (pale = total)", width: 520, height: 280
+    });
+
     var rows = ['<tr><th>' + CAMEL.esc(OPT.group_label || "group") + '</th><th>rows kept</th>' +
       '<th>rows total</th><th>%</th></tr>'];
     order.forEach(function(g){
@@ -52,11 +67,13 @@ function(root, RAW, OPT){
   document.getElementById(id + "-t").addEventListener("click", function(){
     state.time = !state.time;
     this.textContent = "require growth time recorded: " + (state.time ? "ON" : "OFF");
+    this.setAttribute("style", btnStyle(state.time));
     draw();
   });
   document.getElementById(id + "-r").addEventListener("click", function(){
     state.rough = !state.rough;
     this.textContent = "require roughness recorded: " + (state.rough ? "ON" : "OFF");
+    this.setAttribute("style", btnStyle(state.rough));
     draw();
   });
   draw();

@@ -1,6 +1,10 @@
 /* A sortable, filterable table of odd-looking rows; the reader marks each keep, fix, or remove. */
 function(root, RAW, OPT){
-  var DATA = CAMEL.expand(RAW);
+  /* RAW is either the flagged-rows payload, or {flagged, bg} where `bg` holds the
+     values of every unflagged sample, so the chart can show what the reader's
+     decisions do to the whole dataset rather than only to the flagged subset. */
+  var DATA = CAMEL.expand(RAW.flagged || RAW);
+  var BG = RAW.bg || null;
   var body = root.querySelector(".cw-body");
   var id = root.id;
   var cols = OPT.columns;
@@ -31,10 +35,50 @@ function(root, RAW, OPT){
     return rows;
   }
 
+  function chartHtml(){
+    var ch = OPT.chart;
+    if (!ch || !ch.key) return "";
+    var all = [], kept = [];
+    DATA.forEach(function(d){
+      var v = d[ch.key];
+      if (v === null || v === undefined || isNaN(v)) return;
+      all.push(v);
+      if (decisions[d.id] !== "remove") kept.push(v);
+    });
+    if (!all.length) return "";
+    var groups = {};
+    groups["all flagged"] = all;
+    groups["not marked remove"] = kept;
+    var read;
+    if (BG){
+      /* The whole dataset, before and after the reader's removals. The mean moves a
+         long way and the median barely budges: that contrast is the lesson. */
+      var whole = BG.concat(all), after = BG.concat(kept);
+      groups["everything"] = whole;
+      groups["after your removals"] = after;
+      delete groups["all flagged"];
+      delete groups["not marked remove"];
+      groups["the flagged rows"] = all;
+      read = "Across all <b>" + whole.length + "</b> samples the mean is <b>" +
+        CAMEL.fmt(CAMEL.mean(whole), 3) + "</b> and the median <b>" + CAMEL.fmt(CAMEL.median(whole), 3) +
+        "</b>. After the <b>" + (all.length - kept.length) + "</b> row" +
+        (all.length - kept.length === 1 ? "" : "s") + " you marked remove, across the remaining <b>" +
+        after.length + "</b> the mean is <b>" + CAMEL.fmt(CAMEL.mean(after), 3) +
+        "</b> and the median <b>" + CAMEL.fmt(CAMEL.median(after), 3) + "</b>.";
+    } else {
+      read = "median " + CAMEL.esc(ch.label || ch.key) + ": <b>" + CAMEL.fmt(CAMEL.median(all), 3) +
+        "</b> across all " + all.length + " " + (ch.what || "flagged rows") + "; <b>" +
+        CAMEL.fmt(CAMEL.median(kept), 3) + "</b> across the " + kept.length +
+        " you have not marked remove.";
+    }
+    var svg = CAMEL.box({groups: groups, ylab: ch.label || ch.key, width: 340, height: 260});
+    return '<div class="cw-chart">' + svg + '<p class="cw-read">' + read + "</p></div>";
+  }
+
   function render(){
     var rows = sortedFiltered();
     var t = tally();
-    var filterCtl = reasons.length > 1 ? CAMEL.ui.select(id + "-f", "reason",
+    var filterCtl = (reasons.length > 1 && reasons.length <= 6) ? CAMEL.ui.select(id + "-f", "reason",
       [{v: "all", t: "all reasons"}].concat(reasons.map(function(r){ return {v: r, t: r}; })),
       filterReason) : "";
     var head = "<tr><th>why flagged</th>" + cols.map(function(c){
@@ -59,6 +103,7 @@ function(root, RAW, OPT){
     }).join("");
     body.innerHTML =
       '<p class="cw-q">' + CAMEL.esc(OPT.question) + "</p>" +
+      chartHtml() +
       (filterCtl ? '<div class="cw-ctls">' + filterCtl + "</div>" : "") +
       '<div class="cw-read" id="' + id + '-read">' + rows.length + " of " + DATA.length +
         " flagged rows shown &middot; you marked keep " + t.keep + ", fix " + t.fix + ", remove " +

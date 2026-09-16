@@ -19,11 +19,10 @@ function(root, RAW, OPT){
 
   function render(){
     var tot = totals();
-    var bars = '<div class="cw-scroll" style="white-space:nowrap;">' + targets.map(function(x){
-        return '<span style="display:inline-block;margin:0 10px 4px 0;">' + CAMEL.esc(x) +
-          ": <b>" + tot.t[x] + "</b></span>";
-      }).join("") + '<span style="display:inline-block;color:#555;">not sorted yet: <b>' +
-      tot.unmerged + "</b></span></div>";
+    var chartItems = targets.map(function(x){ return {name: x, value: tot.t[x]}; });
+    chartItems.push({name: "not sorted yet", value: tot.unmerged, color: "#9ca3af"});
+    var bars = '<div id="' + id + '-chart">' +
+      CAMEL.bars({items: chartItems, ylab: "rows", width: 520, height: 300}) + '</div>';
 
     var chips = RAW.map(function(d){
       var a = assign[d.raw];

@@ -37,10 +37,18 @@ def _scan_rows(rows, group_key=None):
     return out
 
 
+def _line_share(r):
+    """Fraction of the scan's expected lines that were actually recorded."""
+    if r.get("pix") is None or r.get("lines") is None or r["pix"] == 0:
+        return None
+    return round(r["lines"] / r["pix"], 3)
+
+
 def _odd_extreme_rough(threshold=5.0):
     rows = [r for r in cd.samples(clean=True) if r.get("rough") is not None and r["rough"] >= threshold]
     for r in rows:
         r["reason"] = "roughness above " + str(int(threshold)) + " nm (most films here measure under 1 nm)"
+        r["share"] = _line_share(r)
     return rows
 
 
@@ -48,8 +56,8 @@ def _odd_early_stop():
     rows = [r for r in cd.samples(clean=True)
             if r.get("lines") is not None and r.get("pix") is not None and r["lines"] < r["pix"]]
     for r in rows:
-        r["reason"] = "scan stopped early (" + str(int(r["lines"])) + " lines recorded of " + \
-            str(int(r["pix"])) + " expected)"
+        r["reason"] = "the scan stopped before it finished"
+        r["share"] = _line_share(r)
     return rows
 
 
@@ -65,6 +73,18 @@ def _odd_combined(threshold=5.0):
         else:
             by_id[r["id"]] = dict(r)
     return sorted(by_id.values(), key=lambda r: r["id"])
+
+
+def _bg_rough(flagged_ids):
+    """Roughness of every cleaned sample that is NOT in the flagged set, so an item can
+    show what removing flagged rows does to the whole distribution, not just the subset."""
+    return [round(r["rough"], 3) for r in cd.samples(clean=True)
+            if r.get("rough") is not None and r["id"] not in flagged_ids]
+
+
+def _flagged_with_bg(rows, keys):
+    ids = {r["id"] for r in rows}
+    return {"flagged": cd.compact(rows, keys), "bg": _bg_rough(ids)}
 
 
 ITEMS = [
@@ -90,7 +110,12 @@ ITEMS = [
                 "transistors thinner than any made of silicon.",
                 "This scan also has a glitch — a line where the instrument itself misbehaved, "
                 "not the crystal. Did you notice it?",
-                "Measured roughness for this scan: 6.10 nm over a 2 µm × 2 µm patch.",
+                "The recorded roughness for this scan is 6.10 nm over a 2 µm × 2 µm patch — but "
+                "the colour scale shows the crystals themselves are only about 2 nm tall. Exactly "
+                "one scan line out of 512 is the glitch, and it dips to −455 nm. Leave that single "
+                "line out and the roughness is 0.80 nm.",
+                "So one bad line in 512 multiplied the headline number by more than seven. This is "
+                "the kind of thing worth finding before anyone puts the number in a table.",
             ],
         },
     },
@@ -126,19 +151,24 @@ ITEMS = [
         "blurb": "A temperature trace from a real growth recipe, with no labels yet. Notice, wonder, "
                  "then reveal what was cooking.",
         "grades": "6-12",
-        "source": "one growth recipe, 2DCC LiST records, sample 23451",
+        "source": "one growth recipe, 2DCC LiST records, sample 17403",
         "item": "notice_and_wonder",
-        "data": lambda: {"kind": "line", **{k: v for k, v in cda.recipe_trace(23451).items() if k == "points"}},
+        "data": lambda: {"kind": "line", **{k: v for k, v in cda.recipe_trace(17403).items() if k == "points"}},
         "opts": {
             "kind": "line", "xlab": "minutes since the recipe started", "ylab": "temperature (°C)",
             "question": "This is the temperature log of a real recipe run inside a furnace. What do "
-                        "you notice? What do you wonder? Why might the line stop where it does?",
-            "reveal_title": "Growing a flake of molybdenum disulfide (MoS2) on sapphire.",
+                        "you notice? What do you wonder? Does anything in this line look physically "
+                        "impossible for a real furnace to do?",
+            "reveal_title": "Growing tungsten disulfide (WS2) on sapphire, by MOCVD.",
             "reveal_lines": [
-                "The furnace ramps up to 1000°C over about 17 minutes, anneals, then holds for a "
-                "3-minute growth step — that is when the MoS2 actually forms.",
-                "The line stops there because the recipe log did not record temperature during the "
-                "two cooldown steps afterward. Blank means not recorded — never zero.",
+                "This log records a target temperature for each step, not a continuous measurement. "
+                "The flat stretches and the instant jump from 850°C to 1000°C at 45.5 minutes are "
+                "artifacts of how the table was written — a real furnace takes time to change "
+                "temperature, and that ramp simply is not in this data.",
+                "The last two steps ('Cooldown 1' and 'Cooldown 2') are both recorded as 0°C. No "
+                "furnace drops from 1000°C to freezing in nine minutes, so 0 is not a real "
+                "temperature here — we read it as a placeholder for 'no target was set while "
+                "cooling,' though the log does not say so directly.",
             ],
         },
     },
@@ -299,54 +329,34 @@ ITEMS = [
         "id": "M-05",
         "round": "mess",
         "title": "Sort the messy material list",
-        "blurb": "35 different spellings were typed into one field for “material.” Tap each "
-                 "one and sort it into a group; watch the group counts change.",
+        "blurb": "22 different single spellings were typed into one field for “material” — some "
+                 "are crystals, some are substrates or raw elements. Tap each one and sort it into "
+                 "a group; watch the chart change.",
         "grades": "6-12",
-        "source": "1,005 samples, raw “material” text field, 2DCC LiST records",
+        "source": "951 of 1,005 samples, raw “material” text field, 2DCC LiST records",
         "item": "clean_labels",
-        "data": lambda: cda.material_labels(),
+        "data": lambda: [d for d in cda.material_labels() if ";" not in d["raw"]],
         "opts": {
             "question": "Scientists typed the material name by hand for every sample, so the spelling "
-                        "varies. Tap a spelling, then tap the group it belongs in.",
+                        "varies, and a few entries are not a crystal at all. Tap a spelling, then tap "
+                        "the group it belongs in.",
             "targets": ["MoS2", "WSe2", "WS2", "GaSe", "In2Se3", "MoSe2", "SnSe", "Mo-WSe2", "FeSe",
-                        "InSe", "SnTe", "MnTe", "Bi2Se3", "something else / not sure"],
+                        "InSe", "SnTe", "MnTe", "Bi2Se3", "not a crystal: a substrate or raw element",
+                        "something else / not sure"],
             "reveal_button": "How did an automatic cleanup script sort these?",
             "reveal_lines": [
-                "One simple rule: keep only the text before the first semicolon, and treat "
-                "“2H-MoS2” as “MoS2.”",
+                "One simple rule: treat “2H-MoS2” as “MoS2,” and drop any spelling that exactly "
+                "matches a known substrate name (like Al2O3 or GaAs) or a bare element (like Se).",
                 "That rule still leaves about two dozen distinct spellings standing — most of "
                 "this mess is not typos. It is real variety (alloys, multi-material growths, and "
                 "substrate names) squeezed into one text field.",
+                "Al2O3, GaAs, and Se together are only 6 of these 951 rows, but a script that never "
+                "learned they are not crystals would happily count them as one in an uncleaned chart.",
                 "Did your groups match the script's choices for every spelling? Where did you disagree?",
             ],
-            "note": "There is no single right answer for every spelling here — that is the point.",
-        },
-    },
-    {
-        "id": "M-06",
-        "round": "mess",
-        "title": "Which of these are not even a crystal material?",
-        "blurb": "A handful of “material” entries are actually substrate names or leftover "
-                 "gas. Sort them out.",
-        "grades": "6-12",
-        "source": "1,005 samples, raw “material” text field, 2DCC LiST records",
-        "item": "clean_labels",
-        "data": lambda: [d for d in cda.material_labels() if d["raw"] in ("Al2O3", "GaAs", "0", "Se")],
-        "opts": {
-            "question": "These four spellings showed up in the material field. Tap one, then say what "
-                        "it really is.",
-            "targets": ["this is a substrate, not the crystal grown on it",
-                        "this is a gas or raw element, not a crystal",
-                        "not sure"],
-            "reveal_button": "What does the cleanup script do with these?",
-            "reveal_lines": [
-                "The cleanup script drops any row where the material field exactly matches a known "
-                "substrate name, or matches the sample's own substrate field.",
-                "That catches Al2O3 and GaAs here — but a script cannot tell “0” or "
-                "“Se” are not crystal names without someone deciding that by hand.",
-            ],
-            "note": "Seven rows out of 1,005 have one of these four entries. Small, but they would "
-                    "quietly count as a “material” in an uncleaned chart.",
+            "note": "There is no single right answer for every spelling here — that is the point. "
+                    "13 more spellings name two materials at once (separated by a semicolon) and are "
+                    "sorted separately in the next item.",
         },
     },
     {
@@ -356,7 +366,7 @@ ITEMS = [
         "blurb": "Some rows list two materials separated by a semicolon. Sort each one; then see "
                  "which half a cleanup script keeps.",
         "grades": "6-12",
-        "source": "1,005 samples, raw “material” text field, 2DCC LiST records",
+        "source": "39 of 1,005 samples, raw “material” text field, 2DCC LiST records",
         "item": "clean_labels",
         "data": lambda: [d for d in cda.material_labels() if ";" in d["raw"]],
         "opts": {
@@ -372,7 +382,7 @@ ITEMS = [
                 "even though both were really there.",
                 "Did every one of your picks match what that rule would have chosen?",
             ],
-            "note": "About 50 of the 1,005 rows list more than one material this way.",
+            "note": "39 of the 1,005 rows (13 distinct spellings) list more than one material this way.",
         },
     },
     # ---------------------------------------------------------------- scan_size_trap (mess)
@@ -442,12 +452,14 @@ ITEMS = [
         "grades": "6-12",
         "source": "66 of 1,000 cleaned samples, roughness 5 nm or higher",
         "item": "odd_values",
-        "data": lambda: cd.compact(_odd_extreme_rough(), ["id", "mat", "meth", "scan", "rough", "reason"]),
+        "data": lambda: _flagged_with_bg(_odd_extreme_rough(),
+                                         ["id", "mat", "meth", "scan", "rough", "reason"]),
         "opts": {
             "question": "Most films here measure under 1 nm rough. These 66 measure 5 nm or rougher, "
                         "up to 92 nm. Sort through them: keep, fix, or remove?",
             "columns": [{"key": "mat", "label": "material"}, {"key": "meth", "label": "method"},
                         {"key": "scan", "label": "scan size (µm)"}, {"key": "rough", "label": "roughness (nm)"}],
+            "chart": {"key": "rough", "label": "roughness (nm)", "what": "flagged samples"},
             "note": "There is no answer key here. A real bump can be 92 nm tall; so can a speck of "
                     "dust the microscope tripped over. Record your reasons, not just your tally.",
         },
@@ -457,16 +469,20 @@ ITEMS = [
         "round": "mess",
         "title": "Which scans stopped before they finished?",
         "blurb": "A sortable table of scans where the recorded lines are fewer than the pixels across "
-                 "— meaning the scan stopped early. Mark each keep, fix, or remove.",
+                 "— meaning the scan stopped early. Mark each keep, fix, or remove and watch the "
+                 "chart of lines-recorded move.",
         "grades": "6-12",
         "source": "110 of 1,000 cleaned samples, scan lines fewer than pixels",
         "item": "odd_values",
-        "data": lambda: cd.compact(_odd_early_stop(), ["id", "mat", "meth", "scan", "pix", "lines", "reason"]),
+        "data": lambda: cd.compact(_odd_early_stop(),
+                                    ["id", "mat", "meth", "scan", "pix", "lines", "share", "reason"]),
         "opts": {
             "question": "For each of these, the microscope recorded fewer lines than the scan's own "
                         "pixel width — the scan stopped partway through. Sort through them.",
             "columns": [{"key": "mat", "label": "material"}, {"key": "meth", "label": "method"},
-                        {"key": "pix", "label": "pixels across"}, {"key": "lines", "label": "lines recorded"}],
+                        {"key": "pix", "label": "pixels across"}, {"key": "lines", "label": "lines recorded"},
+                        {"key": "share", "label": "share of lines recorded"}],
+            "chart": {"key": "share", "label": "share of lines recorded", "what": "flagged samples"},
             "note": "A short scan is not automatically wrong — it may still show a real, if "
                     "smaller, patch of the sample. Decide what you would do with each one.",
         },
@@ -480,14 +496,17 @@ ITEMS = [
         "grades": "6-12",
         "source": "174 of 1,000 cleaned samples, flagged for one or both reasons",
         "item": "odd_values",
-        "data": lambda: cd.compact(_odd_combined(),
-                                    ["id", "mat", "meth", "scan", "rough", "pix", "lines", "reason"]),
+        "data": lambda: _flagged_with_bg(
+            _odd_combined(),
+            ["id", "mat", "meth", "scan", "rough", "pix", "lines", "share", "reason"]),
         "opts": {
             "question": "These 174 rows were flagged for at least one reason. Filter by reason, sort "
                         "by any column, and sort through them: keep, fix, or remove?",
             "columns": [{"key": "mat", "label": "material"}, {"key": "meth", "label": "method"},
                         {"key": "scan", "label": "scan (µm)"}, {"key": "rough", "label": "roughness (nm)"},
-                        {"key": "pix", "label": "pixels"}, {"key": "lines", "label": "lines"}],
+                        {"key": "pix", "label": "pixels"}, {"key": "lines", "label": "lines"},
+                        {"key": "share", "label": "share of lines recorded"}],
+            "chart": {"key": "rough", "label": "roughness (nm)", "what": "flagged samples"},
             "note": "Only 2 rows are flagged for both reasons at once — most odd rows are odd in "
                     "only one way.",
         },

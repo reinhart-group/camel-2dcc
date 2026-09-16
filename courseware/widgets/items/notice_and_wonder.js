@@ -4,7 +4,7 @@ function(root, RAW, OPT){
   var id = root.id;
   var plotHtml = "";
   if (OPT.kind === "image"){
-    plotHtml = '<img src="data:image/jpeg;base64,' + RAW.img + '" alt="a microscope height map" ' +
+    plotHtml = '<img src="data:image/png;base64,' + RAW.img + '" alt="a microscope height map" ' +
       'style="width:100%;max-width:340px;display:block;margin:0 auto;border:1px solid #ccc;border-radius:8px;">' +
       '<p class="cw-note">This picture shows a square patch of surface ' + CAMEL.fmt(RAW.width_um, 1) +
       ' micrometers on a side (one micrometer is about 1/100th the width of a human hair). ' +
