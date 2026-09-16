@@ -1,0 +1,6 @@
+
+[notebooks]
+numpy
+plotly
+matplotlib
+requests

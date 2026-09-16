@@ -17,7 +17,9 @@ ITEMS = [
                                    ["mat", "meth", "sub", "rough", "scan"]),
         "opts": {
             "question": "Penn State grew these crystals two different ways and measured how rough "
-                        "each film came out. Do the groups look different?",
+                        "each film came out. You can also compare by material, or by "
+                        "“substrate” — the wafer the crystal was grown on top of. "
+                        "Do the groups look different?",
             "groupings": [{"key": "meth", "label": "growth method"},
                           {"key": "mat", "label": "material"},
                           {"key": "sub", "label": "substrate"}],

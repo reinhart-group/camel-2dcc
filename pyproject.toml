@@ -4,6 +4,23 @@ version = "1.0.0"
 description = "CAMEL x 2DCC: public LiST data slice and high-school math Colab notebooks"
 requires-python = ">=3.11"
 
+# Packaged so a Colab runtime can pip-install the helper code straight from GitHub.
+# The data slice is far too large for the repo and ships as a separate zip, but the
+# CODE must not: shipping it inside the data zip meant every fix waited on someone
+# re-uploading a 31 MB file by hand, and notebooks silently ran the stale copy.
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[project.optional-dependencies]
+notebooks = ["numpy", "plotly", "matplotlib", "requests"]
+
 [tool.pytest.ini_options]
 pythonpath = [".", "src", "scripts"]
 testpaths = ["tests"]
