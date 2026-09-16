@@ -30,8 +30,25 @@ def test_no_base64_arrays(html):
 
 
 def test_plotlyjs_version_is_pinned(html):
-    """Never trust get_plotlyjs_version(); it reports 4.0.0 from a 7.0.0 install."""
-    srcs = re.findall(r'src="([^"]*plotly[^"]*)"', html)
-    assert srcs, "the figure must reference a plotly.js bundle"
-    assert srcs[0] == PLOTLYJS_URL
+    """Never trust get_plotlyjs_version(); it reports 4.0.0 from a 7.0.0 install.
+
+    figure_html builds its own loader, so the URL appears in a script assignment rather
+    than a src attribute. Match either form: what matters is which version is requested.
+    """
+    urls = re.findall(r'["\']([^"\']*cdn\.plot\.ly[^"\']*)["\']', html)
+    assert urls, "the figure must reference a plotly.js bundle"
+    assert set(urls) == {PLOTLYJS_URL}, f"unexpected plotly.js URLs: {set(urls)}"
     assert "plotly-4.0.0" not in html
+
+
+def test_loader_restores_requirejs(html):
+    """The loader hides define.amd while plotly.js loads; it must put it back both on
+    success and on failure, or it leaves the page unable to load any other AMD module."""
+    assert html.count("window.define = undefined") == 1
+    assert html.count("window.define = amd") == 2, "restore define on both onload and onerror"
+
+
+def test_offline_failure_is_explained(html):
+    """A blocked CDN must say so rather than leaving a silent empty box."""
+    assert "onerror" in html
+    assert "works offline" in html
