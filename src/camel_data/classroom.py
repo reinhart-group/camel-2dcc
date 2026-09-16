@@ -217,6 +217,96 @@ def figure_html(fig, height: int = 520, url: str = PLOTLYJS_URL, preview: str | 
     )
 
 
+def surface_gallery_html(entries, height: int = 420, url: str = PLOTLYJS_URL) -> str:
+    """Several scans in ONE output, sharing a single 3D view.
+
+    Two facts, both measured on the operator's device on 2026-09-16, force this shape:
+
+    1. A Colab page in Safari cannot hold more than one live Plotly 3D scene. With three on
+       screen every one fires ``webglcontextlost`` and drops to a 0x0 drawing buffer,
+       including the newest. Alone on a page, a scene draws perfectly.
+    2. Colab renders each cell's output in its own iframe, so code in one output cannot
+       reach or tear down a plot in another. Coordinating across outputs is impossible;
+       coordinating inside one output is trivial.
+
+    So all the scans live in a single output that owns exactly one plot container. Choosing a
+    scan purges the previous one before drawing the next, and the WebGL context budget never
+    exceeds one. Each scan also carries a still render, shown until the reader asks for 3D and
+    restored if the view is ever reclaimed, so the page is never empty.
+
+    ``entries`` is a sequence of ``(name, caption, plotly_spec_dict, preview_png_base64)``.
+    """
+    import json
+    import uuid
+
+    uid = "camel-gal-" + uuid.uuid4().hex[:10]
+    items = [{"name": n, "caption": c, "spec": spec, "png": png} for n, c, spec, png in entries]
+    buttons = "".join(
+        f'<button data-i="{i}" class="{uid}-pick" style="padding:9px 13px;margin:3px;'
+        'font-size:14px;border-radius:7px;border:1px solid #2b6cb0;background:#fff;color:#2b6cb0">'
+        f'{e["name"]}</button>' for i, e in enumerate(items))
+    return (
+        f'<div style="font-family:-apple-system,system-ui,sans-serif">\n'
+        f'  <div>{buttons}</div>\n'
+        f'  <p id="{uid}-cap" style="font-size:14px;color:#374151;margin:8px 2px"></p>\n'
+        f'  <div style="position:relative;height:{height}px;width:100%">\n'
+        f'    <img id="{uid}-img" style="width:100%;height:100%;object-fit:contain" alt="3D view">\n'
+        f'    <div id="{uid}-plot" style="display:none;height:{height}px;width:100%"></div>\n'
+        f'    <button id="{uid}-go" style="position:absolute;left:50%;bottom:6px;'
+        'transform:translateX(-50%);padding:11px 18px;font-size:15px;border-radius:8px;'
+        'border:1px solid #2b6cb0;background:#2b6cb0;color:#fff">spin it</button>\n'
+        "  </div>\n</div>\n"
+        "<script>(function(){\n"
+        f'  var items = {json.dumps(items, separators=(",", ":"))};\n'
+        f'  var img = document.getElementById("{uid}-img"), el = document.getElementById("{uid}-plot");\n'
+        f'  var go = document.getElementById("{uid}-go"), cap = document.getElementById("{uid}-cap");\n'
+        "  var cur = 0, live = false;\n"
+        "  function still(){\n"
+        "    if (live) { try { Plotly.purge(el); } catch(e){} live = false; }\n"
+        "    el.style.display = 'none'; img.style.display = ''; go.style.display = '';\n"
+        "    go.textContent = 'spin it';\n"
+        "  }\n"
+        "  function show(i){\n"
+        "    cur = i; still();\n"
+        "    img.src = 'data:image/png;base64,' + items[i].png;\n"
+        "    cap.textContent = items[i].caption;\n"
+        f'    Array.prototype.forEach.call(document.querySelectorAll(".{uid}-pick"), function(b){{\n'
+        "      var on = +b.getAttribute('data-i') === i;\n"
+        "      b.style.background = on ? '#2b6cb0' : '#fff';\n"
+        "      b.style.color = on ? '#fff' : '#2b6cb0';\n"
+        "    });\n"
+        "  }\n"
+        "  function draw(){\n"
+        "    if (live) { try { Plotly.purge(el); } catch(e){} }\n"
+        "    img.style.display = 'none'; el.style.display = ''; go.style.display = 'none';\n"
+        "    live = true;\n"
+        "    Plotly.newPlot(el, items[cur].spec.data, items[cur].spec.layout, {responsive:true})\n"
+        "      .then(function(){\n"
+        "        var cv = el.querySelector('canvas');\n"
+        "        if (cv) cv.addEventListener('webglcontextlost', function(){\n"
+        "          still(); go.textContent = 'the browser reclaimed the 3D view \u2014 tap to redraw';\n"
+        "        });\n"
+        "      });\n"
+        "  }\n"
+        f'  Array.prototype.forEach.call(document.querySelectorAll(".{uid}-pick"), function(b){{\n'
+        "    b.addEventListener('click', function(){ show(+b.getAttribute('data-i')); });\n"
+        "  });\n"
+        "  go.addEventListener('click', function(){\n"
+        "    if (window.Plotly) { draw(); return; }\n"
+        "    go.textContent = 'loading\u2026';\n"
+        "    var amd = window.define; window.define = undefined;\n"
+        "    var s = document.createElement('script');\n"
+        f'    s.src = "{url}"; s.charset = "utf-8";\n'
+        "    s.onload = function(){ window.define = amd; draw(); };\n"
+        "    s.onerror = function(){ window.define = amd;\n"
+        "      go.textContent = 'could not reach the 3D library \u2014 the picture is still real'; };\n"
+        "    document.head.appendChild(s);\n"
+        "  });\n"
+        "  show(0);\n"
+        "})();</script>"
+    )
+
+
 def _lazy_figure_html(spec: dict, preview_png: str, height: int, url: str) -> str:
     """A still picture that becomes a live 3D plot when tapped, one at a time.
 
