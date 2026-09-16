@@ -126,7 +126,40 @@ def surface_3d(scan: AFMScan, exaggeration: float = 1.0, colorscale: str = "Viri
                    aspectmode="manual", aspectratio=dict(x=1, y=1, z=z_box)),
         height=600, margin=dict(l=0, r=0, t=50, b=0),
     )
-    return fig
+    return _Viewable(fig)
+
+
+class _Viewable:
+    """Wraps a Plotly figure so ``.show()`` leaves a picture behind in the saved notebook.
+
+    Plotly's own ``show()`` stores a mime bundle that a reader only sees while a kernel is
+    attached: opening the notebook on a phone, or in Colab without signing in, shows an empty
+    space. Writing the figure out as self-contained HTML keeps it interactive for every reader.
+    """
+
+    def __init__(self, fig):
+        self.fig = fig
+
+    def __getattr__(self, name):  # update_layout(), add_trace(), ... still work
+        return getattr(self.fig, name)
+
+    def to_html(self, **kw):
+        kw.setdefault("include_plotlyjs", "cdn")
+        kw.setdefault("full_html", False)
+        return self.fig.to_html(**kw)
+
+    def _repr_html_(self):
+        return self.to_html()
+
+    def show(self, **kw):
+        from IPython.display import HTML, display
+
+        display(HTML(self.to_html()))
+
+
+def show(fig, **kw):
+    """Display any Plotly figure so the saved output survives without a running kernel."""
+    _Viewable(fig).show(**kw)
 
 
 def explore_3d(scans: dict[str, AFMScan]):

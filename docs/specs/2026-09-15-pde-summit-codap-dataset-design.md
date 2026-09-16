@@ -46,6 +46,34 @@ samples only, so the card is rewritten to match the data we actually have. Kathy
 4. **The mess is real and stays in.** No synthetic errors are added. Every messy feature listed
    below was verified in the files on 2026-09-15.
 
+## What the device test changed (2026-09-15, evening)
+
+A notebook of ten labelled probes (`notebooks/mobile_js_test.ipynb`, branch `mobile-js-test`) was
+opened on a phone in Safari, in a private window, with no Google session and no runtime attached.
+Saved HTML and JavaScript outputs render **and respond**: tap handlers, a slider filtering 740 rows
+carried inside the page, a library loaded from a CDN, touch drawing on a canvas, and an external
+page in an iframe. What fails is anything that needs Python: `ipywidgets` is dead, a Colab form cell
+renders and accepts taps but never updates, and a Plotly figure shown with `fig.show()` saves a mime
+bundle that displays as nothing.
+
+So the no-account constraint no longer forces CODAP. A published notebook can be an interactive page
+for anyone who opens the link and a Python environment for anyone who signs in. Decision 2 below
+stands for the summit, but it is now a choice about what serves teachers afterwards, not a technical
+limit.
+
+Consequence for this repo: shipping a notebook that a phone can read means shipping it **with
+outputs executed**. The tracked notebooks currently carry none, so a reader who does not run them
+sees only text. `camel_data.classroom.surface_3d` now returns a wrapper whose `.show()` writes
+self-contained HTML, so an executed copy stays interactive for a reader without a kernel.
+
+That fix is not live yet, and the reason is worth recording: the notebooks do not import
+`src/camel_data`. They import the copy of it that ships inside the data slice, which the setup cell
+downloads from SharePoint. Trying to call the new helper from a notebook fails with
+`NameError: name 'show' is not defined`, because the deployed copy predates it. Making the fix
+reach a classroom takes three steps: rebuild `data/slice/` so `camel_data/` is refreshed, rebuild
+`camel-2dcc-v1.zip`, and re-upload that zip to the SharePoint link the notebooks point at. Until
+then, notebook sources must keep calling `fig.show()`.
+
 ## Verified data facts
 
 From `data/slice/camel-2dcc/` (`growth_summary.csv` joined to `samples.csv` and `afm_summary.csv`):
