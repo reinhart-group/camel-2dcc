@@ -14,10 +14,13 @@ already built in. Anyone who opens the link can use them. A teacher who *does* s
 can additionally run the Python underneath and change it, which is the path you describe on your
 "where high school goes next" slide. So the same link serves both audiences, and nobody is blocked.
 
-Rather than guess at what you want, we built a menu. The pages below hold __N__ small activities
+Rather than guess at what you want, we built a menu. The pages below hold 43 small activities
 built on real 2D Crystal Consortium data — every one of them works right now on your phone:
 
-__LINKS__
+- **Round 0, notice and wonder** (8 items): https://colab.research.google.com/github/reinhart-group/camel-2dcc/blob/summit-menu/notebooks/catalog/warmup.ipynb
+- **Round 2, find the mess** (13 items): https://colab.research.google.com/github/reinhart-group/camel-2dcc/blob/summit-menu/notebooks/catalog/mess.ipynb
+- **Round 3, model it** (16 items): https://colab.research.google.com/github/reinhart-group/camel-2dcc/blob/summit-menu/notebooks/catalog/model.ipynb
+- **Round 4, turn the dials** (6 items): https://colab.research.google.com/github/reinhart-group/camel-2dcc/blob/summit-menu/notebooks/catalog/dials.ipynb
 
 They are grouped by your four rounds. Each item has an ID. Please skim them and send us the IDs you
 want, and we will refine those and drop the rest. Nothing here is precious.
