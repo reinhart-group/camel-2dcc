@@ -21,8 +21,15 @@ def badge(path: str) -> str:
 
 
 def write(nb: nbformat.NotebookNode, path: str | pathlib.Path) -> pathlib.Path:
-    """Attach the metadata Colab needs, then write the notebook."""
+    """Attach the metadata Colab needs, then write the notebook.
+
+    Cell ids are numbered rather than left random. nbformat invents a fresh random id for
+    every cell on every build, so rebuilding an unchanged notebook still produced a diff
+    touching every cell, which buried the one cell that really did change.
+    """
     path = pathlib.Path(path)
+    for i, cell in enumerate(nb.cells):
+        cell["id"] = f"cell-{i:03d}"
     nb.metadata["kernelspec"] = {"name": "python3", "display_name": "Python 3"}
     nb.metadata["language_info"] = {"name": "python"}
     nb.metadata.setdefault("colab", {"provenance": [], "toc_visible": True})

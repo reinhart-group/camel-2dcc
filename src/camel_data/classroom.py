@@ -217,7 +217,8 @@ def figure_html(fig, height: int = 520, url: str = PLOTLYJS_URL, preview: str | 
     )
 
 
-def surface_gallery_html(entries, height: int = 420, url: str = PLOTLYJS_URL) -> str:
+def surface_gallery_html(entries, height: int = 420, url: str = PLOTLYJS_URL,
+                         uid: str | None = None) -> str:
     """Several scans in ONE output, sharing a single 3D view.
 
     Two facts, both measured on the operator's device on 2026-09-16, force this shape:
@@ -239,7 +240,10 @@ def surface_gallery_html(entries, height: int = 420, url: str = PLOTLYJS_URL) ->
     import json
     import uuid
 
-    uid = "camel-gal-" + uuid.uuid4().hex[:10]
+    # A caller that writes this into a tracked notebook passes a fixed uid, so rebuilding
+    # an unchanged page produces no diff. Left random otherwise, so two galleries on one
+    # page cannot collide.
+    uid = "camel-gal-" + (uid or uuid.uuid4().hex[:10])
     items = [{"name": n, "caption": c, "spec": spec, "png": png} for n, c, spec, png in entries]
     buttons = "".join(
         f'<button data-i="{i}" class="{uid}-pick" style="padding:9px 13px;margin:3px;'

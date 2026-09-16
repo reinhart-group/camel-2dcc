@@ -1,5 +1,8 @@
 # Catalog notebooks
 
+**The page built for the session itself is [`notebooks/summit/`](../summit/README.md).** This
+directory is the menu it was chosen from: forty items grouped by round, for picking and swapping.
+
 Every page below works on a phone with no Google account and no runtime: the pictures are saved
 and already respond to taps. Tap a badge to open it.
 

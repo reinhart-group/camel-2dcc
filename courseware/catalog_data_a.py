@@ -76,7 +76,7 @@ def _nice_bar_um(width_um: float) -> float:
     return best
 
 
-def small_heightmap(key: str, px: int = 320, dpi: int = 110, colors: int = 64) -> dict:
+def small_heightmap(key: str, px: int = 580, dpi: int = 110, colors: int = 256) -> dict:
     """A labelled AFM height map as a PNG, rendered from the full-resolution source array.
 
     Unlike cd.heightmap (which strides the source down to ~96 px before drawing it), this
@@ -84,9 +84,17 @@ def small_heightmap(key: str, px: int = 320, dpi: int = 110, colors: int = 64) -
     (height in nm) and a scale bar whose length is derived from the scan's real width.
     A matplotlib render of untouched, noisy real-valued data does not compress as PNG at
     full color depth, so the rendered picture (only the picture, never the underlying
-    height values) is palette-quantized to `colors` colors afterward to stay near the
-    CONTRACT's per-item payload budget. Kept as PNG throughout: this is false-color
-    scientific data, and JPEG's block artifacts would misrepresent it.
+    height values) is palette-quantized to `colors` colors afterward. Kept as PNG
+    throughout: this is false-color scientific data, and JPEG's block artifacts would
+    misrepresent it.
+
+    The defaults were measured on wse2_triangles, the scan W-01 uses. At 320 px and 64
+    colors the picture came out 317x237 and visibly banded, because afmhot is a
+    continuous color map and 64 steps are not enough to carry it: the mean error against
+    an unquantized render is 1.87 of 255. At 580 px and 256 colors the picture is 519x424
+    and the mean error is 0.87 of 255, with the payload at 221 KB of base64. Dropping
+    quantization altogether costs 378 KB of PNG to remove that remaining 0.87, which is
+    not a trade worth making on a page a phone has to load.
     """
     import numpy as np
     import matplotlib

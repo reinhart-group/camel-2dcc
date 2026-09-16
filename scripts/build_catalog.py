@@ -13,7 +13,10 @@ import nbformat
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "courseware"))
 
+sys.path.insert(0, str(ROOT / "scripts"))
+
 import catalog  # noqa: E402
+import nbutil  # noqa: E402
 
 WIDGETS = ROOT / "courseware/widgets"
 CORE = (WIDGETS / "core.js").read_text()
@@ -60,7 +63,6 @@ def notebook_for(round_key: str, entries: list[dict]) -> nbformat.NotebookNode:
         cell.outputs = [nbformat.v4.new_output(
             "display_data", data={"text/html": render(e), "text/plain": f"<{e['id']} widget>"})]
         nb.cells.append(cell)
-    nb.metadata["kernelspec"] = {"name": "python3", "display_name": "Python 3"}
     return nb
 
 
@@ -76,7 +78,7 @@ def main() -> int:
         if not entries:
             continue
         path = OUT / f"{key}.ipynb"
-        nbformat.write(notebook_for(key, entries), path)
+        nbutil.write(notebook_for(key, entries), path)
         kb = path.stat().st_size / 1024
         total += kb
         print(f"{path.relative_to(ROOT)}: {len(entries)} items, {kb:.0f} KB")
