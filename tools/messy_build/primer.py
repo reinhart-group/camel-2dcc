@@ -120,8 +120,8 @@ def svg_g15():
     return left, right
 
 def table_materials():
-    rows = [("MoS<sub>2</sub>", "molybdenum disulfide", "The mineral molybdenite, also used as a lubricant. As one layer it is a semiconductor."),
-            ("WSe<sub>2</sub>", "tungsten diselenide", "A semiconductor sheet studied for ultra-thin transistors and light sensors. <b>Our film is this.</b>"),
+    rows = [("MoS<sub>2</sub>", "molybdenum disulfide", "The mineral molybdenite, also used as a lubricant. A single layer is a semiconductor."),
+            ("WSe<sub>2</sub>", "tungsten diselenide", "A semiconductor sheet studied for ultra-thin transistors and light sensors. <b>Sample 17458 is WSe<sub>2</sub>.</b>"),
             ("WS<sub>2</sub>", "tungsten disulfide", "A close cousin of MoS<sub>2</sub>, also a dry lubricant."),
             ("MoSe<sub>2</sub>", "molybdenum diselenide", "Another cousin of MoS<sub>2</sub>."),
             ("GaSe", "gallium selenide", "A layered semiconductor that responds to light."),
@@ -168,8 +168,7 @@ def primer(d01):
 <p class="pnote">Smoother is not automatically better: roughness is one quality measure among many.</p></div></div>
 
 <div class="pcard" data-card="afm"><div class="pnum">3</div><div class="pbody"><h3>How does the microscope work?</h3>
-<div class="ptext"><p>An <b>atomic force microscope (AFM)</b> does not use light.</p>
-<p>A very sharp tip on a tiny flexible arm is dragged across the surface, line by line, like a record-player needle.</p>
+<div class="ptext"><p>An <b>atomic force microscope (AFM)</b> moves a very sharp tip on a tiny flexible arm across the surface, line by line, like a record-player needle.</p>
 <p>It records the height at every point. The result is a grid of heights drawn as an image.</p>
 <p><b>Color shows height</b>, not real color. <b>Scan size</b> is the width of the square patch.</p></div>
 <div class="pfig">''' + svg_afm() + '''</div>
@@ -183,7 +182,7 @@ def primer(d01):
 <div class="ptext"><p><b>RMS roughness</b> is the typical up-and-down from the average height.</p>
 <p>For a math teacher: it is the <b>standard deviation</b> of all the heights in the scan.</p>
 <p class="formula">roughness = &radic;( mean of ( height &minus; average height )&sup2; )</p>
-<p>Squaring means one extreme point counts for a lot. Round 1 shows exactly that.</p></div>
+<p>Squaring makes large gaps count for more.</p></div>
 <div class="pfig">''' + svg_rough() + '''</div></div></div>
 
 <div class="pcard" data-card="row"><div class="pnum">5</div><div class="pbody"><h3>What is one row of the data?</h3>

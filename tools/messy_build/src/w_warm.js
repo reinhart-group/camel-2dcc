@@ -4,7 +4,7 @@
     '<div class="cw-seg" id="wu-picks" role="radiogroup" aria-label="Choose a surface"></div>' +
     '<div class="wu-cap" id="wu-cap"></div>' +
     '<div class="wu-stage"><div id="wu-plot"></div><div class="wu-msg" id="wu-msg">Loading the 3D surface…</div></div>' +
-    '<div class="cw-cap">Drag to rotate, scroll or pinch to zoom. On a phone, swipe the text above or below to scroll the page. All three surfaces are stretched 25 times vertically, by the same amount, so they compare fairly.</div>';
+    '<div class="cw-cap">Drag to rotate, scroll or pinch to zoom. On a phone, swipe the text above or below to scroll the page. All three surfaces are stretched 25 times vertically, by the same amount, so they can be compared.</div>';
   var el = document.getElementById("wu-plot"), msg = document.getElementById("wu-msg"), cap = document.getElementById("wu-cap");
   var picks = document.getElementById("wu-picks");
   var cur = 0, state = "loading", drawnFor = -1;

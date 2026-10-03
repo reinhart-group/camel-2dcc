@@ -46,7 +46,7 @@
       '<div class="cw-read">You marked: keep ' + t.keep + ', fix ' + t.fix + ', remove ' + t.remove + ', undecided ' + t.undecided + '.</div>' +
       '<div class="cw-sortsel"><label for="' + id + '-sort">Sort by</label> <select id="' + id + '-sort">' + [["rough|-1", "roughness, high to low"], ["rough|1", "roughness, low to high"], ["mat|1", "material"], ["meth|1", "method"], ["scan|1", "scan size"]].map(function(o){ return '<option value="' + o[0] + '"' + (o[0] === sortKey + "|" + sortDir ? " selected" : "") + ">" + o[1] + "</option>"; }).join("") + '</select></div>' +
       '<div class="cw-scroll"><table class="cards"><thead>' + head + "</thead><tbody>" + trs + "</tbody></table></div>" +
-      '<div class="cw-cap">Most films here measure under 1 nm. Every row is flagged for the same reason: 5 nm or more. <b>Keep</b>: it is a real reading, so it counts. <b>Remove</b>: drop it from the data. <b>Fix</b>: correct the value, which is only possible when you know exactly what went wrong. Here that is one row: sample 17458 (orange), whose scan has a corrupted line. Fixing it counts it at 0.80 nm instead of 6.10.</div>';
+      '<div class="cw-cap">Most films measure under 1 nm. Every row here is flagged for the same reason: 5 nm or more. <b>Keep</b> counts it as read. <b>Remove</b> drops it. <b>Fix</b> corrects the value, and only sample 17458 (orange) has a known fault, one corrupted scan line. Fixed, it counts as 0.80 nm instead of 6.10.</div>';
     wire();
   }
   function wire(){

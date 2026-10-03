@@ -280,3 +280,13 @@
   .g15x{margin-top:20px;padding-top:14px;border-top:1px solid var(--base-dark);}
   .g15x h3{font-family:"DM Serif Display",serif;font-size:19px;font-weight:400;color:var(--ink);margin-bottom:6px;}
   @media(max-width:620px){.fig-pair{grid-template-columns:1fr;}}
+
+  .m5cards{margin:6px 0 16px;max-width:720px;}
+  .m5h{font-family:"DM Mono",monospace;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--accent);margin-bottom:8px;}
+  .m5grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;}
+  .m5c{border:1.5px solid var(--border);border-radius:6px;background:var(--field);padding:10px 11px;min-width:0;}
+  .m5k{font-family:"DM Mono",monospace;font-size:10px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;}
+  .m5raw{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:2px 8px;padding:5px 8px;margin-bottom:4px;background:#fff;border:1.5px solid var(--blue);border-radius:999px;}
+  .m5raw b{font-family:"DM Mono",monospace;font-size:13px;font-weight:500;color:var(--ink);overflow-wrap:anywhere;}
+  .m5raw i{font-style:normal;font-size:11px;color:#4b5563;}
+  .panel-body .m5why{font-size:13px;line-height:1.5;color:var(--ink-soft);margin:8px 0 0;}

@@ -42,7 +42,7 @@
       '<div id="' + id + '-plot"></div>' +
       '<div class="cw-evid"><div class="pro"><h5>Evidence for</h5><ul id="' + id + '-pro"></ul></div><div class="con"><h5>Evidence against</h5><ul id="' + id + '-con"></ul></div></div>' +
       '<div class="cw-ctl"><label for="' + id + '-rewrite">Rewrite the claim so it names its limits</label><textarea id="' + id + '-rewrite" rows="3" placeholder="Among the samples…"></textarea></div>' +
-      '<details><summary>See a good rewrite</summary><p>“Among the samples 2DCC happened to measure, MOCVD films were typically smoother, but the two groups were not grown or measured under comparable conditions.” A good rewrite names the population and the limit.</p></details>';
+      '<details><summary>See a good rewrite</summary><p>“Among the 899 MOCVD and hybrid MBE samples with roughness measurements, MOCVD films had the lower median roughness, but the groups were not grown or measured under comparable conditions.” A good rewrite names the population and the limit.</p></details>';
     var ev = cl.type === "correlation" ? evalCorr(cl) : evalGroup(cl);
     document.getElementById(id + "-pro").innerHTML = ev.pro.map(function(x){ return "<li>" + x + "</li>"; }).join("");
     document.getElementById(id + "-con").innerHTML = ev.con.map(function(x){ return "<li>" + x + "</li>"; }).join("");

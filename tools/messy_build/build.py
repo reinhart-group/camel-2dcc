@@ -57,7 +57,7 @@ LOOK = {
  "cw-warm": "Three real " + P("afm", "AFM") + " scans drawn in 3D. Height is stretched 25&times; and color shows height. Materials: Bi<sub>2</sub>Se<sub>3</sub>, FeSe, SnTe (" + P("materials", "table") + ").",
  "cw-w01": "An " + P("afm", "AFM") + " height map of a WSe<sub>2</sub> (tungsten diselenide) film: each bright triangle is a tiny crystal island. Color shows height.",
  "cw-w02": "Each bar counts films by " + P("rough", "roughness") + ", the typical bump height. The unit stays hidden until you reveal it.",
- "cw-m05": "The material name, typed by hand. Each bar counts samples with that exact spelling. Formulas are just labels (" + P("materials", "table") + ").",
+ "cw-m05": "The material name, typed by hand. Each tile counts samples with that exact spelling. Formulas are just labels (" + P("materials", "table") + ").",
  "cw-m02": "Each row is one grown sample. <b>Growth method</b>: how atoms arrive (" + P("growth", "MOCVD or hybrid MBE") + "). <b>Growth time</b>: minutes of growing.",
  "cw-m11": "The 66 samples at 5 nm or rougher. <b>Roughness</b> is typical bump height; <b>scan size</b> is the width of the patch " + P("afm", "scanned") + ".",
  "cw-g01": "Each dot is one sample: minutes grown (across) against how bumpy it came out (up). " + P("growth", "What is growth time?"),
@@ -82,8 +82,42 @@ tabs_html = "".join('<button class="tab%s" id="tab-%s" onclick="switchTab(\'%s\'
 
 def cfg(d): return "var cfg = " + json.dumps(d, ensure_ascii=False) + ";"
 
+
+# ---- M-05 example cards: every number is computed from the embedded M-05 rows ----------------
+_M5 = json.loads(DATA["m05"])["rows"]
+def _n(f): return sum(r[2] for r in _M5 if f(r))
+def _parts(s): return [p.strip() for p in s.split(";")]
+def _only(name): return lambda r: all(p == name for p in _parts(r[0])) and bool(r[0])
+M5 = dict(
+    sn_exact=_n(lambda r: r[0] == "SnSe"), sn_all=_n(_only("SnSe")), sn_rep=_n(lambda r: r[0] == "SnSe; SnSe"),
+    fe_a=_n(lambda r: r[0] == "FeSe; FeTe"), fe_b=_n(lambda r: r[0] == "FeTe; FeSe"),
+    mo_exact=_n(lambda r: r[0] == "MoS2"), mo_rep=_n(lambda r: r[0] == "MoS2; MoS2"), mo_junk=_n(lambda r: r[0] == "MoS2; 0"),
+    sub_all=_n(lambda r: r[0] and r[0] == r[1]), sub_al=_n(lambda r: r[0] == "Al2O3" and r[1] == "Al2O3"), sub_ga=_n(lambda r: r[0] == "GaAs" and r[1] == "GaAs"),
+    h2=_n(lambda r: r[0] == "2H-MoS2"), mow=_n(lambda r: r[0] == "Mo-WSe2"), w_exact=_n(lambda r: r[0] == "WSe2"),
+)
+M5["mo_all"] = M5["mo_exact"] + M5["mo_rep"] + M5["mo_junk"]
+M5["w_all"] = M5["w_exact"] + M5["mow"]
+assert (M5["mo_exact"], M5["mo_all"]) == (334, 338) and M5["sub_all"] == 5 and M5["sn_all"] == 34
+def _card(kind, lines, why):
+    return ('<div class="m5c"><div class="m5k">%s</div>%s<p class="m5why">%s</p></div>' %
+            (kind, "".join('<div class="m5raw"><b>%s</b><i>%d sample%s</i></div>' % (t, n, "" if n == 1 else "s") for t, n in lines), why))
+M05_CARDS = ('<div class="m5cards"><div class="m5h">Six real entries from the material box, exactly as typed</div><div class="m5grid">' + "".join([
+    _card("same name twice", [("SnSe; SnSe", M5["sn_rep"])],
+          "Counting the exact text &ldquo;SnSe&rdquo; gives %d samples. Counting the repeats too gives %d." % (M5["sn_exact"], M5["sn_all"])),
+    _card("same pair, two orders", [("FeSe; FeTe", M5["fe_a"]), ("FeTe; FeSe", M5["fe_b"])],
+          "Counting one order gives %d samples. Both orders give %d." % (M5["fe_a"], M5["fe_a"] + M5["fe_b"])),
+    _card("a piece that isn&rsquo;t a name", [("MoS2; 0", M5["mo_junk"])],
+          "Counting the exact text &ldquo;MoS2&rdquo; gives %d samples. Adding %d repeated and this %d with a stray 0 gives %d." % (M5["mo_exact"], M5["mo_rep"], M5["mo_junk"], M5["mo_all"])),
+    _card("substrate typed as the material", [("Al2O3", M5["sub_al"]), ("GaAs", M5["sub_ga"])],
+          "A tally by material puts %d samples under the names of the flat base they grew on (Al<sub>2</sub>O<sub>3</sub>: %d, GaAs: %d)." % (M5["sub_all"], M5["sub_al"], M5["sub_ga"])),
+    _card("2H-MoS2", [("2H-MoS2", M5["h2"])],
+          "The %d &ldquo;MoS2&rdquo; samples leave out these %d. Deciding whether 2H-MoS2 belongs with MoS2 requires domain knowledge." % (M5["mo_all"], M5["h2"])),
+    _card("Mo-WSe2", [("Mo-WSe2", M5["mow"])],
+          "Cutting everything before the dash moves these %d samples into WSe2, from %d to %d. Deciding whether Mo-WSe2 should count as WSe2 requires domain knowledge." % (M5["mow"], M5["w_exact"], M5["w_all"])),
+]) + '</div></div>')
+
 # ---------------- panes -----------------------------------------------------------------
-warm = lede("crystal", "&ldquo;Rough&rdquo; is just a word until you measure it.",
+warm = lede("crystal", "Let&rsquo;s put a number on &ldquo;rough&rdquo;.",
             "<b>Your job:</b> skim the five cards, then pick a surface. Which looks roughest, and what would you measure to prove it?")
 warm += '<div class="path">' + "".join(
     '<button onclick="switchTab(\'%s\')">%s<div><b>%s</b><span>%s</span></div></button>' % (k, ic(i_), n, m)
@@ -93,13 +127,13 @@ warm += '<section class="panel primer" id="primer-panel"><div class="panel-heade
 warm += panel("cube", "Three Real Surfaces", "warm up",
     "Real crystal surfaces, magnified until you can see the bumps.",
     "Pick a surface, then drag to rotate it and scroll or pinch to zoom.", "cw-warm",
-    "To compare surfaces we need a number. That number is <b>roughness</b>, and every activity here uses it.",
-    more("How these scans were made", "<p>A needle sharpened to a single atom was dragged across a real film, recording its height 250,000 times.</p>"
+    "We compare surfaces with a number, <b>roughness</b>. Every activity here uses it.",
+    more("How these scans were made", "<p>A very sharp tip moves across the surface of a real film and records its height 250,000 times.</p>"
          "<p>Each scan is one to two micrometers across, about a fiftieth of the width of a human hair.</p>"),
-    why="We cannot compare surfaces by saying one &ldquo;looks rough&rdquo;. A number lets two people, or two labs, agree. Schools do the same when they turn &ldquo;a good week&rdquo; into an attendance rate.",
+    why="&ldquo;Looks rough&rdquo; is a judgment call. SnTe&rsquo;s typical bump is 0.36 nm, a number two people can both check. Schools do the same when they turn &ldquo;a good week&rdquo; into an attendance rate.",
     note=fnote("say the first surface is rough and the last is smooth before anyone asks.",
                "what would you measure to turn that word into a number? That number is roughness, and every later activity uses it.",
-               "teams meaning different things by &ldquo;rough&rdquo; (tall bumps, many bumps, sharp bumps). Let that disagreement stand; it is the reason to measure. The 3D view needs internet; if it will not draw, the still picture does the same job."))
+               "teams meaning different things by &ldquo;rough&rdquo; (tall bumps, many bumps, sharp bumps). Let that disagreement stand. The 3D view needs internet; if it will not draw, the still picture does the same job."))
 warm += ('<section class="panel"><div class="panel-header"><h2>%s The Data, and Our Film</h2><span class="panel-tag">2D Crystal Consortium</span></div><div class="panel-body">'
  '<p class="point">Every number here is a real record, left exactly as the scientists kept it.</p>'
  '<p>Penn State grows crystal films two or three atoms thick, as candidates for future electronics.</p>'
@@ -109,81 +143,80 @@ warm += ('<section class="panel"><div class="panel-header"><h2>%s The Data, and 
  '<div class="thread">%s<h3>%s Follow one film: sample 17458</h3>'
  '<p>It is tungsten diselenide (WSe<sub>2</sub>). We meet it again in every round.</p><ol>'
  '<li>%s<span><b>Notice &amp; Wonder:</b> its microscope scan, with a glitch in it.</span></li>'
- '<li>%s<span><b>Find the Mess:</b> one of the 66 extreme readings. WSe2 is the orange bar.</span></li>'
- '<li>%s<span><b>Model It:</b> it has no growth time, so it cannot be plotted. Its wafer supplies the sampling grains.</span></li>'
- '<li>%s<span><b>Turn the Dials:</b> watch tidy-up settings drop it from the data.</span></li></ol></div>'
+ '<li>%s<span><b>Find the Mess:</b> one of the 66 extreme readings. WSe2 is the orange tile.</span></li>'
+ '<li>%s<span><b>Model It:</b> it has no growth time, so it cannot be plotted. The sampling grains come from its wafer.</span></li>'
+ '<li>%s<span><b>Turn the Dials:</b> turn on the tidy-up settings and it drops out of the data.</span></li></ol></div>'
  '%s</div></section>') % (
     ic("pin"), "", ic("pin"), ic("image"), ic("alert"), ic("trend"), ic("dials"),
     more("Why some counts read 1,000 and 894", "<p>A few activities first set aside five rows where someone typed the substrate&rsquo;s name (the flat base) into the material box. "
-         "Their counts are 1,000 samples and 894 measurements, not 1,005 and 899. Each activity says which it uses.</p><p>Nothing was cleaned up, simplified or invented for this page.</p>"))
+         "Their counts are 1,000 samples and 894 measurements, not 1,005 and 899. Each activity says which it uses.</p><p>The page embeds the source records unchanged. Each activity states the filters or grouping rules it applies.</p>"))
 warm = warm.replace('<div class="thread">' + ic("pin") + '<h3>', '<div class="thread"><h3>')  # (icon already in h3)
 warm += wscript("cw-warm", "null", rd("w_warm.js"), ITEMS)
 
-notice = lede("eye", "Looking closely finds what a summary number hides.",
+notice = lede("eye", "Let&rsquo;s look at the picture before we trust the number.",
               "<b>Your job:</b> write two things you notice and one thing you wonder. Then reveal. Spotting something the reveal skips counts as a win.")
 notice += panel("image", "Look at This Picture", "W-01 &middot; one microscope scan",
-    "A single bad scan line can quietly change a number.", "Look first, name it second. Zoom in if you can.", "cw-w01",
-    "One bad line in 512 multiplied the roughness by more than seven. Look at the data before you trust the summary.",
-    why="A summary number is a claim about the data, and it can be wrong. Here one bad line in the scan wrecked the headline figure. A single mistyped grade, or a blank saved as 999, can do the same to a class average. Looking at the raw picture first is the cheapest check there is.",
-    fig=figure(PR.svg_afm(False), "A scan is built one line at a time, so one bad line is one bad pass of the tip, not a flaw in the crystal.", "fig-afm") + PR.afm_key() ,
+    "Start with the image. Write what you notice before opening the measurement.", "Look first, name it second. Zoom in if you can.", "cw-w01",
+    "The 6.10 nm comes mostly from one faulty line out of 512. The other 511 lines are still usable.",
+    why="One roughness number summarizes the whole scan. Looking at the picture first is how we check what that number rests on. A teacher does the same with a class average: look at the grades before trusting it.",
+    fig=figure(PR.svg_afm(False), "A scan is built one line at a time, one pass of the tip per line.", "fig-afm") + PR.afm_key() ,
     note=fnote("name the triangles first. Some also spot the dark horizontal stripe partway down the scan.",
                "which parts of this picture are the crystal, and which are the instrument?",
-               "teams who treat the stripe as part of the crystal, or who decide the whole scan is useless. One bad line is the fault; the rest of the scan is fine. The same sample, 17458, comes back in every round."))
+               "teams who treat the stripe as part of the crystal, or who decide the whole scan is useless. The fault is one line; the rest of the scan is usable. The same sample, 17458, comes back in every round."))
 notice += wscript("cw-w01", DATA["w01"], rd("w_notice.js"), cfg({
     "kind": "image", "question": "This is a real picture from a scientific instrument. What do you notice? What do you wonder?",
     "title": "Tiny triangles of tungsten diselenide (WSe2), with a glitch.",
-    "lines": ["It is an atomic force microscope scan: a needle drags across the surface and feels its height.",
-              "The triangles are WSe2 crystals, thin enough to make transistors thinner than any silicon one.",
-              "The dark stripe is the instrument misbehaving, not the crystal: one scan line out of 512, dipping to −455 nm.",
-              "One bad line in 512 multiplied the headline number by more than seven."],
+    "lines": ["It is an atomic force microscope scan: a very sharp tip moves across the surface and records its height.",
+              "The triangles are WSe2 crystal islands. WSe2 is studied for atomically thin transistor channels.",
+              "The stripe records a bad pass of the tip rather than a −455 nm surface feature. The remaining scan lines are still usable.",
+              "With the bad line included, the computed roughness is 6.10 nm; without it, the result is 0.80 nm."],
     "more": "The color scale shows the crystals themselves are only about 2 nm tall. Over a 2 µm × 2 µm patch the recorded roughness is 6.10 nm; leave out that single line and it is 0.80 nm.",
     "thread": "This scan is <b>sample 17458</b>, our WSe2 film. Remember its 6.10 nm."}))
 notice += panel("hist", "Now Look at This Pile of Numbers", "W-02 &middot; 894 roughness measurements",
-    "A histogram shows the shape of many numbers at once.", "Shape first, meaning second. Same routine: notice, wonder, reveal.", "cw-w02",
-    "Most films are flat and a few are far rougher. Round 2 asks which of those few to trust.",
-    why="A histogram draws every value instead of one average, so you can see whether &ldquo;typical&rdquo; even makes sense. Attendance rates, test scores and survey answers often look like this: a big pile and a thin tail. The tail is where the surprises are, and an average hides it.",
+    "A histogram shows the shape of many numbers at once.", "Start with the shape. Write what you notice before revealing the variable and unit.", "cw-w02",
+    "One typical value describes the big pile and leaves the far-out readings out. In round 2 you decide which of those readings to trust.",
+    why="A histogram shows every value at once, so we can check the shape before we summarize it. Attendance rates and test scores deserve the same look.",
     note=fnote("say &ldquo;most are about the same and a few are way out.&rdquo; Both halves matter later: the big pile is round 3&rsquo;s problem and the long thin tail is round 2&rsquo;s.",
                "which of the far-out ones would you believe, and what would you need to know to decide?",
-               "a team deciding the tail must be errors. Some of it may be, and some is a genuinely lumpy film. A histogram alone cannot tell you which, and that gap is the point of the next round."))
+               "a team deciding the tail must be errors. Some of it may be, and some is a genuinely lumpy film. Nothing in a histogram separates the two. Round 2 starts there."))
 notice += wscript("cw-w02", DATA["w02"], rd("w_notice.js"), cfg({
     "kind": "hist", "question": "Here are 894 real measurements with no label yet. What do you notice about their shape? What do you wonder?",
     "title": "Roughness, in nanometers, of 894 real crystal films grown at Penn State.",
     "lines": ["Roughness is how bumpy a film’s surface is. A flatter film has a smaller number.",
               "Most films are very flat: under 2 nm, which is just a few atoms tall.",
-              "A handful are far rougher, over 50 nm. They are real samples, not mistakes."],
-    "more": "Roughness also depends on how big an area was scanned, which this chart does not show."}))
+              "A handful are far rougher, over 50 nm. They are real samples."],
+    "more": "Roughness also depends on how big an area was scanned, which is not plotted here."}))
 
-mess = lede("search", "Real data hides problems that tidy-looking rules cannot see.",
+mess = lede("search", "Let&rsquo;s apply cleaning rules to real records and see what each one does.",
             "<b>Your job:</b> for each activity, write the <em>rule</em> you would apply. A rule is something a computer could follow.")
 mess += panel("text", "One Text Box, Thirty-Five Answers", "M-05 &middot; 1,005 samples, raw material field",
-    "Cleaning rules can merge typos, but only an expert can say which labels mean the same thing.",
+    "Some spellings merge by rule. Others need someone who knows the field.",
     "Every rule starts at <b>keep as typed</b>. Switch one to merge, read which tiles will move, then press <b>Merge</b> to watch it happen. No chemistry needed.", "cw-m05",
-    "Mechanical mess is fixable by anyone. The rest needs someone who knows the field, or an honest &ldquo;unresolved&rdquo;.",
-    more("A rule that tidies the most but fixes nothing", "<p>Folding labels under 5 samples into &ldquo;rare&rdquo; hides the small labels and fixes nothing. How many it hides depends on which other rules are on: 18 with none of them, 10 with all of them, and the count under the button tells you the number for your current choices. It makes the chart look cleanest, which is why it is worth pointing at.</p>"),
-    why="Anything typed by hand comes out in many spellings. A rule can fix a typo, but only someone who knows the field can say whether two labels mean the same thing. Course titles, school names and student names have the same problem. A wrong merge makes the data look cleaner while making it less true.",
+    "Four rules fix the mechanical mess. Four labels still require domain knowledge. Until then, leave them unresolved.",
+    more("A rule that tidies the most but fixes nothing", "<p>Folding labels under 5 samples into &ldquo;rare&rdquo; combines the small labels into one category and fixes no spelling. It combines 18 labels with no other rule on and 10 with all of them on; the count under the button shows the number for your current choices.</p>"),
+    why="Hand-entered labels often appear in several spellings. Course titles, school names and student names do too.", fig=M05_CARDS,
     note=fnote("find the easy merges fast (a name typed twice, a list in a different order). Nobody needs to know the chemistry.",
                "after every rule is on, four labels that all look like MoS<sub>2</sub> are still separate. Who gets to decide whether they are the same thing?",
-               "a team choosing the &ldquo;rare&rdquo; rule because the chart looks tidiest, or one that strips everything before a dash (right for one label, wrong for others, and just as tidy). The honest answer is &ldquo;unresolved, ask someone in the field&rdquo;, so say that out loud if a team gets there. Press the reveal button when teams have tried all five rules."))
+               "a team choosing the &ldquo;rare&rdquo; rule because it gives the shortest chart, or one that strips everything before a dash (right for one label, wrong for others). A team that answers &ldquo;unresolved, ask someone in the field&rdquo; has it right, so say that out loud. Press the reveal button when teams have tried all five rules."))
 mess += wscript("cw-m05", DATA["m05"], rd("w_m05.js"))
-mess += panel("filter", "A Reasonable Rule That Deletes a Whole Method", "M-02 &middot; 1,005 samples, uncleaned",
-    "A sensible-sounding filter can quietly delete most of one group.", "Turn each requirement on and off. Watch which method disappears.", "cw-m02",
-    "&ldquo;Only complete rows&rdquo; keeps 740 of 772 MOCVD samples but only 14 of 233 hybrid MBE.",
+mess += panel("filter", "A Common Filter That Removes Most of One Method", "M-02 &middot; 1,005 samples, uncleaned",
+    "One common filter removes most of one group.", "Turn each requirement on and off. Watch which method disappears.", "cw-m02",
+    "The same missing-value rule affects the two methods differently, because their records are filled in unevenly.",
     more("A question for your own data", "<p>What does your student information system do when a field is blank? Is it blank at random?</p>"),
     flag='<span class="star-flag">most important</span>',
-    why="Dropping incomplete rows sounds neutral, but blanks are not spread evenly. If one group has more blanks, the filter quietly removes that group. In school data, &ldquo;drop students with a missing score&rdquo; can drop the students who were absent on test day, and nobody sees it happen.",
-    fig=figure(PR.svg_growth(), "Two growth methods. Their records are filled in unevenly, so the same filter cuts them by very different amounts.", "fig-growth"),
+    why="Hybrid MBE loses 219 of its 233 samples to this filter and MOCVD loses 32 of 772. In school data, &ldquo;drop students with a missing score&rdquo; has the same shape when the missing scores belong to students who were absent on test day.",
+    fig=figure(PR.svg_growth(), "Two growth methods. Their records are filled in unevenly.", "fig-growth"),
     note=fnote("agree that &ldquo;only keep complete rows&rdquo; sounds like basic hygiene, then are surprised when one growth method nearly vanishes.",
                "what does your own student information system do with a blank field, and is it blank at random?",
                "teams who see the shrinking count but not that it fell unevenly across the two methods. Protect time for this one; if the session runs short, skip the optional activities instead."))
 mess += wscript("cw-m02", DATA["m02"], rd("w_m02.js"))
 mess += panel("alert", "Which Extreme Readings Would You Trust?", "M-11 &middot; 66 of 1,000 cleaned samples, 5 nm or rougher",
-    "Removing extreme values moves the mean far more than the median.", "Mark readings keep or remove, or try a shortcut. Fix the one reading whose fault is known. Watch the two dots.", "cw-m11",
-    "Removing all 66 moves the mean from 1.83 to 1.01 nm but the median only from 0.74 to 0.66.",
-    more("There is no answer key", "<p>A real bump can be 92 nm tall. So can a speck of dust the microscope tripped over. Record your reasons, not just your tally.</p>"
+    "Removing extreme values changes the mean far more than the median.", "Mark readings keep or remove, or try a shortcut. Fix the one reading whose fault is known. Watch the two dots.", "cw-m11",
+    "Removing the 66 readings changes the mean a lot and the median little, so the keep-or-remove decision matters most if you report the mean.",
+    more("There is no answer key", "<p>A scan can have RMS roughness near 92 nm because of real topography or contamination. The number alone does not distinguish them. Record your reasons, not just your tally.</p>"
          "<p>If you saw the glitch in W-01, you have already met one of these rows: sample 17458, at 6.1 nm.</p>"),
     flag='<span class="optional-flag">if time</span>',
-    why="An extreme value is either a real event or a mistake, and the data alone often cannot say which. Your choice changes the answer. The <b>mean</b> is the usual average and chases extremes. The <b>median</b> is the middle value and mostly ignores them. A district&rsquo;s average days absent can swing on a handful of students.",
-    fig=figure(PR.svg_rough().replace('font-size="13"', 'font-size="17"').replace('y="192"', 'y="196"'), "Roughness squares each gap from the average, so one extreme point counts for a lot. That is why the mean moves and the median does not.", "fig-rough"),
+    why="Only one of the 66 readings has a known fault: sample 17458&rsquo;s bad scan line. The <b>mean</b> is the usual average. It uses every value, so a few large readings pull it up. The <b>median</b> is the middle value and depends on rank, so extreme values change it much less. A district&rsquo;s average days absent can shift on a handful of students.",
     note=fnote("split over whether the biggest values are real. Some keep them all, some remove them all.",
                "what is the difference between fixing a reading and removing it? (Fixing needs a known cause. Sample 17458&rsquo;s fault is known, so it is the only one that can be fixed.)",
                "teams who watch only the mean and miss that the median barely moves. If a team saw the glitch line in W-01, point out that they have already met one of these rows."))
@@ -192,27 +225,27 @@ mess += wscript("cw-m11", DATA["m11"], rd("w_m11.js"))
 
 G15_L, G15_R = PR.svg_g15()
 G15_AFTER = ('<div class="g15x"><h3>Two ways to compare, and what each lumps together</h3>'
- '<div class="fig-pair"><figure class="fig">' + G15_L + '<figcaption><b>Trend line</b> (schematic). The line runs through every film at once, so anything else that changes with growth time rides along with it.</figcaption></figure>'
- '<figure class="fig">' + G15_R + '<figcaption><b>Two groups</b> (schematic). Each box averages over whatever else differs between the groups, growth time included.</figcaption></figure></div>'
- '<p>The trend line lumps in everything that changes with growth time. Of the 754 samples on it, 740 are MOCVD, and the slope is about the same with MOCVD alone (about 0.06 nm per minute either way). So this line hardly mixes in method. It does mix in which material, which substrate and which project.</p>'
- '<p>The group comparison lumps in growth time. Only 24 of the 233 hybrid MBE samples have a growth time recorded, and only 14 have both a time and a roughness. So you cannot check whether the method gap is really a growth-time gap. Among the 24 that were recorded, hybrid MBE growths were shorter (median 7 min vs 15 min for MOCVD), which if anything points the other way.</p>'
- '<p><b>Whichever comparison you choose, name what it lumps together.</b> The honest fix is to compare like with like: same material, same time range. These records mostly do not allow it.</p></div>')
-model = lede("trend", "A model summarizes a pattern. Ask how much it explains and what it leaves out.",
-             "<b>Your job:</b> write one sentence you would defend, limits included. &ldquo;We found no relationship&rdquo; is a real finding.")
+ '<div class="fig-pair"><figure class="fig">' + G15_L + '<figcaption><b>Trend line</b> (schematic). The line runs through every film at once, so anything else that changes with growth time is mixed into the slope.</figcaption></figure>'
+ '<figure class="fig">' + G15_R + '<figcaption><b>Two groups</b> (schematic). Each box pools films that differ in other ways, growth time included.</figcaption></figure></div>'
+ '<p>Of the 754 samples on the trend line, 740 are MOCVD, and the slope is about the same with MOCVD alone (about 0.06 nm per minute either way). Method barely varies along it. Material, substrate and project all vary.</p>'
+ '<p>In the group comparison, growth time varies inside each box. Only 24 of the 233 hybrid MBE samples have a growth time recorded, and only 14 have both a time and a roughness. With 14, you can&rsquo;t check whether the method gap is really a growth-time gap. Among the 24 recorded hybrid MBE times, the median is 7 min, against 15 min for MOCVD. That points the opposite way from a growth-time explanation of the method gap, and 14 pairs are too few to say more.</p>'
+ '<p><b>Whichever comparison you choose, say what it lumps together.</b> Comparing like with like (same material, same time range) is the fix, and these records mostly have too few matching samples.</p></div>')
+model = lede("trend", "Let&rsquo;s fit lines to the records and check how much each one explains.",
+             "<b>Your job:</b> write one sentence you would defend, limits included. &ldquo;The line explains about 2% of the variation&rdquo; is a real finding.")
 model += panel("trend", "Does Growing a Film Longer Make It Rougher?", "G-01 &middot; 754 samples with growth time and roughness",
     "A line can be fitted to any cloud of dots, so check how much it explains.", "Hide and show the line. Change the dot colors. Read the slope and R&sup2;.", "cw-g01",
-    "The line rises about 0.06 nm per minute, yet explains only 2% of the variation (R&sup2; = 0.020). How steep it is and how well it fits are separate questions.",
-    more("A stronger measure, and who is missing", "<p>The rank correlation is stronger (Spearman +0.29) because roughness is so skewed. That is a good advanced conversation, not the headline.</p>"
-         "<p>The 251 left-out samples did not leave at random. See M-02.</p>"),
-    why="A line can be fitted to any cloud of dots, even a shapeless one, and it will always have a slope. R&sup2; says how much of the ups and downs the line actually accounts for. The same check applies to &ldquo;more study time means higher scores&rdquo; or &ldquo;more absences means lower grades&rdquo;.",
+    "Growth time alone leaves most of the variation in roughness unexplained.",
+    more("A rank-based measure, and who is missing", "<p>Spearman&rsquo;s rank correlation is +0.29. Ranking reduces the influence of the largest roughness values, so it measures something different from the fitted line.</p>"
+         "<p>Missingness is not random: 251 samples lack growth time, roughness, or both. See M-02.</p>"),
+    why="R&sup2; is the share of the ups and downs in roughness that the line accounts for. Claims like &ldquo;more study time means higher scores&rdquo; or &ldquo;more absences means lower grades&rdquo; get the same check.",
     note=fnote("expect a clear upward trend and are let down by how loose the cloud is.",
-               "how many of the 1,005 samples are in this picture? (754. The other 251 are missing a growth time or a roughness, and they did not go missing at random; see M-02.)",
-               "teams reading the fitted line as a result. A line can be fitted to anything, so ask how much it explains, not only which way it slopes. &ldquo;We found almost no relationship&rdquo; is a good sentence to write."))
+               "how many of the 1,005 samples are in this picture? (754. The other 251 lack a growth time or a roughness, and the gaps are not random; see M-02.)",
+               "teams reading the fitted line as a result. A line can be fitted to anything, so ask how much it explains, not only which way it slopes. &ldquo;This fitted line explains about 2% of the variation in roughness&rdquo; is a good sentence to write. If you mention Spearman, add that the rank-based association is modestly positive."))
 model += wscript("cw-g01", DATA["g01"], rd("w_g01.js"))
 model += panel("claim", "Check a Claim, Then Rewrite It", "G-15 &middot; two claims, one dataset",
     "A claim needs evidence on both sides, plus its limits.", "Pick a claim. Read both columns. Then rewrite it so it is true.", "cw-g15",
-    "Both claims are associations in observational records, never causes. A good rewrite names who was measured and under what conditions.",
-    why="Claims in reports and in the news arrive as one tidy sentence. Checking one means asking what supports it, what cuts against it, and who was actually measured. Rewriting it is practice at saying only as much as the data can carry.",
+    "These observational comparisons support associations, not causal conclusions. A good rewrite names who was measured and under what conditions.",
+    why="&ldquo;Growing a film longer makes it rougher&rdquo; is one sentence. Behind it are 754 samples, a slope of 0.06 nm per minute and R&sup2; = 0.020.",
     after=G15_AFTER,
     note=fnote("believe both claims at the start, then find there is real evidence on each side.",
                "what is the smallest change that makes this sentence true? (The first claim fails on the verb &ldquo;makes&rdquo;. In the second, the two methods were grown for different projects and measured differently, so it is a lopsided observation, not a trial.)",
@@ -220,45 +253,45 @@ model += panel("claim", "Check a Claim, Then Rewrite It", "G-15 &middot; two cla
 model += wscript("cw-g15", DATA["g15"], rd("w_g15.js"), cfg({"claims": [
     {"key": "time_rough", "claim": "Growing a film longer makes it rougher.", "type": "correlation", "x_key": "time", "x_label": "growth time (minutes)"},
     {"key": "method_smooth", "claim": "MOCVD makes smoother films than hybrid MBE.", "type": "group", "group_key": "meth", "groups": ["MOCVD", "Hybrid MBE"]}]}))
-model += panel("dice", "How Much Does One Sample Tell You?", "G-06 &middot; 501 grains from sample 17458&rsquo;s wafer",
-    "Bigger samples wander less, but an easy-to-take sample can be off target for good.", "Slide n up. Then sample from the center or the edge only.", "cw-g06",
-    "More grains shrink the wander. A center-only sample stays away from the all-grains mean at any size.",
+model += panel("dice", "How Close Is One Sample to the Whole?", "G-06 &middot; 501 grains from sample 17458&rsquo;s wafer",
+    "Sampling variation decreases as n increases. A sample of only the easy-to-reach grains stays off target at any size.", "Slide n up. Then sample from the center or the edge only.", "cw-g06",
+    "As n increases, sample means narrow around the mean of the grains being sampled. For a center-only sample, that is not the all-grains mean.",
     more("About the grains", "<p>The 501 grains come from three real scans across one WSe2 wafer, sample 17458: a measured population, not a full wafer census.</p>"
-         "<p>The center&rsquo;s median grain is 1,526 nm&sup2; and the edge&rsquo;s is 2,792 nm&sup2;.</p>"),
+         ""),
     flag='<span class="optional-flag">if time</span>',
-    why="A sample is a small piece used to stand in for the whole. A bigger one gives steadier answers, but only if it is picked fairly. Surveying only the students who are easy to reach, such as those who answer email, can give a confident answer that is wrong.",
-    note=fnote("watch the spread of sample averages shrink as n goes up, and enjoy the effect.",
+    why="Mean grain area is 1,469 nm&sup2; at the center, 2,818 nm&sup2; toward the edge, and 1,889 nm&sup2; across all 501 observed grains, so a center-only sample is centered away from the all-grains mean at any size. A survey of only the students who answer email has the same problem.",
+    note=fnote("watch the spread of sample averages narrow as n goes up.",
                "if you could only grab the crystals that were easy to reach, what would your sample miss?",
-               "the idea that a bigger sample cures a biased one. Center-only and edge-only samples stay off target at any size; they just get more confident about the wrong answer."))
+               "the idea that a bigger sample fixes a biased one. Center-only and edge-only samples stay off target at any size, and their spread keeps narrowing around the center mean or the edge mean, not the all-grains mean."))
 model += wscript("cw-g06", DATA["g06"], rd("w_g06.js"))
 
-dials = lede("dials", "The same data can be taught simply or honestly. Each dial trades one for the other.",
+dials = lede("dials", "The same table can be taught simply or in full. Turning a dial changes what students see first.",
              "<b>Your job:</b> pick the setting for day one and the one you want by the end. Say what you gave up.")
 dials += panel("dials", "Turn All Three Complexity Dials", "D-01 &middot; 1,005 samples, every dial position",
     "The source table stays fixed. Only the rows, columns and labels a student meets first change.", "Turn each dial. Watch the sample count, the graph and the table.", "cw-d01",
-    "The simplest setting is easy to teach but promises what the data cannot keep. The full setting is honest but hard to start with.",
+    "The simplest setting shows 2 variables and a clean graph. The fullest shows all 8 variables, the mess, and every recorded scan, and is harder to start from.",
     more("What each dial means", "<p><b>Structural:</b> how many variables are in front of you.</p>"
-         "<p><b>Provenance:</b> whether missing values and odd spellings are shown or quietly resolved.</p>"
-         "<p><b>Statistical:</b> whether the noise and the outliers are left in.</p>"),
-    why="The same table can be shown in many ways, and each way hides something. Choosing what students see first is a teaching choice and a data choice at once. The dials make that trade visible: easier to start with, or more honest about the mess.",
+         "<p><b>Provenance:</b> whether missing values and odd spellings are shown or resolved.</p>"
+         "<p><b>Statistical:</b> which scans are included. One setting keeps every recorded scan. The other keeps only 5 &micro;m scans under 10 nm.</p>"),
+    why="With the Provenance dial on &ldquo;tidy it up&rdquo;, sample 17458 leaves the table because it has no growth time. With the Statistical dial on &ldquo;5 &micro;m scans under 10 nm&rdquo;, it leaves because it was scanned at 2 &micro;m. On &ldquo;show the mess&rdquo; and &ldquo;all recorded scans&rdquo;, it stays.",
     note=fnote("start with the simplest setting because it is the easiest to teach, then notice what disappeared.",
                "what did you give up at the setting you chose?",
                "teams picking a side (&ldquo;simple is best&rdquo; or &ldquo;always show everything&rdquo;) instead of naming the trade. A team that can say what each setting costs has got the point of the session."))
 dials += wscript("cw-d01", DATA["d01"], rd("w_d01.js"))
 
-reflect = lede("chat", "Take these three questions back to the room.", "There are no right answers. Disagreement is where the data literacy is.")
+reflect = lede("chat", "Take these three questions back to the room.", "There are no right answers.")
 reflect += ('<section class="panel"><div class="panel-header"><h2>%s Reflection Questions</h2><span class="panel-tag">for the room</span></div><div class="panel-body">'
- '<div class="reflect-q">%s<div><b>1. Where did your team disagree?</b><p>Which spellings match, which extremes to trust, whether a line means anything. Those calls are the data literacy.</p></div></div>'
+ '<div class="reflect-q">%s<div><b>1. Where did your team disagree?</b><p>Which spellings match, which extremes to trust, whether a line means anything.</p></div></div>'
  '<div class="reflect-q">%s<div><b>2. What did the dials cost?</b><p>Where would you set them for your students, and what would you tell them you turned down?</p></div></div>'
  '<div class="reflect-q">%s<div><b>3. What is the equivalent dataset in your building?</b><p>Attendance, benchmarks, course requests. Which of these messes is already in that file?</p></div></div>'
  '</div></section>') % (ic("chat"), ic("flag"), ic("dials"), ic("search"))
 reflect += ('<section class="panel"><div class="panel-header"><h2>%s Our Film&rsquo;s Journey</h2><span class="panel-tag">sample 17458, WSe2</span></div><div class="panel-body">'
  '<p class="point">One film, five lessons.</p><ol class="claim-list">'
- '<li>%s<span><b>Notice:</b> one bad scan line made it read 6.10 nm instead of 0.80 nm.</span></li>'
- '<li>%s<span><b>Mess:</b> one of 66 extreme readings, and a bar among 35 spellings.</span></li>'
- '<li>%s<span><b>Model:</b> no growth time, so it was never a dot.</span></li>'
- '<li>%s<span><b>Sampling:</b> its wafer gave the 501 grains.</span></li>'
- '<li>%s<span><b>Dials:</b> tidy settings quietly removed it.</span></li></ol></div></section>') % (ic("pin"), ic("image"), ic("alert"), ic("trend"), ic("dice"), ic("dials"))
+ '<li>%s<span><b>Notice:</b> with one bad scan line included it reads 6.10 nm; without it, 0.80 nm.</span></li>'
+ '<li>%s<span><b>Mess:</b> one of 66 extreme readings, and a tile among 35 spellings.</span></li>'
+ '<li>%s<span><b>Model:</b> no growth time was recorded, so the plot excludes sample 17458.</span></li>'
+ '<li>%s<span><b>Sampling:</b> the 501 measured grains came from three scans across its wafer.</span></li>'
+ '<li>%s<span><b>Dials:</b> tidy settings removed it.</span></li></ol></div></section>') % (ic("pin"), ic("image"), ic("alert"), ic("trend"), ic("dice"), ic("dials"))
 CLAIMS_NOTE = fac("<p>Teams reach for all three, and all three are wrong. Say so kindly, and give them the true version.</p>"
     "<p><b>&ldquo;So these are the chips in AI data centers.&rdquo;</b> Nothing in these records shows that any sample became a chip. 2D materials are <em>researched</em> as candidates for future electronics, which is still exciting.</p>"
     "<p><b>&ldquo;Smoother is better.&rdquo;</b> Roughness is one quality measurement among many, and nothing here connects it to whether a device works.</p>"
@@ -297,7 +330,7 @@ page = ('<!DOCTYPE html>\n<html lang="en">\n<head>\n<meta charset="UTF-8">\n<met
  '<div class="nav"><a href="../index.html">epiSTEMic</a><span>/</span><span class="nav-current">Modeling the Messy</span></div>\n'
  '<header><div class="header-eyebrow">Materials Science &amp; Data Literacy &middot; Guided Investigation</div>'
  '<div class="titlerow">' + LOGO + '<h1>Modeling the Messy</h1></div>'
- '<p class="header-sub">Real, uncleaned crystal-growth records from Penn State. Find what the mess hides, and see how the same numbers teach different lessons.</p>'
+ '<p class="header-sub">Real, uncleaned crystal-growth records from Penn State. Find the mess in them, and see how one table can be taught different ways.</p>'
  '<div class="header-meta"><span><b>Source:</b> Penn State 2D Crystal Consortium, LiST sample records</span>'
  '<span><b>Adapted from:</b> the PA Dept. of Education Data Literacy Summit session (Reinhart group, Penn State)</span></div></header>\n' + SESSION +
  '<div class="tabs" role="tablist">' + tabs_html + '</div>\n' + panes_html + '\n'

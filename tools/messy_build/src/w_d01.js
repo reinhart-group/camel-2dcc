@@ -7,8 +7,8 @@
   var LABELS = {id: "sample id", mat: "material", sub: "substrate", meth: "growth method", time: "growth time (min)", temp: "temperature (°C)", rough: "roughness (nm)", scan: "scan size (µm)"};
   var DIALS = [
     {key: "structural", t: "Structural", q: "How many variables?", opts: [{v: "few", t: "2"}, {v: "some", t: "6"}, {v: "all", t: "all 8"}]},
-    {key: "provenance", t: "Provenance", q: "Mess shown or hidden?", opts: [{v: "surfaced", t: "show the mess"}, {v: "resolved", t: "tidy it quietly"}]},
-    {key: "statistical", t: "Statistical", q: "Noise shown or hidden?", opts: [{v: "explicit", t: "show the noise"}, {v: "implicit", t: "typical samples only"}]},
+    {key: "provenance", t: "Provenance", q: "Mess shown or tidied up?", opts: [{v: "surfaced", t: "show the mess"}, {v: "resolved", t: "tidy it up"}]},
+    {key: "statistical", t: "Statistical", q: "Which scans are included?", opts: [{v: "explicit", t: "all recorded scans"}, {v: "implicit", t: "5 µm scans under 10 nm"}]},
     {key: "merge", t: "A judgment call", q: "Is 2H-MoS2 the same as MoS2?", opts: [{v: "no", t: "keep separate"}, {v: "yes", t: "treat as MoS2"}]}
   ];
   var st = {structural: "some", provenance: "resolved", statistical: "implicit", merge: "no"};   /* a designed starting view, not a neutral baseline */
@@ -18,8 +18,8 @@
     '<div class="cw-verdict" id="' + id + '-thread"></div>' +
     '<div id="' + id + '-plot"></div><div class="cw-key" id="' + id + '-key"></div>' +
     '<details open><summary>The table a student would see (first 12 rows)</summary><div class="cw-scroll" id="' + id + '-tbl"></div></details>' +
-    '<div class="cw-cap">Tidying uses only the mechanical rules from Find the Mess. Treating 2H-MoS2 as MoS2 is a domain assumption no text rule can make, so it is your choice and starts off.</div>' +
-    '<div class="cw-cap">The source table stays fixed. The dials change which rows, columns and labels you meet first. This starting view is one designed presentation, not a neutral baseline.</div>';
+    '<div class="cw-cap">Tidying uses only the mechanical rules from Find the Mess. Treating 2H-MoS2 as MoS2 is a domain assumption, so it is your choice and starts off.</div>' +
+    '<div class="cw-cap">The starting view is one designed presentation.</div>';
   function prepare(){
     var r = rows.map(function(d){ var c = {}, k; for (k in d) c[k] = d[k]; return c; });
     var steps = [{name: "all samples", n: r.length}];
@@ -31,7 +31,7 @@
     }
     if (st.statistical === "implicit"){
       r = r.filter(function(d){ return d.scan === 5 && d.rough !== null && d.rough < 10; });
-      steps.push({name: "typical only", n: r.length});
+      steps.push({name: "5 µm scans under 10 nm", n: r.length});
     }
     return {rows: r, steps: steps};
   }
@@ -56,15 +56,15 @@
     var el = document.getElementById(id + "-plot"), w = CAMEL.widthOf(el);
     el.innerHTML = CAMEL.scatter({points: pts, width: w, height: w < 420 ? 270 : 300, xlab: "growth time (minutes)", ylab: "roughness (nm)", xunit: "min", yunit: "nm",
       label: "Roughness against growth time", xdom: [0, TMAX], ydom: [0, st.statistical === "implicit" ? 10 : 100],
-      note: st.statistical === "implicit" ? "Axes are frozen at 0 to " + TMAX + " min and 0 to 10 nm so the dials can be compared. Typical-only hides everything above 10 nm."
+      note: st.statistical === "implicit" ? "Axes are frozen at 0 to " + TMAX + " min and 0 to 10 nm so the dials can be compared. This setting leaves out scans that are not 5 µm and readings of 10 nm or more."
                                           : "Axes are frozen at 0 to " + TMAX + " min and 0 to 100 nm so the dials can be compared. Squashed near the bottom is the real shape of the data."});
     document.getElementById(id + "-key").innerHTML = (st.structural !== "few" && order.length) ?
       order.slice(0, 6).map(function(n, i){ return '<span class="k dot" style="background:' + CAMEL.palette[i % CAMEL.palette.length] + '"></span> ' + CAMEL.esc(n); }).join(" &nbsp; ") : '<span class="k dot" style="background:' + CAMEL.BLUE + '"></span> one color: with only time and roughness, there is nothing else to tell dots apart';
     var in17 = p.rows.some(function(d){ return d.id === 17458; });
     document.getElementById(id + "-thread").innerHTML = '<b>Where is sample 17458, our WSe2 film?</b> ' + (in17
-      ? 'Still in the table (a row, but with no growth time, so it is never a dot).'
+      ? 'Still in the table, but no growth time was recorded, so it is not plotted.'
       : (st.provenance === "resolved" ? 'Gone. The tidy-up removed it because no growth time was recorded.'
-                                      : 'Gone. \u201ctypical samples only\u201d removed it: it was scanned at 2 \u00b5m, not the common 5 \u00b5m.'));
+                                      : 'Gone. The \u201c5 \u00b5m scans under 10 nm\u201d setting removed it: it was scanned at 2 \u00b5m.'));
     var head = "<tr>" + cols.map(function(c){ return "<th>" + CAMEL.esc(LABELS[c]) + "</th>"; }).join("") + "</tr>";
     var body = p.rows.slice(0, 12).map(function(d){
       return "<tr>" + cols.map(function(c){ var v = d[c], miss = v === null || v === undefined; return "<td" + (miss ? ' class="miss"' : "") + ">" + (miss ? "&mdash;" : CAMEL.esc(v)) + "</td>"; }).join("") + "</tr>";

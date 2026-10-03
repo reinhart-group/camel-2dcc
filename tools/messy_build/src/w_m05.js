@@ -6,7 +6,7 @@
     {key: "order", label: "Same list, different order", ex: "“FeSe; FeTe” and “FeTe; FeSe” name the same pair."},
     {key: "junk", label: "A piece that isn’t a name", ex: "“MoS2; 0” has a number where a name should be."},
     {key: "substrate", label: "Matches the “grown on” column", ex: "The material box holds the substrate’s name (the flat base), the same word as the other column on that row."},
-    {key: "rare", label: "Fold labels under " + RARE + " samples into “rare”", ex: "A real choice, and it hides small groups."}
+    {key: "rare", label: "Fold labels under " + RARE + " samples into “rare”", ex: "A real choice. It combines small groups under “rare”."}
   ];
   var on = {};
   RULES.forEach(function(r){ on[r.key] = false; });      /* default for every rule: keep as typed */
@@ -106,7 +106,7 @@
     if (!moved){ prevOn = copyOn(on); return finalHtml(s); }
     var eA = ordered(A.s), target = copyOn(on);
     var label = leaving ? "Merge these " + leaving + (leaving === 1 ? " spelling" : " spellings") + " &rarr;" : "Split them back apart &rarr;";
-    var plan = leaving ? leaving + " red " + (leaving === 1 ? "tile is" : "tiles are") + " about to merge. Each says where it goes."
+    var plan = leaving ? leaving + " red " + (leaving === 1 ? "tile is" : "tiles are") + " about to merge. Each shows where it goes."
                        : arriving + (arriving === 1 ? " spelling comes" : " spellings come") + " back as typed.";
     window.setTimeout(function(){
       var btn = document.getElementById(id + "-go"); if (!btn) return;
@@ -138,7 +138,7 @@
       return '<div class="cw-rule"><div class="cw-rule-t"><b>' + CAMEL.esc(r.label) + '</b><span>' + CAMEL.esc(r.ex) + '</span></div>' +
         CAMEL.ui.seg(r.key, [{v: "keep", t: "keep as typed"}, {v: "merge", t: r.key === "substrate" ? "set aside" : (r.key === "rare" ? "fold" : "merge")}], on[r.key] ? "merge" : "keep") +
         '<div class="cw-rule-g">' + (r.key === "rare"
-          ? (on[r.key] ? "now hides " : "would hide ") + hid(r.key) + " small labels in the chart, and fixes 0 spellings (given your current choices)"
+          ? (on[r.key] ? "now combines " : "would combine ") + hid(r.key) + " small labels into one displayed category, and fixes 0 spellings (given your current choices)"
           : (on[r.key] ? "now removes " : "would remove ") + g + (g === 1 ? " spelling" : " spellings") + ", given your current choices") + '</div></div>';
     }).join("");
     root.innerHTML =
@@ -158,10 +158,9 @@
   function revealBox(){
     return '<div class="cw-reveal"><h4>All five rules take 35 spellings down to 25. Four labels still look related:</h4>' +
       '<div class="chips">' + chip("MoS2", 338) + chip("2H-MoS2", 2) + chip("MoS2-WS2", 1) + chip("Mo-WSe2", 18) + '</div>' +
-      '<ul><li>No rule written from the text can say which of these name the same substance.</li>' +
-      '<li>A rule that strips everything before a dash merges all four: right about one, wrong about the others, and just as tidy.</li>' +
-      '<li>The mechanical mess is fixable by anyone. The rest needs someone who knows the field, or an honest “unresolved”.</li>' +
-      '<li>Fifteen samples had nothing typed in the box at all, and no rule fixes those either.</li></ul></div>';
+      '<ul><li>Deciding which of these name the same substance takes someone who knows the field.</li>' +
+      '<li>Stripping everything before a dash sends Mo-WSe2 to WSe2 (219 to 237 samples), 2H-MoS2 to MoS2 and MoS2-WS2 to WS2. It is right for one of them and wrong for the others.</li>' +
+      '<li>Fifteen samples have nothing typed in the box, and all five rules leave them as they are.</li></ul></div>';
   }
   function wire(){
     Array.prototype.forEach.call(root.querySelectorAll(".cw-segbtn"), function(b){

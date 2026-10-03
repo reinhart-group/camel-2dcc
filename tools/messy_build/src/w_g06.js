@@ -58,8 +58,8 @@
       '<div><span class="lab">Samples drawn</span><span class="num">' + means.length + '</span><span class="sub">each of n = ' + st.n + ' grains</span></div>' +
       '<div><span class="lab">Typical wander</span><span class="num">±' + CAMEL.fmt(obs, 0) + '</span><span class="sub">nm²; theory says ' + CAMEL.fmt(th, 0) + '</span></div>';
     document.getElementById(id + "-verdict").innerHTML = st.spot === "all"
-      ? 'A bigger n squeezes the pile toward the mean of all 501 grains. Try center only or edge only: easy to take, but off target.'
-      : '<b>A convenient sample is off target.</b> Its pile centers on ' + CAMEL.fmt(pm, 0) + ', not the mean of all 501 grains ' + CAMEL.fmt(ALLMEAN, 0) + ', and a bigger n will not fix that.';
+      ? 'Sampling variation decreases as n increases: the pile narrows around the mean of all 501 grains. Try center only or edge only: easy to take, but off target.'
+      : '<b>A convenient sample is off target.</b> Its pile centers on ' + CAMEL.fmt(pm, 0) + ', not the mean of all 501 grains ' + CAMEL.fmt(ALLMEAN, 0) + '. Increasing n does not remove selection bias.';
     var pts = [], n;
     for (n = N_MIN; n <= N_MAX; n++) pts.push([n, theory(a, n)]);
     var el2 = document.getElementById(id + "-se"), w2 = CAMEL.widthOf(el2);

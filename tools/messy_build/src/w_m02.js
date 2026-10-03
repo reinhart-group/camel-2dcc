@@ -40,8 +40,8 @@
     var worst = order.slice().sort(function(a, b){ return groups[a].keep / groups[a].total - groups[b].keep / groups[b].total; })[0];
     var wp = Math.round(groups[worst].keep / groups[worst].total * 100);
     document.getElementById(id + "-verdict").innerHTML = wp < 50
-      ? '<b>' + CAMEL.esc(worst) + ' almost disappears:</b> only ' + groups[worst].keep + ' of ' + groups[worst].total + ' samples (' + wp + '%) survive this rule.'
-      : 'Both methods mostly survive. Now try requiring both.';
+      ? '<b>' + CAMEL.esc(worst) + ':</b> ' + groups[worst].keep + ' of ' + groups[worst].total + ' samples (' + wp + '%) are kept.'
+      : 'Both methods mostly stay. Try requiring both.';
     document.getElementById(id + "-read").innerHTML = '<span class="num">' + keepAll + '</span> of ' + rows.length.toLocaleString("en-US") + ' samples kept (' + Math.round(keepAll / rows.length * 100) + '%)';
     var tr = ['<tr><th>growth method</th><th>kept</th><th>total</th><th>%</th></tr>'];
     order.forEach(function(g){ var p = Math.round(groups[g].keep / groups[g].total * 100);
