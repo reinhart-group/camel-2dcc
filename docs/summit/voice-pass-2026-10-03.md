@@ -328,3 +328,46 @@ Review: `voice-pass-review-codex.md`. Text shown with tags and entities stripped
 23. Folded into 4 (M-11 why): "...it uses every value, so a few large readings pull it up... extreme values change it much less."
 24. "Among the 899 MOCVD and hybrid MBE samples with roughness measurements, MOCVD films had the lower median roughness, but the groups were not grown or measured under comparable conditions."
 25. "Model: no growth time was recorded, so the plot excludes sample 17458." D-01 in-table text: "Still in the table, but no growth time was recorded, so it is not plotted."
+
+## Moral/hedge cut (2026-10-03)
+
+Generator: `tools/messy_build/` (`build.py`, `primer.py`, `src/w_g15.js`). Rebuilt `investigation.html`.
+
+### School analogies and morals (deleted)
+- W-02 why: "...before we summarize it. Attendance rates and test scores deserve the same look." -> sentence cut.
+- W-01 why: "One roughness number summarizes the whole scan. Looking at the picture first is how we check what that number rests on. A teacher does the same with a class average..." -> "One roughness number summarizes 512 scan lines."
+- Warm-up why: "Schools do the same when they turn 'a good week' into an attendance rate." -> cut.
+- M-05 why: "Course titles, school names and student names do too." -> cut.
+- M-02 why: "In school data, 'drop students with a missing score' has the same shape..." -> cut.
+- M-11 why: "A district's average days absent can shift on a handful of students." -> cut.
+- G-01 why: "Claims like 'more study time means higher scores'... get the same check." -> cut.
+- G-06 why: "A survey of only the students who answer email has the same problem." -> cut.
+
+### Duplicated caveats (kept once, in the Reflect claims panel)
+- Primer card 2: "Smoother is not automatically better: roughness is one quality measure among many." -> cut.
+- Reflect: student panel "Three Claims We Are Careful Not to Make" / tag "keep these limits explicit" -> "Three claims these records don't support", no tag; one factual sentence per claim (device: "Nothing in these records connects roughness to device performance."; chips: "Nothing in these records shows that any sample became a chip."; cause: unchanged). Teacher "claims to correct" details deleted, including "Say so kindly..." and "which is still exciting".
+- Session panel: "Before you start: the Reflect tab ends with three wrong claims..." -> cut.
+- G-15 rewrite example: "A good rewrite names the population and the limit." -> cut (example kept). G-15 lede: "A good rewrite names who was measured and under what conditions." -> cut. "These are records, not a controlled experiment, so 'makes' is the wrong verb." kept.
+- G-15 discussion: "Whichever comparison you choose, say what it lumps together. Comparing like with like... is the fix..." -> "Few samples share both material and time range, so a like-for-like comparison is not possible here."
+- G-15 discussion: "...and 14 pairs are too few to say more" -> cut; "That points the opposite way from a growth-time explanation of the method gap" -> "That is the opposite direction from a growth-time explanation."
+
+### Hedges, approval, reassurance
+- "Record your reasons, not just your tally." -> cut.
+- Reflect lede "There are no right answers." -> cut (lede now has no job line).
+- Notice lede: "Let's look at the picture before we trust the number." -> "Let's look at the picture, then the number."
+- Reflect Q1: "which extremes to trust, whether a line means anything" -> "which extremes to keep, how much a line explains".
+- M-05 lede: "Others need someone who knows the field." -> "Four labels stay separate."
+- Mo-WSe2 card: second sentence "Deciding whether Mo-WSe2 should count as WSe2 requires domain knowledge." -> cut (2H-MoS2 card keeps its sentence).
+- Teacher notes cut: "A team that answers 'unresolved, ask someone in the field' has it right..."; "A team that can say what each setting costs has got the point of the session."; "Let that disagreement stand."; "Protect time for this one; ..."; "If you mention Spearman, add that the rank-based association is modestly positive."; "'This fitted line explains about 2%...' is a good sentence to write."
+- W-02 teacher: "Some of it may be, and some is a genuinely lumpy film. Nothing in a histogram separates the two." -> "A histogram doesn't separate errors from rough films."
+- G-01 teacher: "are let down by how loose the cloud is" -> "find a loose cloud".
+- G-15 teacher: "rewrites that only soften the wording ('might make'). A good rewrite names who was measured..." -> "rewrites that only change 'makes' to 'might make'."
+
+### Sweep (extra cuts)
+- W-01 lede: "Spotting something the reveal skips counts as a win." -> cut.
+- W-02 takeaway: "which of those readings to trust" -> "to keep"; M-11 title "Would You Trust?" -> "Would You Keep?".
+- M-05: "No chemistry needed." (lede), "Nobody needs to know the chemistry." (teacher) -> cut. Takeaway: "Until then, leave them unresolved." -> cut.
+- Primer card 1: "You don't need the chemistry. Treat each formula as a label." -> "Treat each formula as a label."
+- M-11: summary "There is no answer key" -> "Why 92 nm is ambiguous".
+- Session panel: "Teams can ignore them." -> cut.
+- Left as is: G-15 takeaway "These observational comparisons support associations, not causal conclusions." (statement of what the method supports).

@@ -154,7 +154,7 @@ def primer(d01):
 <div class="ptext"><p>They are <b>2D materials</b>: crystals that form sheets only a few atoms thick.</p>
 <p>Graphene, a single layer of the carbon in pencil graphite, is the famous one.</p>
 <p>The names are chemical formulas. MoS<sub>2</sub> means one molybdenum atom for every two sulfur atoms.</p>
-<p class="reassure"><b>You don&rsquo;t need the chemistry.</b> Treat each formula as a label.</p></div>
+<p class="reassure"><b>Treat each formula as a label.</b></p></div>
 <div class="pfig">''' + svg_sheets() + '''</div>
 <details class="ptable"><summary>The materials in this data: formula, name, why anyone cares</summary>''' + table_materials() + '''</details></div></div>
 
@@ -164,8 +164,7 @@ def primer(d01):
 <p><b>MOCVD</b>: a gas carries the atoms in, a bit like frost forming on a window.</p>
 <p><b>MBE</b> (molecular beam epitaxy): beams of atoms are aimed at the base. <b>Hybrid MBE</b> supplies some ingredients as a gas.</p>
 <p><b>Growth time</b> is how many minutes the atoms keep arriving.</p></div>
-<div class="pfig">''' + svg_growth() + '''</div>
-<p class="pnote">Smoother is not automatically better: roughness is one quality measure among many.</p></div></div>
+<div class="pfig">''' + svg_growth() + '''</div></div></div>
 
 <div class="pcard" data-card="afm"><div class="pnum">3</div><div class="pbody"><h3>How does the microscope work?</h3>
 <div class="ptext"><p>An <b>atomic force microscope (AFM)</b> moves a very sharp tip on a tiny flexible arm across the surface, line by line, like a record-player needle.</p>
