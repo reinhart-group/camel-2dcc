@@ -55,6 +55,15 @@
   .takeaway{display:flex;gap:10px;align-items:flex-start;margin-top:16px;padding:12px 14px;background:var(--tint);border-left:4px solid var(--blue);border-radius:0 4px 4px 0;font-size:14px;line-height:1.55;color:var(--ink);max-width:720px;}
   .takeaway svg{font-size:19px;color:var(--blue);margin-top:1px;}
   .takeaway b{color:var(--blue);}
+  details.teacher{margin-top:16px;max-width:720px;border:1px solid var(--border);border-radius:5px;background:#fff;}
+  details.teacher summary{padding:11px 14px;cursor:pointer;color:var(--muted);font:11px "DM Mono",monospace;letter-spacing:.04em;text-transform:none;}
+  details.teacher[open] summary{margin-bottom:0;border-bottom:1px solid var(--border);}
+  details.teacher .teacher-body{padding:10px 14px 14px;font-size:13px;line-height:1.6;color:var(--ink-soft);}
+  details.teacher .teacher-body p{font-size:13px;margin:6px 0;}
+  details.teacher .teacher-body b{color:var(--ink);}
+  details.teacher .teacher-body ul{padding-left:18px;}
+  details.teacher .teacher-body li{margin:6px 0;}
+  details.teacher.session{margin:0 0 18px;max-width:none;}
   details{margin-top:12px;max-width:720px;}
   details summary{cursor:pointer;font-family:"DM Mono",monospace;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--data);padding:6px 0;}
   details[open] summary{margin-bottom:4px;}

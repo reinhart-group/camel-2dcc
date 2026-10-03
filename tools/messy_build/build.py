@@ -46,6 +46,10 @@ def lede(icon, point, job):
     return '<div class="lede">%s<div><div class="pt">%s</div><div class="job">%s</div></div></div>' % (ic(icon, "ic big-ic"), point, job)
 def widget(wid): return '<div class="cw" id="%s"></div>' % wid
 def takeaway(t, hid=None): return '<div class="takeaway"%s>%s<div><b>Takeaway.</b> %s</div></div>' % ((' id="%s-take" hidden' % hid) if hid else '', ic("key"), t)
+def fac(body, label="teachers &middot; notes for this activity"):
+    return '<details class="teacher"><summary>%s</summary><div class="teacher-body">%s</div></details>' % (label, body)
+def fnote(usually, ask, watch):
+    return fac('<p><b>Teams usually:</b> %s</p><p><b>Ask the room:</b> %s</p><p><b>Watch for:</b> %s</p>' % (usually, ask, watch))
 def more(summary, body): return '<details><summary>%s</summary>%s</details>' % (summary, body)
 
 P = lambda card, text: PR.link(card, text)
@@ -62,10 +66,10 @@ LOOK = {
  "cw-d01": "Each row is one sample: <b>substrate</b> (the flat base), <b>growth method</b>, <b>scan size</b>, <b>roughness</b>. " + P("row", "See a real row") + ".",
 }
 
-def panel(icon, title, tag, point, task, wid, take, extra="", flag="", look=""):
+def panel(icon, title, tag, point, task, wid, take, extra="", flag="", look="", note=""):
     look = look or LOOK.get(wid, "")
     return ('<section class="panel"><div class="panel-header"><h2>%s%s%s</h2><span class="panel-tag">%s</span></div><div class="panel-body">'
-            '<p class="point">%s</p>%s<p class="task">%s</p>%s%s%s</div></section>') % (ic(icon), title, flag, tag, point, ('<p class="look">%s<span><b>What you&rsquo;re looking at:</b> %s</span></p>' % (ic("eye"), look)) if look else "", task, widget(wid), takeaway(take, wid if wid in ("cw-w01", "cw-w02") else None), extra)
+            '<p class="point">%s</p>%s<p class="task">%s</p>%s%s%s</div></section>') % (ic(icon), title, flag, tag, point, ('<p class="look">%s<span><b>What you&rsquo;re looking at:</b> %s</span></p>' % (ic("eye"), look)) if look else "", task, widget(wid), takeaway(take, wid if wid in ("cw-w01", "cw-w02") else None), extra + note)
 def script(body): return "<script>(function(){" + body + "})();</script>"
 def wscript(wid, data, js, extra=""):
     return script('var root = document.getElementById("%s"); var DATA = %s; %s\n%s' % (wid, data, extra, js))
@@ -89,7 +93,10 @@ warm += panel("cube", "Three Real Surfaces", "warm up",
     "Pick a surface, then drag to rotate it and scroll or pinch to zoom.", "cw-warm",
     "To compare surfaces we need a number. That number is <b>roughness</b>, and every activity here uses it.",
     more("How these scans were made", "<p>A needle sharpened to a single atom was dragged across a real film, recording its height 250,000 times.</p>"
-         "<p>Each scan is one to two micrometers across, about a fiftieth of the width of a human hair.</p>"))
+         "<p>Each scan is one to two micrometers across, about a fiftieth of the width of a human hair.</p>"),
+    note=fnote("say the first surface is rough and the last is smooth before anyone asks.",
+               "what would you measure to turn that word into a number? That number is roughness, and every later activity uses it.",
+               "teams meaning different things by &ldquo;rough&rdquo; (tall bumps, many bumps, sharp bumps). Let that disagreement stand; it is the reason to measure. The 3D view needs internet; if it will not draw, the still picture does the same job."))
 warm += ('<section class="panel"><div class="panel-header"><h2>%s The Data, and Our Film</h2><span class="panel-tag">2D Crystal Consortium</span></div><div class="panel-body">'
  '<p class="point">Every number here is a real record, left exactly as the scientists kept it.</p>'
  '<p>Penn State grows crystal films two or three atoms thick, as candidates for future electronics.</p>'
@@ -113,7 +120,10 @@ notice = lede("eye", "Looking closely finds what a summary number hides.",
               "<b>Your job:</b> write two things you notice and one thing you wonder. Then reveal. Spotting something the reveal skips counts as a win.")
 notice += panel("image", "Look at This Picture", "W-01 &middot; one microscope scan",
     "A single bad scan line can quietly change a number.", "Look first, name it second. Zoom in if you can.", "cw-w01",
-    "One bad line in 512 multiplied the roughness by more than seven. Look at the data before you trust the summary.")
+    "One bad line in 512 multiplied the roughness by more than seven. Look at the data before you trust the summary.",
+    note=fnote("name the triangles first. Some also spot the dark horizontal stripe partway down the scan.",
+               "which parts of this picture are the crystal, and which are the instrument?",
+               "teams who treat the stripe as part of the crystal, or who decide the whole scan is useless. One bad line is the fault; the rest of the scan is fine. The same sample, 17458, comes back in every round."))
 notice += wscript("cw-w01", DATA["w01"], rd("w_notice.js"), cfg({
     "kind": "image", "question": "This is a real picture from a scientific instrument. What do you notice? What do you wonder?",
     "title": "Tiny triangles of tungsten diselenide (WSe2), with a glitch.",
@@ -125,7 +135,10 @@ notice += wscript("cw-w01", DATA["w01"], rd("w_notice.js"), cfg({
     "thread": "This scan is <b>sample 17458</b>, our WSe2 film. Remember its 6.10 nm."}))
 notice += panel("hist", "Now Look at This Pile of Numbers", "W-02 &middot; 894 roughness measurements",
     "A histogram shows the shape of many numbers at once.", "Shape first, meaning second. Same routine: notice, wonder, reveal.", "cw-w02",
-    "Most films are flat and a few are far rougher. Round 2 asks which of those few to trust.")
+    "Most films are flat and a few are far rougher. Round 2 asks which of those few to trust.",
+    note=fnote("say &ldquo;most are about the same and a few are way out.&rdquo; Both halves matter later: the big pile is round 3&rsquo;s problem and the long thin tail is round 2&rsquo;s.",
+               "which of the far-out ones would you believe, and what would you need to know to decide?",
+               "a team deciding the tail must be errors. Some of it may be, and some is a genuinely lumpy film. A histogram alone cannot tell you which, and that gap is the point of the next round."))
 notice += wscript("cw-w02", DATA["w02"], rd("w_notice.js"), cfg({
     "kind": "hist", "question": "Here are 894 real measurements with no label yet. What do you notice about their shape? What do you wonder?",
     "title": "Roughness, in nanometers, of 894 real crystal films grown at Penn State.",
@@ -140,20 +153,29 @@ mess += panel("text", "One Text Box, Thirty-Five Answers", "M-05 &middot; 1,005 
     "Cleaning rules can merge typos, but only an expert can say which labels mean the same thing.",
     "Every rule starts at <b>keep as typed</b>. Switch one to merge, read which tiles will move, then press <b>Merge</b> to watch it happen. No chemistry needed.", "cw-m05",
     "Mechanical mess is fixable by anyone. The rest needs someone who knows the field, or an honest &ldquo;unresolved&rdquo;.",
-    more("A rule that tidies the most but fixes nothing", "<p>Folding labels under 5 samples into &ldquo;rare&rdquo; hides 10 labels and changes nothing. It makes the chart look cleanest, which is why it is worth pointing at.</p>"))
+    more("A rule that tidies the most but fixes nothing", "<p>Folding labels under 5 samples into &ldquo;rare&rdquo; hides the small labels and fixes nothing. How many it hides depends on which other rules are on: 18 with none of them, 10 with all of them, and the count under the button tells you the number for your current choices. It makes the chart look cleanest, which is why it is worth pointing at.</p>"),
+    note=fnote("find the easy merges fast (a name typed twice, a list in a different order). Nobody needs to know the chemistry.",
+               "after every rule is on, four labels that all look like MoS<sub>2</sub> are still separate. Who gets to decide whether they are the same thing?",
+               "a team choosing the &ldquo;rare&rdquo; rule because the chart looks tidiest, or one that strips everything before a dash (right for one label, wrong for others, and just as tidy). The honest answer is &ldquo;unresolved, ask someone in the field&rdquo;, so say that out loud if a team gets there. Press the reveal button when teams have tried all five rules."))
 mess += wscript("cw-m05", DATA["m05"], rd("w_m05.js"))
 mess += panel("filter", "A Reasonable Rule That Deletes a Whole Method", "M-02 &middot; 1,005 samples, uncleaned",
     "A sensible-sounding filter can quietly delete most of one group.", "Turn each requirement on and off. Watch which method disappears.", "cw-m02",
     "&ldquo;Only complete rows&rdquo; keeps 740 of 772 MOCVD samples but only 14 of 233 hybrid MBE.",
     more("A question for your own data", "<p>What does your student information system do when a field is blank? Is it blank at random?</p>"),
-    flag='<span class="star-flag">most important</span>')
+    flag='<span class="star-flag">most important</span>',
+    note=fnote("agree that &ldquo;only keep complete rows&rdquo; sounds like basic hygiene, then are surprised when one growth method nearly vanishes.",
+               "what does your own student information system do with a blank field, and is it blank at random?",
+               "teams who see the shrinking count but not that it fell unevenly across the two methods. Protect time for this one; if the session runs short, skip the optional activities instead."))
 mess += wscript("cw-m02", DATA["m02"], rd("w_m02.js"))
 mess += panel("alert", "Which Extreme Readings Would You Trust?", "M-11 &middot; 66 of 1,000 cleaned samples, 5 nm or rougher",
     "Removing extreme values moves the mean far more than the median.", "Mark readings keep or remove, or try a shortcut. Fix the one reading whose fault is known. Watch the two dots.", "cw-m11",
     "Removing all 66 moves the mean from 1.83 to 1.01 nm but the median only from 0.74 to 0.66.",
     more("There is no answer key", "<p>A real bump can be 92 nm tall. So can a speck of dust the microscope tripped over. Record your reasons, not just your tally.</p>"
          "<p>If you saw the glitch in W-01, you have already met one of these rows: sample 17458, at 6.1 nm.</p>"),
-    flag='<span class="optional-flag">if time</span>')
+    flag='<span class="optional-flag">if time</span>',
+    note=fnote("split over whether the biggest values are real. Some keep them all, some remove them all.",
+               "what is the difference between fixing a reading and removing it? (Fixing needs a known cause. Sample 17458&rsquo;s fault is known, so it is the only one that can be fixed.)",
+               "teams who watch only the mean and miss that the median barely moves. If a team saw the glitch line in W-01, point out that they have already met one of these rows."))
 mess += wscript("cw-m11", DATA["m11"], rd("w_m11.js"))
 
 model = lede("trend", "A model summarizes a pattern. Ask how much it explains and what it leaves out.",
@@ -162,11 +184,17 @@ model += panel("trend", "Does Growing a Film Longer Make It Rougher?", "G-01 &mi
     "A line can be fitted to any cloud of dots, so check how much it explains.", "Hide and show the line. Change the dot colors. Read the slope and R&sup2;.", "cw-g01",
     "The line rises about 0.06 nm per minute, yet explains only 2% of the variation (R&sup2; = 0.020). How steep it is and how well it fits are separate questions.",
     more("A stronger measure, and who is missing", "<p>The rank correlation is stronger (Spearman +0.29) because roughness is so skewed. That is a good advanced conversation, not the headline.</p>"
-         "<p>The 251 left-out samples did not leave at random. See M-02.</p>"))
+         "<p>The 251 left-out samples did not leave at random. See M-02.</p>"),
+    note=fnote("expect a clear upward trend and are let down by how loose the cloud is.",
+               "how many of the 1,005 samples are in this picture? (754. The other 251 are missing a growth time or a roughness, and they did not go missing at random; see M-02.)",
+               "teams reading the fitted line as a result. A line can be fitted to anything, so ask how much it explains, not only which way it slopes. &ldquo;We found almost no relationship&rdquo; is a good sentence to write."))
 model += wscript("cw-g01", DATA["g01"], rd("w_g01.js"))
 model += panel("claim", "Check a Claim, Then Rewrite It", "G-15 &middot; two claims, one dataset",
     "A claim needs evidence on both sides, plus its limits.", "Pick a claim. Read both columns. Then rewrite it so it is true.", "cw-g15",
-    "Both claims are associations in observational records, never causes. A good rewrite names who was measured and under what conditions.")
+    "Both claims are associations in observational records, never causes. A good rewrite names who was measured and under what conditions.",
+    note=fnote("believe both claims at the start, then find there is real evidence on each side.",
+               "what is the smallest change that makes this sentence true? (The first claim fails on the verb &ldquo;makes&rdquo;. In the second, the two methods were grown for different projects and measured differently, so it is a lopsided observation, not a trial.)",
+               "rewrites that only soften the wording (&ldquo;might make&rdquo;). A good rewrite names who was measured and warns that the groups were not comparable."))
 model += wscript("cw-g15", DATA["g15"], rd("w_g15.js"), cfg({"claims": [
     {"key": "time_rough", "claim": "Growing a film longer makes it rougher.", "type": "correlation", "x_key": "time", "x_label": "growth time (minutes)"},
     {"key": "method_smooth", "claim": "MOCVD makes smoother films than hybrid MBE.", "type": "group", "group_key": "meth", "groups": ["MOCVD", "Hybrid MBE"]}]}))
@@ -175,7 +203,10 @@ model += panel("dice", "How Much Does One Sample Tell You?", "G-06 &middot; 501 
     "More grains shrink the wander. A center-only sample stays away from the all-grains mean at any size.",
     more("About the grains", "<p>The 501 grains come from three real scans across one WSe2 wafer, sample 17458: a measured population, not a full wafer census.</p>"
          "<p>The center&rsquo;s median grain is 1,526 nm&sup2; and the edge&rsquo;s is 2,792 nm&sup2;.</p>"),
-    flag='<span class="optional-flag">if time</span>')
+    flag='<span class="optional-flag">if time</span>',
+    note=fnote("watch the spread of sample averages shrink as n goes up, and enjoy the effect.",
+               "if you could only grab the crystals that were easy to reach, what would your sample miss?",
+               "the idea that a bigger sample cures a biased one. Center-only and edge-only samples stay off target at any size; they just get more confident about the wrong answer."))
 model += wscript("cw-g06", DATA["g06"], rd("w_g06.js"))
 
 dials = lede("dials", "The same data can be taught simply or honestly. Each dial trades one for the other.",
@@ -185,7 +216,10 @@ dials += panel("dials", "Turn All Three Complexity Dials", "D-01 &middot; 1,005 
     "The simplest setting is easy to teach but promises what the data cannot keep. The full setting is honest but hard to start with.",
     more("What each dial means", "<p><b>Structural:</b> how many variables are in front of you.</p>"
          "<p><b>Provenance:</b> whether missing values and odd spellings are shown or quietly resolved.</p>"
-         "<p><b>Statistical:</b> whether the noise and the outliers are left in.</p>"))
+         "<p><b>Statistical:</b> whether the noise and the outliers are left in.</p>"),
+    note=fnote("start with the simplest setting because it is the easiest to teach, then notice what disappeared.",
+               "what did you give up at the setting you chose?",
+               "teams picking a side (&ldquo;simple is best&rdquo; or &ldquo;always show everything&rdquo;) instead of naming the trade. A team that can say what each setting costs has got the point of the session."))
 dials += wscript("cw-d01", DATA["d01"], rd("w_d01.js"))
 
 reflect = lede("chat", "Take these three questions back to the room.", "There are no right answers. Disagreement is where the data literacy is.")
@@ -201,11 +235,15 @@ reflect += ('<section class="panel"><div class="panel-header"><h2>%s Our Film&rs
  '<li>%s<span><b>Model:</b> no growth time, so it was never a dot.</span></li>'
  '<li>%s<span><b>Sampling:</b> its wafer gave the 501 grains.</span></li>'
  '<li>%s<span><b>Dials:</b> tidy settings quietly removed it.</span></li></ol></div></section>') % (ic("pin"), ic("image"), ic("alert"), ic("trend"), ic("dice"), ic("dials"))
+CLAIMS_NOTE = fac("<p>Teams reach for all three, and all three are wrong. Say so kindly, and give them the true version.</p>"
+    "<p><b>&ldquo;So these are the chips in AI data centers.&rdquo;</b> Nothing in these records shows that any sample became a chip. 2D materials are <em>researched</em> as candidates for future electronics, which is still exciting.</p>"
+    "<p><b>&ldquo;Smoother is better.&rdquo;</b> Roughness is one quality measurement among many, and nothing here connects it to whether a device works.</p>"
+    "<p><b>&ldquo;Longer growth causes rougher films.&rdquo;</b> Every relationship on this page is an association in records of experiments that were never designed to be compared.</p>", "teachers &middot; claims to correct if you hear them")
 reflect += ('<section class="panel"><div class="panel-header"><h2>%s Three Claims We Are Careful Not to Make</h2><span class="panel-tag">keep these limits explicit</span></div><div class="panel-body">'
  '<ul class="claim-list">'
  '<li>%s<span>A smoother film is a better device. Roughness is one quality measure among many.</span></li>'
  '<li>%s<span>These samples became computer chips. 2D materials are <em>researched</em> as candidates for future electronics.</span></li>'
- '<li>%s<span>Any of these relationships is a cause. They are associations in records of experiments never designed to be compared.</span></li></ul></div></section>') % (ic("alert"), ic("alert"), ic("alert"), ic("alert"))
+ '<li>%s<span>Any of these relationships is a cause. They are associations in records of experiments never designed to be compared.</span></li></ul>' + CLAIMS_NOTE + '</div></section>') % (ic("alert"), ic("alert"), ic("alert"), ic("alert"))
 reflect += ('<section class="panel"><div class="panel-header"><h2>%s Go Further</h2><span class="panel-tag">beyond this page</span></div><div class="panel-body">'
  '<p>Everything here runs inside this page, with no account. The full 40-item catalog, and each analysis in a dozen lines of Python, is in '
  '<a href="../CAMEL/index.html">the CAMEL notebook catalog</a>.</p></div></section>') % ic("claim")
@@ -215,6 +253,14 @@ panes_html = "".join('<div class="pane%s" id="pane-%s">%s</div>' % (" active" if
 # scripts are placed after the panes, inside the pane they belong to: move them out for clarity
 LOGO = '<svg class="logo" viewBox="0 0 48 48" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"><path d="M24 4l16 9.2v18.6L24 41 8 31.800V13.200z"/><path d="M24 4v37M8 13.2L24 23l16-9.8" /><path d="M10 44q7-5 14 0t14 0" stroke="#8e2f8e"/></svg>'
 
+SESSION = fac("<ul>"
+  "<li><b>Setup:</b> one phone, tablet or laptop per team. Nothing to install and no account or sign-in. Teams work from this page alone; the five cards and each &ldquo;Your job&rdquo; line are the instructions.</li>"
+  "<li><b>Order and time:</b> Warm up 5 min, 1 &middot; Notice &amp; Wonder 5, 2 &middot; Find the Mess 10, 3 &middot; Model It 12, 4 &middot; Turn the Dials 8, then Reflect with the room. Teams move on with the tabs.</li>"
+  "<li><b>If you are short on time:</b> skip the activities marked <em>if time</em> (M-11 and G-06). Protect M-02, marked <em>most important</em>.</li>"
+  "<li><b>Internet:</b> only the 3D warm-up needs it (it fetches a drawing library). If it is blocked, the still picture works the same, and everything else runs offline once the page has loaded.</li>"
+  "<li><b>Notes:</b> under each activity, a closed <em>teachers</em> bar holds what teams usually notice, one question to ask, and the misreading to watch for. Teams can ignore them.</li>"
+  "<li><b>Before you start:</b> the Reflect tab ends with three wrong claims teams often make, with the true version of each. Worth reading first.</li></ul>",
+  "teachers &middot; running this session").replace('class="teacher"', 'class="teacher session"')
 HEAD = ORIG[0:7]   # doctype..fonts preconnect (checked below)
 page = ('<!DOCTYPE html>\n<html lang="en">\n<head>\n<meta charset="UTF-8">\n<meta name="viewport" content="width=device-width, initial-scale=1.0">\n'
  '<title>Modeling the Messy | epiSTEMic</title>\n<link rel="preconnect" href="https://fonts.googleapis.com">\n'
@@ -229,7 +275,7 @@ page = ('<!DOCTYPE html>\n<html lang="en">\n<head>\n<meta charset="UTF-8">\n<met
  '<div class="titlerow">' + LOGO + '<h1>Modeling the Messy</h1></div>'
  '<p class="header-sub">Real, uncleaned crystal-growth records from Penn State. Find what the mess hides, and see how the same numbers teach different lessons.</p>'
  '<div class="header-meta"><span><b>Source:</b> Penn State 2D Crystal Consortium, LiST sample records</span>'
- '<span><b>Adapted from:</b> the PA Dept. of Education Data Literacy Summit session (Reinhart group, Penn State)</span></div></header>\n'
+ '<span><b>Adapted from:</b> the PA Dept. of Education Data Literacy Summit session (Reinhart group, Penn State)</span></div></header>\n' + SESSION +
  '<div class="tabs" role="tablist">' + tabs_html + '</div>\n' + panes_html + '\n'
  '<footer><p>epiSTEMic &middot; Materials Science &amp; Data Literacy</p><p>Data: Penn State 2D Crystal Consortium, via the LiST sample records. Investigation adapted from the Pennsylvania Department of Education Data Literacy Summit session built by the Reinhart group at Penn State.</p></footer>\n</div>\n'
  '<script>\n' + rd("core.js") + '\n</script>\n')
