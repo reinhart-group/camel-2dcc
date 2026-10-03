@@ -18,7 +18,7 @@ are their real records, pulled from the LiST sample database.
 | | |
 |---|---|
 | Grown samples | 1,005 |
-| Samples with a roughness measurement | 894 |
+| Samples with a roughness measurement | 899 (894 after the 5 invalid records are set aside) |
 | Samples with both a growth time and a roughness | 754 |
 | Distinct hand-typed spellings of the material | 35 |
 | Distinct microscope scan sizes | 15 (709 of them at 5 µm) |
@@ -114,7 +114,10 @@ the second method at all, and nothing in the resulting chart says so.
 blank, and is it blank at random?
 
 **M-11, extreme values (optional).** The 66 samples measuring 5 nm or rougher. Teams mark
-each keep, fix or remove and watch the whole dataset's mean and median move. Removing all
+each keep or remove and watch the whole dataset's mean and median move. One row,
+sample 17458, also offers **fix**: its fault is known (the corrupted line from W-01), so it
+can be corrected to 0.80 nm instead of deleted. That is the contrast to draw out: fixing
+needs a known cause, removing does not. Removing all
 66 moves the **mean from 1.83 to 1.01 nm** and the **median only from 0.74 to 0.66**.
 That contrast is the lesson and it is visible on the chart, not asserted.
 
@@ -161,7 +164,7 @@ the center's median grain is 1,526 nm² and the edge's is 2,792 nm².
 **D-01** puts your three dials over the same table and the same graph. Nothing about the
 data changes; only what a student meets first.
 
-- **Structural** — how many variables are in front of them, from one to all nineteen.
+- **Structural** — how many variables are in front of them: 2, 6 or all 8 columns of the table.
 - **Provenance** — whether the missing values and the odd spellings are shown or quietly
   resolved.
 - **Statistical** — whether the noise and the outliers are left in.
