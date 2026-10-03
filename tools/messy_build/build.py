@@ -66,10 +66,12 @@ LOOK = {
  "cw-d01": "Each row is one sample: <b>substrate</b> (the flat base), <b>growth method</b>, <b>scan size</b>, <b>roughness</b>. " + P("row", "See a real row") + ".",
 }
 
-def panel(icon, title, tag, point, task, wid, take, extra="", flag="", look="", note=""):
+def why_block(t): return '<div class="why"><div class="why-h">Why this matters</div><p>%s</p></div>' % t if t else ""
+def figure(svg, cap, cls=""): return '<figure class="fig %s">%s<figcaption>%s</figcaption></figure>' % (cls, svg, cap) if svg else ""
+def panel(icon, title, tag, point, task, wid, take, extra="", flag="", look="", note="", why="", fig="", after=""):
     look = look or LOOK.get(wid, "")
     return ('<section class="panel"><div class="panel-header"><h2>%s%s%s</h2><span class="panel-tag">%s</span></div><div class="panel-body">'
-            '<p class="point">%s</p>%s<p class="task">%s</p>%s%s%s</div></section>') % (ic(icon), title, flag, tag, point, ('<p class="look">%s<span><b>What you&rsquo;re looking at:</b> %s</span></p>' % (ic("eye"), look)) if look else "", task, widget(wid), takeaway(take, wid if wid in ("cw-w01", "cw-w02") else None), extra + note)
+            '<p class="point">%s</p>%s%s%s<p class="task">%s</p>%s%s%s%s</div></section>') % (ic(icon), title, flag, tag, point, why_block(why), fig, ('<p class="look">%s<span><b>What you&rsquo;re looking at:</b> %s</span></p>' % (ic("eye"), look)) if look else "", task, widget(wid), after, takeaway(take, wid if wid in ("cw-w01", "cw-w02") else None), extra + note)
 def script(body): return "<script>(function(){" + body + "})();</script>"
 def wscript(wid, data, js, extra=""):
     return script('var root = document.getElementById("%s"); var DATA = %s; %s\n%s' % (wid, data, extra, js))
@@ -94,6 +96,7 @@ warm += panel("cube", "Three Real Surfaces", "warm up",
     "To compare surfaces we need a number. That number is <b>roughness</b>, and every activity here uses it.",
     more("How these scans were made", "<p>A needle sharpened to a single atom was dragged across a real film, recording its height 250,000 times.</p>"
          "<p>Each scan is one to two micrometers across, about a fiftieth of the width of a human hair.</p>"),
+    why="We cannot compare surfaces by saying one &ldquo;looks rough&rdquo;. A number lets two people, or two labs, agree. Schools do the same when they turn &ldquo;a good week&rdquo; into an attendance rate.",
     note=fnote("say the first surface is rough and the last is smooth before anyone asks.",
                "what would you measure to turn that word into a number? That number is roughness, and every later activity uses it.",
                "teams meaning different things by &ldquo;rough&rdquo; (tall bumps, many bumps, sharp bumps). Let that disagreement stand; it is the reason to measure. The 3D view needs internet; if it will not draw, the still picture does the same job."))
@@ -121,6 +124,8 @@ notice = lede("eye", "Looking closely finds what a summary number hides.",
 notice += panel("image", "Look at This Picture", "W-01 &middot; one microscope scan",
     "A single bad scan line can quietly change a number.", "Look first, name it second. Zoom in if you can.", "cw-w01",
     "One bad line in 512 multiplied the roughness by more than seven. Look at the data before you trust the summary.",
+    why="A summary number is a claim about the data, and it can be wrong. Here one bad line in the scan wrecked the headline figure. A single mistyped grade, or a blank saved as 999, can do the same to a class average. Looking at the raw picture first is the cheapest check there is.",
+    fig=figure(PR.svg_afm(False), "A scan is built one line at a time, so one bad line is one bad pass of the tip, not a flaw in the crystal.", "fig-afm") + PR.afm_key() ,
     note=fnote("name the triangles first. Some also spot the dark horizontal stripe partway down the scan.",
                "which parts of this picture are the crystal, and which are the instrument?",
                "teams who treat the stripe as part of the crystal, or who decide the whole scan is useless. One bad line is the fault; the rest of the scan is fine. The same sample, 17458, comes back in every round."))
@@ -136,6 +141,7 @@ notice += wscript("cw-w01", DATA["w01"], rd("w_notice.js"), cfg({
 notice += panel("hist", "Now Look at This Pile of Numbers", "W-02 &middot; 894 roughness measurements",
     "A histogram shows the shape of many numbers at once.", "Shape first, meaning second. Same routine: notice, wonder, reveal.", "cw-w02",
     "Most films are flat and a few are far rougher. Round 2 asks which of those few to trust.",
+    why="A histogram draws every value instead of one average, so you can see whether &ldquo;typical&rdquo; even makes sense. Attendance rates, test scores and survey answers often look like this: a big pile and a thin tail. The tail is where the surprises are, and an average hides it.",
     note=fnote("say &ldquo;most are about the same and a few are way out.&rdquo; Both halves matter later: the big pile is round 3&rsquo;s problem and the long thin tail is round 2&rsquo;s.",
                "which of the far-out ones would you believe, and what would you need to know to decide?",
                "a team deciding the tail must be errors. Some of it may be, and some is a genuinely lumpy film. A histogram alone cannot tell you which, and that gap is the point of the next round."))
@@ -154,6 +160,7 @@ mess += panel("text", "One Text Box, Thirty-Five Answers", "M-05 &middot; 1,005 
     "Every rule starts at <b>keep as typed</b>. Switch one to merge, read which tiles will move, then press <b>Merge</b> to watch it happen. No chemistry needed.", "cw-m05",
     "Mechanical mess is fixable by anyone. The rest needs someone who knows the field, or an honest &ldquo;unresolved&rdquo;.",
     more("A rule that tidies the most but fixes nothing", "<p>Folding labels under 5 samples into &ldquo;rare&rdquo; hides the small labels and fixes nothing. How many it hides depends on which other rules are on: 18 with none of them, 10 with all of them, and the count under the button tells you the number for your current choices. It makes the chart look cleanest, which is why it is worth pointing at.</p>"),
+    why="Anything typed by hand comes out in many spellings. A rule can fix a typo, but only someone who knows the field can say whether two labels mean the same thing. Course titles, school names and student names have the same problem. A wrong merge makes the data look cleaner while making it less true.",
     note=fnote("find the easy merges fast (a name typed twice, a list in a different order). Nobody needs to know the chemistry.",
                "after every rule is on, four labels that all look like MoS<sub>2</sub> are still separate. Who gets to decide whether they are the same thing?",
                "a team choosing the &ldquo;rare&rdquo; rule because the chart looks tidiest, or one that strips everything before a dash (right for one label, wrong for others, and just as tidy). The honest answer is &ldquo;unresolved, ask someone in the field&rdquo;, so say that out loud if a team gets there. Press the reveal button when teams have tried all five rules."))
@@ -163,6 +170,8 @@ mess += panel("filter", "A Reasonable Rule That Deletes a Whole Method", "M-02 &
     "&ldquo;Only complete rows&rdquo; keeps 740 of 772 MOCVD samples but only 14 of 233 hybrid MBE.",
     more("A question for your own data", "<p>What does your student information system do when a field is blank? Is it blank at random?</p>"),
     flag='<span class="star-flag">most important</span>',
+    why="Dropping incomplete rows sounds neutral, but blanks are not spread evenly. If one group has more blanks, the filter quietly removes that group. In school data, &ldquo;drop students with a missing score&rdquo; can drop the students who were absent on test day, and nobody sees it happen.",
+    fig=figure(PR.svg_growth(), "Two growth methods. Their records are filled in unevenly, so the same filter cuts them by very different amounts.", "fig-growth"),
     note=fnote("agree that &ldquo;only keep complete rows&rdquo; sounds like basic hygiene, then are surprised when one growth method nearly vanishes.",
                "what does your own student information system do with a blank field, and is it blank at random?",
                "teams who see the shrinking count but not that it fell unevenly across the two methods. Protect time for this one; if the session runs short, skip the optional activities instead."))
@@ -173,11 +182,21 @@ mess += panel("alert", "Which Extreme Readings Would You Trust?", "M-11 &middot;
     more("There is no answer key", "<p>A real bump can be 92 nm tall. So can a speck of dust the microscope tripped over. Record your reasons, not just your tally.</p>"
          "<p>If you saw the glitch in W-01, you have already met one of these rows: sample 17458, at 6.1 nm.</p>"),
     flag='<span class="optional-flag">if time</span>',
+    why="An extreme value is either a real event or a mistake, and the data alone often cannot say which. Your choice changes the answer. The <b>mean</b> is the usual average and chases extremes. The <b>median</b> is the middle value and mostly ignores them. A district&rsquo;s average days absent can swing on a handful of students.",
+    fig=figure(PR.svg_rough().replace('font-size="13"', 'font-size="17"').replace('y="192"', 'y="196"'), "Roughness squares each gap from the average, so one extreme point counts for a lot. That is why the mean moves and the median does not.", "fig-rough"),
     note=fnote("split over whether the biggest values are real. Some keep them all, some remove them all.",
                "what is the difference between fixing a reading and removing it? (Fixing needs a known cause. Sample 17458&rsquo;s fault is known, so it is the only one that can be fixed.)",
                "teams who watch only the mean and miss that the median barely moves. If a team saw the glitch line in W-01, point out that they have already met one of these rows."))
 mess += wscript("cw-m11", DATA["m11"], rd("w_m11.js"))
 
+
+G15_L, G15_R = PR.svg_g15()
+G15_AFTER = ('<div class="g15x"><h3>Two ways to compare, and what each lumps together</h3>'
+ '<div class="fig-pair"><figure class="fig">' + G15_L + '<figcaption><b>Trend line</b> (schematic). The line runs through every film at once, so anything else that changes with growth time rides along with it.</figcaption></figure>'
+ '<figure class="fig">' + G15_R + '<figcaption><b>Two groups</b> (schematic). Each box averages over whatever else differs between the groups, growth time included.</figcaption></figure></div>'
+ '<p>The trend line lumps in everything that changes with growth time. Of the 754 samples on it, 740 are MOCVD, and the slope is about the same with MOCVD alone (about 0.06 nm per minute either way). So this line hardly mixes in method. It does mix in which material, which substrate and which project.</p>'
+ '<p>The group comparison lumps in growth time. Only 24 of the 233 hybrid MBE samples have a growth time recorded, and only 14 have both a time and a roughness. So you cannot check whether the method gap is really a growth-time gap. Among the 24 that were recorded, hybrid MBE growths were shorter (median 7 min vs 15 min for MOCVD), which if anything points the other way.</p>'
+ '<p><b>Whichever comparison you choose, name what it lumps together.</b> The honest fix is to compare like with like: same material, same time range. These records mostly do not allow it.</p></div>')
 model = lede("trend", "A model summarizes a pattern. Ask how much it explains and what it leaves out.",
              "<b>Your job:</b> write one sentence you would defend, limits included. &ldquo;We found no relationship&rdquo; is a real finding.")
 model += panel("trend", "Does Growing a Film Longer Make It Rougher?", "G-01 &middot; 754 samples with growth time and roughness",
@@ -185,6 +204,7 @@ model += panel("trend", "Does Growing a Film Longer Make It Rougher?", "G-01 &mi
     "The line rises about 0.06 nm per minute, yet explains only 2% of the variation (R&sup2; = 0.020). How steep it is and how well it fits are separate questions.",
     more("A stronger measure, and who is missing", "<p>The rank correlation is stronger (Spearman +0.29) because roughness is so skewed. That is a good advanced conversation, not the headline.</p>"
          "<p>The 251 left-out samples did not leave at random. See M-02.</p>"),
+    why="A line can be fitted to any cloud of dots, even a shapeless one, and it will always have a slope. R&sup2; says how much of the ups and downs the line actually accounts for. The same check applies to &ldquo;more study time means higher scores&rdquo; or &ldquo;more absences means lower grades&rdquo;.",
     note=fnote("expect a clear upward trend and are let down by how loose the cloud is.",
                "how many of the 1,005 samples are in this picture? (754. The other 251 are missing a growth time or a roughness, and they did not go missing at random; see M-02.)",
                "teams reading the fitted line as a result. A line can be fitted to anything, so ask how much it explains, not only which way it slopes. &ldquo;We found almost no relationship&rdquo; is a good sentence to write."))
@@ -192,6 +212,8 @@ model += wscript("cw-g01", DATA["g01"], rd("w_g01.js"))
 model += panel("claim", "Check a Claim, Then Rewrite It", "G-15 &middot; two claims, one dataset",
     "A claim needs evidence on both sides, plus its limits.", "Pick a claim. Read both columns. Then rewrite it so it is true.", "cw-g15",
     "Both claims are associations in observational records, never causes. A good rewrite names who was measured and under what conditions.",
+    why="Claims in reports and in the news arrive as one tidy sentence. Checking one means asking what supports it, what cuts against it, and who was actually measured. Rewriting it is practice at saying only as much as the data can carry.",
+    after=G15_AFTER,
     note=fnote("believe both claims at the start, then find there is real evidence on each side.",
                "what is the smallest change that makes this sentence true? (The first claim fails on the verb &ldquo;makes&rdquo;. In the second, the two methods were grown for different projects and measured differently, so it is a lopsided observation, not a trial.)",
                "rewrites that only soften the wording (&ldquo;might make&rdquo;). A good rewrite names who was measured and warns that the groups were not comparable."))
@@ -204,6 +226,7 @@ model += panel("dice", "How Much Does One Sample Tell You?", "G-06 &middot; 501 
     more("About the grains", "<p>The 501 grains come from three real scans across one WSe2 wafer, sample 17458: a measured population, not a full wafer census.</p>"
          "<p>The center&rsquo;s median grain is 1,526 nm&sup2; and the edge&rsquo;s is 2,792 nm&sup2;.</p>"),
     flag='<span class="optional-flag">if time</span>',
+    why="A sample is a small piece used to stand in for the whole. A bigger one gives steadier answers, but only if it is picked fairly. Surveying only the students who are easy to reach, such as those who answer email, can give a confident answer that is wrong.",
     note=fnote("watch the spread of sample averages shrink as n goes up, and enjoy the effect.",
                "if you could only grab the crystals that were easy to reach, what would your sample miss?",
                "the idea that a bigger sample cures a biased one. Center-only and edge-only samples stay off target at any size; they just get more confident about the wrong answer."))
@@ -217,6 +240,7 @@ dials += panel("dials", "Turn All Three Complexity Dials", "D-01 &middot; 1,005 
     more("What each dial means", "<p><b>Structural:</b> how many variables are in front of you.</p>"
          "<p><b>Provenance:</b> whether missing values and odd spellings are shown or quietly resolved.</p>"
          "<p><b>Statistical:</b> whether the noise and the outliers are left in.</p>"),
+    why="The same table can be shown in many ways, and each way hides something. Choosing what students see first is a teaching choice and a data choice at once. The dials make that trade visible: easier to start with, or more honest about the mess.",
     note=fnote("start with the simplest setting because it is the easiest to teach, then notice what disappeared.",
                "what did you give up at the setting you chose?",
                "teams picking a side (&ldquo;simple is best&rdquo; or &ldquo;always show everything&rdquo;) instead of naming the trade. A team that can say what each setting costs has got the point of the session."))

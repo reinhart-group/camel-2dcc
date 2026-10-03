@@ -266,3 +266,17 @@
   @media(prefers-reduced-motion:reduce){.sp-tile{transition:none;animation:none!important}}
   tr.fixable td{background:#fff4e8}.fix-note{font-size:11px;color:#9a4a08;margin-top:4px;white-space:normal;max-width:260px}
   .sp-plan{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin-bottom:8px;padding:8px 12px;background:#fdecea;border:1px solid #f1b5ad;border-radius:6px;font-size:13px;color:#7f1d1d}
+
+  .why{margin:2px 0 12px;padding:10px 14px;background:var(--field);border:1px solid var(--border);border-left:4px solid var(--accent);border-radius:0 5px 5px 0;max-width:720px;}
+  .why-h{font-family:"DM Mono",monospace;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--accent);margin-bottom:3px;}
+  .panel-body .why p{font-size:14px;line-height:1.55;color:var(--ink);margin:0;}
+  .fig{margin:6px 0 14px;max-width:560px;}
+  .fig svg.dg{width:100%;height:auto;display:block;background:#fff;border:1px solid var(--border);border-radius:6px;}
+  .fig figcaption{font-size:13px;line-height:1.5;color:var(--ink-soft);margin-top:6px;}
+  .fig-afm,.fig-afm + .afm-key{max-width:520px;}
+  .fig-afm + .afm-key{margin:0 0 14px;}
+  .fig-pair{display:grid;grid-template-columns:1fr 1fr;gap:14px;max-width:720px;margin:6px 0 14px;}
+  .fig-pair .fig{margin:0;}
+  .g15x{margin-top:20px;padding-top:14px;border-top:1px solid var(--base-dark);}
+  .g15x h3{font-family:"DM Serif Display",serif;font-size:19px;font-weight:400;color:var(--ink);margin-bottom:6px;}
+  @media(max-width:620px){.fig-pair{grid-template-columns:1fr;}}

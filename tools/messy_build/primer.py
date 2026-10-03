@@ -36,7 +36,13 @@ def svg_growth():
         + t(260, 220, "Both happen inside a vacuum chamber. The blue layer is the new film.", sz=12)
         + '</svg>')
 
-def svg_afm():
+def afm_key():
+    return ('<ol class="afm-key"><li><b>Laser</b> shines on the back of the arm.</li>'
+        '<li><b>Flexible arm with a sharp tip</b> rides up and down over every bump.</li>'
+        '<li><b>Detector</b> sees the reflected spot move when the arm bends.</li>'
+        '<li><b>Recorded line</b> of heights. Repeat, one line under the next, to build an image.</li></ol>')
+
+def svg_afm(key=True):
     # Animated by the AFM script in build.py: every .afm-anim svg that is visible gets the
     # moving tip, bending arm, moving laser spot and growing height trace. Class-based (no ids)
     # because the primer is cloned twice (inline and in the drawer).
@@ -57,10 +63,7 @@ def svg_afm():
         '<circle cx="566" cy="53" r="12" fill="#8e2f8e"/><text x="566" y="59" text-anchor="middle">3</text>'
         '<circle cx="22" cy="322" r="12" fill="#1e8449"/><text x="22" y="328" text-anchor="middle">4</text></g>'
         '</svg>'
-        '<ol class="afm-key"><li><b>Laser</b> shines on the back of the arm.</li>'
-        '<li><b>Flexible arm with a sharp tip</b> rides up and down over every bump.</li>'
-        '<li><b>Detector</b> sees the reflected spot move when the arm bends.</li>'
-        '<li><b>Recorded line</b> of heights. Repeat, one line under the next, to build an image.</li></ol>')
+        + (afm_key() if key else ''))
 
 def svg_rough():
     import math
@@ -74,6 +77,47 @@ def svg_rough():
         '<line x1="20" y1="10" x2="20" y2="150" stroke="#555"/><line x1="20" y1="150" x2="500" y2="150" stroke="#555"/>'
         % (d, bars) + t(28, 174, "dashed line: the average height") + t(28, 192, "red gaps: how far each point sits from that average")
         + t(30, 22, "height") + '</svg>')
+
+def svg_g15():
+    """Schematic (not real data): what a trend line and a two-group comparison each lump together."""
+    import random
+    rnd = random.Random(11)
+    T = lambda x, y, s, b=False, a="middle", sz=12, c="#1c1730": '<text x="%s" y="%s" font-size="%d" text-anchor="%s" fill="%s"%s>%s</text>' % (x, y, sz, a, c, ' font-weight="600"' if b else "", s)
+    PUR, ORG = "#5b3a9e", "#d9730d"
+    frame = lambda: '<rect x="1" y="1" width="258" height="238" rx="6" fill="#fff" stroke="#d7cde5"/>'
+    # left: trend line
+    pts = [(0.5, 0.75, 0), (1.1, 0.55, 0), (1.7, 0.9, 0), (2.2, 0.62, 0), (2.6, 1.1, 0), (3.2, 1.0, 0), (3.6, 1.45, 0), (4.1, 1.2, 1),
+           (4.6, 1.7, 0), (5.1, 1.35, 0), (5.7, 1.9, 0), (6.2, 1.6, 0), (6.8, 2.2, 0), (7.4, 1.95, 0), (8.0, 2.45, 0)]
+    X = lambda t: 38 + t * 26; Y = lambda r: 190 - r * 50
+    dots = "".join('<circle cx="%.1f" cy="%.1f" r="4.2" fill="%s" fill-opacity="0.9"/>' % (X(t), Y(r), ORG if m else PUR) for t, r, m in pts)
+    left = ('<svg viewBox="0 0 260 240" role="img" aria-label="Schematic: a scatter of growth time against roughness with one fitted line through every dot; dots are colored by growth method" class="dg g15s">' + frame()
+        + T(130, 22, "Trend line", True, sz=14)
+        + '<line x1="38" y1="36" x2="38" y2="190" stroke="#555"/><line x1="38" y1="190" x2="250" y2="190" stroke="#555"/>'
+        + T(144, 210, "growth time (minutes)") + '<text x="14" y="113" font-size="12" text-anchor="middle" fill="#1c1730" transform="rotate(-90 14 113)">roughness</text>'
+        + dots + '<line x1="42" y1="165" x2="246" y2="62" stroke="#3d2465" stroke-width="2.5"/>'
+        + '<circle cx="62" cy="228" r="4" fill="%s"/>' % PUR + T(70, 232, "MOCVD", a="start", sz=11) + '<circle cx="146" cy="228" r="4" fill="%s"/>' % ORG + T(154, 232, "hybrid MBE", a="start", sz=11)
+        + '</svg>')
+    # right: two boxes with dots shaded by growth time
+    def shade(f):  # 0 short (light) .. 1 long (dark)
+        a, b = (198, 219, 239), (8, 48, 107)
+        return "#%02x%02x%02x" % tuple(int(a[k] + (b[k] - a[k]) * f) for k in range(3))
+    def box(cx, hi, q1, med, q3, lo, label, n):   # y grows downward: hi < q1 < med < q3 < lo
+        out = ('<line x1="%d" y1="%d" x2="%d" y2="%d" stroke="#555"/>' % (cx, hi, cx, lo)
+               + '<line x1="%d" y1="%d" x2="%d" y2="%d" stroke="#555"/><line x1="%d" y1="%d" x2="%d" y2="%d" stroke="#555"/>' % (cx - 10, hi, cx + 10, hi, cx - 10, lo, cx + 10, lo)
+               + '<rect x="%d" y="%d" width="56" height="%d" fill="#f7f5fb" stroke="#555" stroke-width="1.5"/>' % (cx - 28, q1, q3 - q1)
+               + '<line x1="%d" y1="%d" x2="%d" y2="%d" stroke="#1c1730" stroke-width="3"/>' % (cx - 28, med, cx + 28, med))
+        for k in range(n):
+            f = (k * 0.618 + rnd.random() * 0.15) % 1
+            out += '<circle cx="%.1f" cy="%.1f" r="4.2" fill="%s" stroke="#fff" stroke-width="0.8"/>' % (cx - 20 + rnd.random() * 40, q1 + 6 + rnd.random() * (q3 - q1 - 12), shade(f))
+        return out + T(cx, 210, label, True, sz=12)
+    keyx = "".join('<rect x="%d" y="223" width="12" height="10" fill="%s"/>' % (76 + k * 12, shade(k / 5)) for k in range(6))
+    right = ('<svg viewBox="0 0 260 240" role="img" aria-label="Schematic: two box plots, one per growth method; inside each box the dots are shaded from light to dark by growth time, so each box mixes short and long growths" class="dg g15s">' + frame()
+        + T(130, 22, "Two groups", True, sz=14)
+        + '<line x1="30" y1="36" x2="30" y2="190" stroke="#555"/>' + '<text x="14" y="113" font-size="12" text-anchor="middle" fill="#1c1730" transform="rotate(-90 14 113)">roughness</text>'
+        + box(95, 84, 112, 138, 162, 182, "MOCVD", 12) + box(195, 46, 70, 102, 142, 174, "hybrid MBE", 12)
+        + T(70, 232, "short", a="end", sz=11) + keyx + T(158, 232, "long growth", a="start", sz=11)
+        + '</svg>')
+    return left, right
 
 def table_materials():
     rows = [("MoS<sub>2</sub>", "molybdenum disulfide", "The mineral molybdenite, also used as a lubricant. As one layer it is a semiconductor."),
